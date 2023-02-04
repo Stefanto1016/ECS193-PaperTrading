@@ -5,12 +5,16 @@ const password = '1';
 var data;
 
 
-const company = "GOOG";
+const companies = "GOOG,AMZN";
 const queryType = "quotes";
-const url = `https://api.tdameritrade.com/v1/marketdata/${company}/${queryType}?`;
-const params = new URLSearchParams({apikey: client_id});
+const url = `https://api.tdameritrade.com/v1/marketdata/${queryType}?`;
+const params = new URLSearchParams({apikey: client_id, symbol: companies});
 
-data = fetch(url + params).then(response => response.json().then(json => console.log(json['GOOG']['askPrice'])));
+data = fetch(url + params).then(response => response.json().then(json =>
+    {
+         console.log(json['GOOG']['askPrice'])
+         console.log(json['AMZN']['askPrice'])
+    }));
 
 
 
