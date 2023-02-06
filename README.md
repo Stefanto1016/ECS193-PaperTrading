@@ -1,1 +1,1 @@
-# ECS193-Compu-Brain-Capstone-Project-Ideas-20
+# ECS193 Team #15 Senior Design Project
