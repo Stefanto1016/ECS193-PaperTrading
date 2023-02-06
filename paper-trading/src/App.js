@@ -10,7 +10,7 @@ function App() {
         label: "Cost of Stock in $ (x100)",
         data: [3.2, 2.7, 1.9, 2.5, 3.0, 3.1, 4.0, 3.5, 3.2, 3.6, 3.9, 3.4],
         fill: true,
-        borderColor: "rgb(0,191,255)",
+        borderColor: "blue",
         tension: 0.1
       }
     ]
@@ -18,7 +18,7 @@ function App() {
 
   return (
     <div className="App">
-      <LineChart chartData={chartData} />
+      <LineChart chartData={chartData} /> 
     </div>
   );
 }
