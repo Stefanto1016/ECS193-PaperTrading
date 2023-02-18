@@ -78,8 +78,8 @@ function App() {
   return (
     <div className="App">
       <div>
-        {/*<NavBar/> <- uncommenting this causes white web page*/} 
-      </div>
+        <NavBar/> 
+      </div> 
       <div>
         <h2>Google Login</h2>
         <br></br>
