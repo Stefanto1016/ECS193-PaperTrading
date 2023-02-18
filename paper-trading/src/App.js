@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import LineChart from './components/LineChart';
+import NavBar from './components/NavBar';
 import {GoogleLogin, googleLogout, useGoogleLogin} from '@react-oauth/google';
 import axios from 'axios';
 
@@ -37,6 +38,7 @@ function App() {
     ]
   };
 
+  
   //Google User Data
   const [user, setUser] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -46,6 +48,7 @@ function App() {
     onError: (err) => console.log("Login failed, ", err)
   });
 
+  
   useEffect(
     () => {
       if (user) {
@@ -63,6 +66,7 @@ function App() {
     },
     [user]
   );
+  
 
   const logOut = () => {
     googleLogout();
@@ -71,12 +75,11 @@ function App() {
 
   const [chartData, setChartData] = useState(chartData1);
 
-  function DisplayChart(chartData) {
-    return <LineChart chartData={chartData}/>
-  }
-
   return (
     <div className="App">
+      <div>
+        {/*<NavBar/> <- uncommenting this causes white web page*/} 
+      </div>
       <div>
         <h2>Google Login</h2>
         <br></br>
@@ -98,8 +101,8 @@ function App() {
       <button onClick={() => setChartData(chartData2)}> Chart 2 </button>
       <div style={{width: 1000}}>
         <LineChart chartData={chartData}/>
+        </div> 
       </div>
-    </div>
   );
 }
 
