@@ -5,6 +5,13 @@ import NavBar from './components/NavBar';
 import {GoogleLogin, googleLogout, useGoogleLogin} from '@react-oauth/google';
 import axios from 'axios';
 
+import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
+import Portfolio from './pages/Portfolio'
+import Stocks from './pages/Stocks'
+import Learning from './pages/Learning'
+import LogOut from './pages/Logout'
+
+
 function App() {
   //const [chartData, setChartData] = useState(chartData1);
 
@@ -73,13 +80,19 @@ function App() {
     setProfile(null);
   }
 
-  const [chartData, setChartData] = useState(chartData1);
+  //const [chartData, setChartData] = useState(chartData1);
 
   return (
     <div className="App">
-      <div>
+      <Router>
         <NavBar/> 
-      </div> 
+        <Routes>
+          <Route path='/portfolio' element={<Portfolio/>} />
+          <Route path='/stocks' element={<Stocks/>} />
+          <Route path='/learning' element={<Learning/>} />
+          <Route path='/logout' element={<LogOut/>} />
+        </Routes>
+      </Router> 
       <div>
         <h2>Google Login</h2>
         <br></br>
@@ -97,12 +110,16 @@ function App() {
         )}
         <br></br>
       </div>
+
+
+      {/*
       <button onClick={() => setChartData(chartData1)}> Chart 1 </button>
       <button onClick={() => setChartData(chartData2)}> Chart 2 </button>
       <div style={{width: 1000}}>
         <LineChart chartData={chartData}/>
-        </div> 
-      </div>
+      </div> 
+        */}
+    </div>
   );
 }
 
