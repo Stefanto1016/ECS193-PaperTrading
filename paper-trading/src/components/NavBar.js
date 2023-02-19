@@ -3,15 +3,20 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Button from'@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import HomeIcon from '@mui/icons-material/Home';
 import { Link } from 'react-router-dom'
 
 import { minHeight } from '@mui/system';
+import { IconButton } from '@mui/material';
 
 export default function NavBar() {
     return(
         <div className="NavBar">
             <AppBar position="fixed">
                 <Toolbar>
+                    <IconButton component={Link} to='/' size='large' edge='start' color='inherit'>
+                        <HomeIcon />
+                    </IconButton>
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
                         CompuTrade
                     </Typography>
