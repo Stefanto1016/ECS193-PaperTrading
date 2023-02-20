@@ -3,6 +3,11 @@ import { useState } from 'react';
 import LineChart from '../components/LineChart';
 
 function Stocks() {
+
+const chartStyle = {
+    width: 500,
+}
+
   // Data for Chart 1
   const chartData1 = {
     // x-axis labels
@@ -39,7 +44,7 @@ function Stocks() {
     <div className='Stocks'>
       <button onClick={() => setChartData(chartData1)}> Chart 1 </button>
       <button onClick={() => setChartData(chartData2)}> Chart 2 </button>
-      <div style={{width: 1000}}>
+      <div style={chartStyle}>
         <LineChart chartData={chartData}/>
       </div>
     </div>
