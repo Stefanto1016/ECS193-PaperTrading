@@ -14,7 +14,7 @@ function Login() {
   const [profile, setProfile] = useState(null);
 
   const login = useGoogleLogin({
-    onSuccess: (res) => setUser(res),
+    onSuccess: (res) => {setUser(res); handleNav();},
     onError: (err) => console.log("Login failed, ", err)
   });
 
@@ -45,17 +45,42 @@ function Login() {
     setProfile(null);
   }
 
+  const pageStyle = {
+    backgroundColor: "#104e8d",
+    height: "100vh", 
+    width: "100vw", 
+    display: "flex", 
+    justifyContent: "center",
+    alignItems: "center"
+  };
+
+  const loginStyle = {
+    backgroundImage: `url(${stock})`, 
+    height: "100%", 
+    width: "100%", 
+    margin: "0px", 
+    padding: "0px", 
+    backgroundPosition: "center center", 
+    position: "50% 50%", 
+    backgroundRepeat: "no-repeat",  
+    backgroundSize: "100%", 
+    display: "flex", 
+    justifyContent: "center", 
+    alignItems: "center", 
+    opacity: "0.6"
+  };
+
 
     return (
-        <div style={{backgroundColor: "#104e8d", height: "100vh", width: "100vw", display: "flex", justifyContent: "center", alignItems: "center"}}>
-          <div style={{backgroundImage: `url(${stock})`, height: "100%", width: "100%", margin: "0px", padding: "0px", backgroundPosition: "center center", position: "50% 50%", backgroundRepeat: "no-repeat",  backgroundSize: "100%", display: "flex", justifyContent: "center", alignItems: "center", opacity: "0.6"}}>
+        <div style={pageStyle}>
+          <div style={loginStyle}>
           <br></br>
           {profile ? (
             <div>
               <button onClick={logOut}>Log Out</button>
             </div>
           ) : (
-          <GoogleButton onClick={() => {login(); handleNav();}}/>
+          <GoogleButton onClick={() => login()}/>
           )}
           <br></br>
         </div>
