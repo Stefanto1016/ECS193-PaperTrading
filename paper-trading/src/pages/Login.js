@@ -1,10 +1,15 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
-import {GoogleLogin, googleLogout, useGoogleLogin} from '@react-oauth/google';
+import {googleLogout, useGoogleLogin} from '@react-oauth/google';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import GoogleButton from 'react-google-button';
+import stock from "../images/stock_background.jpeg"
+import { width } from '@mui/system';
 
 function Login() {
     //Google User Data
+  const navigate = useNavigate();
   const [user, setUser] = useState([]);
   const [profile, setProfile] = useState(null);
 
@@ -12,6 +17,10 @@ function Login() {
     onSuccess: (res) => setUser(res),
     onError: (err) => console.log("Login failed, ", err)
   });
+
+  const handleNav = (e) => {
+    navigate("/App");
+  }
 
   useEffect(
     () => {
@@ -36,25 +45,23 @@ function Login() {
     setProfile(null);
   }
 
+
     return (
-        <div>
-        <h2>Google Login</h2>
-        <br></br>
-        {profile ? (
-          <div>
-            <img src={profile.picture} alt="user image"/>
-            <h3>User currently logged in</h3>
-            <p>Name: {profile.name}</p>
-            <p>Email: {profile.email}</p>
-            <br></br>
-            <button onClick={logOut}>Log Out</button>
-          </div>
-        ) : (
-        <button onClick={() => login()}>Login</button>
-        )}
-        <br></br>
+        <div style={{backgroundColor: "#104e8d", height: "100vh", width: "100vw", display: "flex", justifyContent: "center", alignItems: "center"}}>
+          <div style={{backgroundImage: `url(${stock})`, height: "100%", width: "100%", margin: "0px", padding: "0px", backgroundPosition: "center center", position: "50% 50%", backgroundRepeat: "no-repeat",  backgroundSize: "100%", display: "flex", justifyContent: "center", alignItems: "center", opacity: "0.6"}}>
+          <br></br>
+          {profile ? (
+            <div>
+              <button onClick={logOut}>Log Out</button>
+            </div>
+          ) : (
+          <GoogleButton onClick={() => {login(); handleNav();}}/>
+          )}
+          <br></br>
+        </div>
       </div>
     )
 }
+
 
 export default Login
