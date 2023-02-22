@@ -1,6 +1,7 @@
 import React from 'react'
 import { useState } from 'react';
 import LineChart from '../components/LineChart';
+import NavBar from '../components/NavBar';
 
 function Stocks() {
 
@@ -42,6 +43,7 @@ const chartStyle = {
 
   return (
     <div className='Stocks'>
+      <NavBar/> 
       <button onClick={() => setChartData(chartData1)}> Chart 1 </button>
       <button onClick={() => setChartData(chartData2)}> Chart 2 </button>
       <div style={chartStyle}>

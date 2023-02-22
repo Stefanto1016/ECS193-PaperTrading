@@ -6,7 +6,6 @@ import Typography from '@mui/material/Typography';
 import HomeIcon from '@mui/icons-material/Home';
 import { Link } from 'react-router-dom'
 
-import { minHeight } from '@mui/system';
 import { IconButton } from '@mui/material';
 
 export default function NavBar() {
@@ -14,7 +13,7 @@ export default function NavBar() {
         <div className="NavBar">
             <AppBar position="fixed">
                 <Toolbar>
-                    <IconButton component={Link} to='/' size='large' edge='start' color='inherit'>
+                    <IconButton component={Link} to='/App' size='large' edge='start' color='inherit'>
                         <HomeIcon />
                     </IconButton>
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
