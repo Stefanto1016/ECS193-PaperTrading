@@ -25,6 +25,7 @@ was first listed at least 20 years ago and is currently listed. I used GOOG in m
 but decided against hard coding it
 */
 
+
 async function getNumDataPoints(company)
 {
      var retArr = [];
