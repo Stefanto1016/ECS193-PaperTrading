@@ -5,9 +5,9 @@ import NavBar from '../components/NavBar';
 
 function Stocks() {
 
-const chartStyle = {
+  const chartStyle = {
     width: 500,
-}
+  }
 
   // Data for Chart 1
   const chartData1 = {
