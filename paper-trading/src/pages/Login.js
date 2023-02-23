@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import GoogleButton from 'react-google-button';
 import stock from "../images/stock_background.jpeg"
 import { width } from '@mui/system';
+import { Typography } from '@mui/material';
 
 function Login() {
     //Google User Data
@@ -46,18 +47,18 @@ function Login() {
   }
 
   const pageStyle = {
-    backgroundColor: "#104e8d",
+    backgroundColor: "#e5e8eb",
     height: "100vh", 
     width: "100vw", 
     display: "flex", 
     justifyContent: "center",
     alignItems: "center"
   };
-
+  /*
   const loginStyle = {
     backgroundImage: `url(${stock})`, 
     height: "100%", 
-    width: "100%", 
+    width: "60%", 
     margin: "0px", 
     padding: "0px", 
     backgroundPosition: "center center", 
@@ -68,21 +69,69 @@ function Login() {
     justifyContent: "center", 
     alignItems: "center", 
     opacity: "0.6"
+  };*/
+
+  const loginBackgroundStyle = {
+    backgroundImage: `url(${stock})`, 
+    height: "100%", 
+    width: "60%", 
+    margin: "0px", 
+    padding: "0px", 
+    backgroundPosition: "center center", 
+    position: "50% 50%", 
+    backgroundRepeat: "no-repeat",  
+    backgroundSize: "cover", 
+    display: "flex", 
+    justifyContent: "center", 
+    alignItems: "center", 
+    opacity: "0.6",
+    float: "right",
+    borderRadius: "50px 0px 0px 50px",
+    overflow: "auto"
   };
+
+  const loginModuleStyle = {
+    height: "80%",
+    width: "70%",
+    backgroundColor: "#F0EAD6",
+    display: "inline-block",
+    borderRadius: "50px",
+    overflow: "auto",
+    boxShadow: "5px 10px 50px 10px"
+  }
+
+  const buttonSideStyle = {
+    height: "100%",
+    width: "40%",
+    backgroundColor: "#F0EAD6",
+    float: "left",
+    alignItems: "center",
+    justifyContent: "center",
+    display: "flex",
+    overflow: "auto"
+  }
+
 
 
     return (
         <div style={pageStyle}>
-          <div style={loginStyle}>
+          <div style={loginModuleStyle}>
+            <div style={buttonSideStyle}>
+            
           <br></br>
           {profile ? (
             <div>
               <button onClick={logOut}>Log Out</button>
             </div>
           ) : (
-          <GoogleButton onClick={() => login()}/>
+            <div>
+              <GoogleButton onClick={() => login()}/>
+            </div>
           )}
           <br></br>
+          </div>
+          <div style={loginBackgroundStyle}>
+          </div>
         </div>
       </div>
     )
