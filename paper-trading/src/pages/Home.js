@@ -165,7 +165,6 @@ function Home() {
        return(data);
   }
 
-
     async function getTopGainers() {
         var url = 'https://api.tdameritrade.com/v1/marketdata/$COMPX/movers?apikey=Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK&direction=up&change=percent'
         var data = await retryFetch(url);
