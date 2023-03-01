@@ -22,23 +22,36 @@ async function disconnect()
 
 /*  addUser(email, username, stocks, balance) 
 This function adds a new user(document) to the "userInfo" collection on MongoDB
-There is no error catching at this level, possible to make duplicate documents  */
+Error Catching implemented */
 async function addUser(email, username, stocks, balance)
 {
     try {
         connect();
-        const user = {
-        email: email,
-        username: username,
-        stocks: stocks,
-        balance: balance
+        const userCheck = await userSchema.findOne({username : username});
+        const emailCheck = await userSchema.findOne({email : email});
+
+        if (userCheck != undefined) {
+            console.log("ERROR: Unable to add User: username already taken");
+            disconnect();
+            return;
+        } else if (emailCheck != undefined) {
+            console.log("ERROR: Unable to add User: email already taken");
+            disconnect();
+            return;
+        } else {
+            const user = {
+                email: email,
+                username: username,
+                stocks: stocks,
+                balance: balance
+            }
+            await new userSchema(user).save()
+            disconnect();
         }
-
-        await new userSchema(user).save()
-    } finally {
-        disconnect();
+    } catch(error) {
+        console.log(error)
     }
-
+    
 }
 
 /*  updateBalance(username, balance)
@@ -47,17 +60,25 @@ username => the username of a given user (subject to change, email might be easi
 balance => {"date" : Number Amount}  */
 async function updateBalance(username, balance)
 {
-    connect();
-    const user = await userSchema.findOne({username : username});
-    
-    const mergeBalance = {
-        ...balance,
-        ...user.balance
-    };
+    try {
+        connect();
+        const user = await userSchema.findOne({username : username});
+        if (user == undefined) {
+            console.log("ERROR: Unable to Update Balance: username does not exist in database");
+            disconnect();
+            return;
+        }
+        const mergeBalance = {
+            ...balance,
+            ...user.balance
+        };
 
-    const update = {balance: mergeBalance};
-    await userSchema.findOneAndUpdate(user, update);
-    disconnect();
+        const update = {balance: mergeBalance};
+        await userSchema.findOneAndUpdate(user, update);
+        disconnect();
+    } catch(error) {
+        console.log(error)
+    }
 }
 
 /*  addStock(username, stock) 
@@ -66,16 +87,24 @@ username => the username of a given user
 stock => {"symbol" : Quantity}  */
 async function addStock(username, stock)
 {
-    connect();
-    const user = await userSchema.findOne({username : username});
-    
-    const mergeStocks = {
-        ...user.stocks,
-        ...stock
-    };
-    const update = {stocks: mergeStocks};
-    await userSchema.findOneAndUpdate(user, update);
-    disconnect();
+    try {
+        connect();
+        const user = await userSchema.findOne({username : username});
+        if (user == undefined) {
+            console.log("ERROR: Unable to Add Stock: username does not exist in database");
+            disconnect();
+            return;
+        }
+        const mergeStocks = {
+            ...user.stocks,
+            ...stock
+        };
+        const update = {stocks: mergeStocks};
+        await userSchema.findOneAndUpdate(user, update);
+        disconnect();
+    } catch(error) {
+        console.log(error)
+    }
 }
 
 
@@ -87,14 +116,39 @@ newQuantity => the quantity that the stock should be set too  */
 async function updateStock(username, symbol, newQuantity)
 {
     try {
+        // NO connect() here 
+        if (newQuantity == 0) {
+            deleteStock(username, symbol);
+        } else {
+            connect();
+            const user = await userSchema.findOne({username : username});
+            user.stocks[symbol] = newQuantity;
+            await userSchema(user).save()
+            disconnect();
+        }
+
+    } catch(error) {
+        console.log(error)
+    }
+   
+}
+
+/*  deleteStock(username, symbol) 
+This function removes the stock from the users "stocks" object
+username => user document that will have given stock removed 
+symbol => the stock that will be removed from "stocks" object*/
+async function deleteStock(username, symbol)
+{
+    try {
         connect();
         const user = await userSchema.findOne({username : username});
-        user.stocks[symbol] = newQuantity;
-        await userSchema(user).save();
+        delete user.stocks[symbol];
+        await userSchema(user).save()
+        disconnect();
     } catch(error) {
-        console.log(error);
+        console.log(error)
     }
-    disconnect();
+    
 }
 
 /*  getUser(email)
@@ -103,16 +157,45 @@ email => the email address given when user logs in
  */
 async function getUser(email)
 {
-    connect();
-    const user = await userSchema.findOne({email : email});
-    console.log(user);
-    disconnect();
-    return(user);
+    try {
+        connect();
+        const user = await userSchema.findOne({email : email});
+        disconnect();
+        return(user);
+    } catch(error) {
+        console.log(error)
+    }
+}
+
+/*  stockQuantity(username, symbol)
+This function returns the number of shares of a stock that the user owns  */
+async function stockQuantity(username, symbol)
+{
+    try {
+        connect();
+        const user = await userSchema.findOne({username : username});
+
+        if (user.stocks[symbol] == undefined) {
+            console.log("ERROR: This User doesn't own any shares of this stock.")
+            disconnect();
+            return(0);
+        } else {
+            //console.log(user.stocks[symbol]);
+            disconnect();
+            return(user.stocks[symbol]);
+        }
+
+    } catch(error) {
+        console.log(error)
+    }
 }
 
 //  Testing function calls below 
 //addUser("garretthilyer@gmail.com", "ghilyer", {"XOM": 25, "DIS": 14, "TSLA": 16}, {"2/23/2023": 10000})
 //updateBalance("ghilyer", {"2/24/2023" : 4500});
-//addStock("ghilyer", {"APPL": 15});
-//updateStock("ghilyer", "APPL", 34);
-//getUser("garretthilyer@gmail.com")
+//addStock("ghilyer", {"AAPL": 15});
+//updateStock("ghilyer", "XOM", 35);
+//updateStock("ghilyer", "AAPL", 0);
+//getUser("garretthilyer@gmail.com");
+//deleteStock("ghilyer", "AAPL");
+//stockQuantity("ghilyer", "XOM");
