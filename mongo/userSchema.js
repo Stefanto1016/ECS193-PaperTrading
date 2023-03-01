@@ -16,4 +16,4 @@ const userSchema = mongoose.Schema({
     balance: Object
 })
 
-module.exports = mongoose.model('users', userSchema, 'userInfo');
+module.exports = mongoose.model('user', userSchema, 'userInfo');
