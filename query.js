@@ -62,18 +62,18 @@ async function getStockListDate(company)
 }
 
 /*
-This function will return all current data about a stock. Pass to function the symbol of
-a stock as a string in all caps. For a full list of available information check out 
+This function will return all current data about a stock. Pass to function an array 
+of symbols strings in all caps. For a full list of available information check out 
 "https://developer.tdameritrade.com/quotes/apis/get/marketdata/%7Bsymbol%7D/quotes"
 using the apikey listed at the top of this document
 */
 
-async function getCurrentData(companyList)//pass as array of strings listing company tag in caps without spaces
+async function getCurrentData(companyList)
 {
      var companies = "";
      for(var i = 0; i < companyList.length; i++)
      {
-          companies = companies.concat([companyList[i]]); //throw error if fail
+          companies = companies.concat([companyList[i]]); 
      }
      const queryType = "quotes";
      const url = `https://api.tdameritrade.com/v1/marketdata/${queryType}?`;
