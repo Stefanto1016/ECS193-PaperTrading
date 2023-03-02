@@ -163,7 +163,7 @@ function Home() {
        }
        data = await data.json();
        return(data);
-  }
+    }
 
     async function getTopGainers() {
         var url = 'https://api.tdameritrade.com/v1/marketdata/$COMPX/movers?apikey=Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK&direction=up&change=percent'
@@ -187,7 +187,7 @@ function Home() {
           news.push(createNews(entry.title, entry.summary, entry.banner_image))
         }
     
-        console.log(news)
+        //console.log(news)
         setNews(news)
     }
 

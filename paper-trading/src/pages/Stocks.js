@@ -14,7 +14,14 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Divider from "@mui/material/Divider";
 
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
+
+
 import Stack from '@mui/material/Stack';
+import { minWidth } from '@mui/system';
 
 
 function Stocks() {
@@ -72,20 +79,19 @@ function Stocks() {
 
   async function getCurrentData(companyList)//pass as array of strings listing company tag in caps without spaces
   {
+    //console.log(companyList)
      var companies = "";
      for(var i = 0; i < companyList.length; i++)
      {
           companies = companies.concat([companyList[i]]); //throw error if fail
      }
+     //console.log(companies)
      const queryType = "quotes";
      const url = `https://api.tdameritrade.com/v1/marketdata/${queryType}?`;
      const params = new URLSearchParams({apikey: 'Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK', symbol: companies});
+     //console.log(url+params)
      var data = await retryFetch(url + params);
      return(data);
-  }
-
-  function handleClick() {
-    setDataVisibility(true)
   }
 
   function primaryData() {
@@ -128,7 +134,7 @@ function Stocks() {
   function secondaryData() {
     return (
       <Stack direction="row" spacing={2}>
-        <List sx={{width: "100%", maxWidth: 360}}>
+        <List sx={{width: "100%", maxWidth: 360, ml:1.5}}>
           <ListItem>
             <ListItemText primary="Volume (current)" />
             <ListItemText align='right' primary="500" />
@@ -166,13 +172,89 @@ function Stocks() {
     )
   }
 
+  const [option, setOption] = useState('')
+  //const [buttonColor, setColor] = useState('')
+
+  function changeOption(event) {
+    setOption(event.target.value)
+  }
+
+  function purchasingOptions() {
+    return (
+      <Box sx={{ width: '100%', maxWidth:700}}>
+
+
+        <FormControl>
+          <InputLabel sx={{m:3}}>Action</InputLabel>
+          <Select
+            value={option}
+            label='Action'
+            onChange={changeOption}
+            sx={{minWidth:250, m:3}}
+          >
+            <MenuItem value={'buy'}> Buy </MenuItem>
+            <MenuItem value={'sell'}> Sell </MenuItem>
+          </Select>
+        </FormControl>
+
+        <TextField id="outlined-basic" label="Quantity" variant="outlined" sx={{mt:3}}/>
+
+        <Button variant='contained' sx={{height: 50, mt:3.3, ml: 3}}>
+          Confirm
+        </Button>
+      </Box>
+    )
+  }
+
+  function handleClick(stock) {
+    const array = [stock]
+    
+    getCurrentData(array).then(response =>
+      {
+        //console.log(response)
+        if (Object.keys(response).length === 0 || stock == '') {
+        
+        } else {
+            //setStockInfo({symbol: 'hi', desc: 'hello'})
+            const stockAllCaps = stock.toUpperCase()
+          
+            setStockInfo(
+              {
+                symbol: response[stockAllCaps]['symbol'],
+                desc: response[stockAllCaps]['description'],
+                mark: response[stockAllCaps]['mark'],
+                markChange: response[stockAllCaps]['markChangeInDouble'],
+                markPercentChange: response[stockAllCaps]['markPercentChangeInDouble'],
+                exchangeName: response[stockAllCaps]['exchangeName'],
+                volatility: response[stockAllCaps]['volatility'],
+                peRatio: response[stockAllCaps]['peRation'],
+                volume: response[stockAllCaps]['totalVolume'],
+                high: response[stockAllCaps]['highPrice'],
+                low: response[stockAllCaps]['lowPrice'],
+                bidPrice: response[stockAllCaps]['bidPrice'],
+                askPrice: response[stockAllCaps]['askPrice'],
+                week52High: response[stockAllCaps]['52WkHigh'],
+                week52Low: response[stockAllCaps]['52WkLow'],
+              }
+            )
+            setDataVisibility(true)
+        }
+      }
+    )
+  }
+
+  const [searchStock, setStock] = useState('')
+  const [stockInfo, setStockInfo] = useState({})
   
   const SearchButton = () => (
-    <IconButton onClick={handleClick}>
+    <IconButton onClick={() => handleClick(searchStock)}>
       <SearchIcon />
     </IconButton>
     )
 
+    function changeStock(event) {
+      setStock(event.target.value)
+    }
 
   return (
     <div className='Stocks'>
@@ -187,7 +269,8 @@ function Stocks() {
     >
       <TextField id="standard-basic" 
                  label="Search for Symbol" 
-                 variant="standard" 
+                 variant="standard"
+                 onChange={changeStock}
                  InputProps={{endAdornment: <SearchButton />}}
       />
 
@@ -200,10 +283,7 @@ function Stocks() {
         <LineChart chartData={chartData1}/>
       </div>
     }
-
-
-
-
+    {dataVisibility && purchasingOptions()}
 
      {/*
       <button onClick={() => setChartData(chartData1)}> Chart 1 </button>
