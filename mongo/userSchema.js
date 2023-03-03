@@ -7,10 +7,7 @@ const userSchema = mongoose.Schema({
         lowercase: true
     },
 
-    username: {
-        type: String,
-        required: true
-    },
+    buyingPower: Number,
 
     stocks: Object,
 
