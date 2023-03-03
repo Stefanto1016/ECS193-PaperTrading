@@ -35,14 +35,14 @@ function Stocks() {
   }
 
   // Data for Chart 1
-  const chartData1 = {
+  const emptyChart = {
     // x-axis labels
-    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    labels: [],
     datasets: [
       {
-        label: "Cost of Stock in $ (x100)",
+        label: '',
         // corresponding y values
-        data: [3.2, 2.7, 1.9, 2.5, 3.0, 3.1, 4.0, 3.5, 3.2, 3.6, 3.9, 3.4],
+        data: [],
         fill: true,
         borderColor: "blue",
         tension: 0.1
@@ -50,21 +50,7 @@ function Stocks() {
     ]
   }
 
-  // Datafor Chart 2
-  const chartData2 = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    datasets: [
-      {
-        label: "Cost of Stock in $ (x100)",
-        data: [1.2, 1.7, 1.0, 1.8, 2.0, 1.8, 2.1],
-        fill: true,
-        borderColor: "red",
-        tension: 0.1
-      }
-    ]
-  };
-
-  const [chartData, setChartData] = useState(chartData1);
+  const [chartData, setChartData] = useState(emptyChart);
   const [dataVisibility, setDataVisibility] = useState(false)
 
   async function retryFetch(url) {
@@ -94,15 +80,38 @@ function Stocks() {
      return(data);
   }
 
+  async function getNumDataPoints(company)
+  {
+     var client_id = 'Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK' 
+     var retArr = [];
+     const url = `https://api.tdameritrade.com/v1/marketdata/${company}/pricehistory?`;
+     var params = new URLSearchParams({apikey: client_id, periodType: "month", period: 1, frequencyType: "daily", frequency: 1});
+     var data = await retryFetch(url + params);
+     retArr.push(data["candles"]);
+     params = new URLSearchParams({apikey: client_id, periodType: "month", period: 6, frequencyType: "daily", frequency: 1});
+     data = await retryFetch(url + params);
+     retArr.push(data["candles"]);
+     params = new URLSearchParams({apikey: client_id, periodType: "year", period: 1, frequencyType: "daily", frequency: 1});
+     data = await retryFetch(url + params);
+     retArr.push(data["candles"]);
+     params = new URLSearchParams({apikey: client_id, periodType: "year", period: 5, frequencyType: "daily", frequency: 1});
+     data = await retryFetch(url + params);
+     retArr.push(data["candles"]);
+     params = new URLSearchParams({apikey: client_id, periodType: "year", period: 20, frequencyType: "daily", frequency: 1});
+     data = await retryFetch(url + params);
+     retArr.push(data["candles"]);
+     return(retArr);
+  }
+
   function primaryData() {
     return (
       <div>
         <List component={Stack} direction='row' sx={{maxWidth: 800, ml:3}}>
             <ListItemText 
               primaryTypographyProps={{fontWeight: 'bold', fontSize: 30}}
-              primary='TSLA'
+              primary={stockInfo.symbol}
               secondaryTypographyProps={{fontWeight: 'light', fontSize: 15, color: 'gray'}}
-              secondary='TESLA, INC'/>
+              secondary={stockInfo.desc}/>
           </List>
 
 
@@ -110,21 +119,23 @@ function Stocks() {
           <List component={Stack} direction='row' sx={{maxWidth: 800, ml:3}}>
             <ListItemText 
               primaryTypographyProps={{fontWeight: 'bold', fontSize: 30}}
-              primary='196.88 USD'/>
+              primary={stockInfo.mark + ' USD'}/>
             <ListItemText 
-              primaryTypographyProps={{fontSize: 25, color: 'red', mt:0.3}}
-              primary='-5.19'/>
+              primaryTypographyProps={{fontSize: 25, 
+                                       color: (stockInfo.markChange > 0 ? 'green' : 'red'), mt:0.3}}
+              primary={(stockInfo.markChange > 0 ? '+' : '') + stockInfo.markChange}/>
             <ListItemText 
-              primaryTypographyProps={{fontSize: 25, color: 'red', mt:0.3}}
-              primary='(-2.57%)'/>
+              primaryTypographyProps={{fontSize: 25,
+                                       color: (stockInfo.markChange > 0 ? 'green' : 'red'), mt:0.3}}
+              primary={(stockInfo.markChange > 0 ? '+' : '') + stockInfo.markPercentChange + '%'}/>
           </List>
         </Box>
 
         <Box sx={{ width: '100%', maxWidth: 360}}>
           <List component={Stack} direction='row' sx={{maxWidth: 800, ml:3}}>
-            <ListItemText primary='50' secondary='EPS'/>
-            <ListItemText primary='50' secondary='MARKET CAP'/>
-            <ListItemText primary='50' secondary='P/E'/>
+            <ListItemText primary={stockInfo.exchangeName} secondary='EXCHANGE'/>
+            <ListItemText primary={stockInfo.volatility} secondary='VOLATILITY'/>
+            <ListItemText primary={stockInfo.peRatio} secondary='P/E'/>
           </List>
         </Box>
       </div>
@@ -137,34 +148,34 @@ function Stocks() {
         <List sx={{width: "100%", maxWidth: 360, ml:1.5}}>
           <ListItem>
             <ListItemText primary="Volume (current)" />
-            <ListItemText align='right' primary="500" />
+            <ListItemText align='right' primary={stockInfo.volume} />
           </ListItem>
           <Divider />
           <ListItem>
             <ListItemText primary="Today's High ($)" />
-            <ListItemText align='right' primary="500" />
+            <ListItemText align='right' primary={stockInfo.high} />
           </ListItem>
           <Divider />
           <ListItem>
             <ListItemText primary="Today's Low ($)" />
-            <ListItemText align='right' primary="500" />
+            <ListItemText align='right' primary={stockInfo.low} />
           </ListItem>
         </List>
 
         <List sx={{width: "100%", maxWidth: 360}}>
           <ListItem>
             <ListItemText primary="52 Week High ($)" />
-            <ListItemText align='right' primary="500" />
+            <ListItemText align='right' primary={stockInfo.week52High} />
           </ListItem>
           <Divider />
           <ListItem>
             <ListItemText primary="Bid/Ask Price ($)" />
-            <ListItemText align='right' primary="500" />
+            <ListItemText align='right' primary={stockInfo.bidPrice + '/' + stockInfo.askPrice} />
           </ListItem>
           <Divider />
           <ListItem>
             <ListItemText primary="52 Week Low ($)" />
-            <ListItemText align='right' primary="500" />
+            <ListItemText align='right' primary={stockInfo.week52Low} />
           </ListItem>
         </List>
       
@@ -173,7 +184,6 @@ function Stocks() {
   }
 
   const [option, setOption] = useState('')
-  //const [buttonColor, setColor] = useState('')
 
   function changeOption(event) {
     setOption(event.target.value)
@@ -215,7 +225,6 @@ function Stocks() {
         if (Object.keys(response).length === 0 || stock == '') {
         
         } else {
-            //setStockInfo({symbol: 'hi', desc: 'hello'})
             const stockAllCaps = stock.toUpperCase()
           
             setStockInfo(
@@ -227,7 +236,7 @@ function Stocks() {
                 markPercentChange: response[stockAllCaps]['markPercentChangeInDouble'],
                 exchangeName: response[stockAllCaps]['exchangeName'],
                 volatility: response[stockAllCaps]['volatility'],
-                peRatio: response[stockAllCaps]['peRation'],
+                peRatio: response[stockAllCaps]['peRatio'],
                 volume: response[stockAllCaps]['totalVolume'],
                 high: response[stockAllCaps]['highPrice'],
                 low: response[stockAllCaps]['lowPrice'],
@@ -237,6 +246,41 @@ function Stocks() {
                 week52Low: response[stockAllCaps]['52WkLow'],
               }
             )
+
+
+            getNumDataPoints(stockAllCaps).then(response =>
+              {
+                //console.log(response[0])
+                
+                let times = []
+                let prices = []
+                for (const candle of response[0]) {
+                  //console.log(candle)
+                  times.push(new Date(candle.datetime))
+                  prices.push(candle.close)
+                }
+                //console.log(times)
+                //console.log(prices)
+                const chartData = {
+                  // x-axis labels
+                  labels: times,
+                  datasets: [
+                  {
+                    label: "Stock Price ($)",
+                    // corresponding y values
+                    data: prices,
+                    fill: true,
+                    borderColor: "blue",
+                    tension: 0.1
+                  }
+                  ]
+                }
+                console.log(chartData)
+
+                setChartData(chartData)
+              }
+            )
+
             setDataVisibility(true)
         }
       }
@@ -244,7 +288,23 @@ function Stocks() {
   }
 
   const [searchStock, setStock] = useState('')
-  const [stockInfo, setStockInfo] = useState({})
+  const [stockInfo, setStockInfo] = useState(
+                                            {symbol: '',
+                                            desc: '',
+                                            mark: '',
+                                            markChange: '',
+                                            markPercentChange: '',
+                                            exchangeName: '',
+                                            volatility: '',
+                                            peRatio: '',
+                                            volume: '',
+                                            high: '',
+                                            low: '',
+                                            bidPrice: '',
+                                            askPrice: '',
+                                            week52High: '',
+                                            week52Low: '',
+                                          })
   
   const SearchButton = () => (
     <IconButton onClick={() => handleClick(searchStock)}>
@@ -278,9 +338,9 @@ function Stocks() {
     
     {dataVisibility && primaryData()}
     {dataVisibility && secondaryData()}
-    {dataVisibility && 
+    {(dataVisibility) &&
       <div style={chartStyle}>
-        <LineChart chartData={chartData1}/>
+        {(<LineChart chartData={chartData}/>)}
       </div>
     }
     {dataVisibility && purchasingOptions()}

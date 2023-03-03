@@ -13,6 +13,13 @@ function LineChart({ chartData }) {
                         legend: {
                             display: false
                         }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                display: false
+                            }
+                        }
                     }
                 }}
             />
