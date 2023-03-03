@@ -17,57 +17,101 @@ import Avatar from "@mui/material/Avatar";
 
 
 import {List, ListItem, ListItemText, Typography } from '@mui/material';
+import { textAlign } from '@mui/system';
+
+const pageStyle = {
+    maxHeight: "90vh",
+    height: "90vh",
+    width: "100vw"
+}
+
+const leftStyle = {
+    height: "100%",
+    width: "70%",
+    float: "left"
+
+}
+const accountStyle = {
+    height: "40%"
+}
+
+const tableHeadStyle = {
+    position: "sticky",
+    background: "white",
+    top: 0
+}
+
+
+const graphStyle = {
+}
 
 const tableStyle = {
-    height: 305,
-    width: 650,
-    position: 'absolute',
-    top: 425,
-    left: 15,
+    height: "58%",
+    width: "100%",
+    float: "left",
+    textAlign: "center"
 }
 
-const newsStyle = {
-    height: 288,
-    width: 700,
-    position: 'absolute',
-    top: 425,
-    left: 675,
-    bgcolor: 'background.paper',
-    overflow: 'auto'
-}
-
-const chartStyle = {
-    width: 450,
-    position: 'absolute',
-    top: 125,
-    left: 300
-}
-
-const cardStyle = {
-    width: 250,
-    height: 280,
-    position: 'absolute',
-    top: 75,
-    left: 15,
-}
-
-const chartTitle = {
-    position: 'absolute',
-    top: 60,
-    left: 375
+const tableStocksStyle = {
+    height: "75%"
 }
 
 const tableTitle = {
-    position: 'absolute',
-    top: 350,
-    left: 215
+    position: 'sticky'
 } 
 
+const newsStyle = {
+    float: "right",
+    width: "30%",
+    height: "101%",
+    textAlign: "center",
+    overflow: "auto"
+}
+
+const newsArticles = {
+}
+
 const newsTitle = {
-    position: 'absolute',
-    top: 350,
-    left: 890
+    position: "sticky",
+    background: "white",
+    top: 0
 } 
+
+const accountTitle = {
+    position: "sticky",
+    background: "white",
+    top: 0
+} 
+
+const accountSummaryStyle = {
+    float: "left",
+    width: "30%",
+    position: "center"
+}
+
+
+const cardStyle = {
+    width: "100%",
+    height: "85%",
+    float: "left",
+    textAlign: "center",
+    justifyContent: "center"
+}
+
+const chartStyle = {
+    height: "40%",
+    width: "60%",
+    float: "right",
+    textAlign: "center"
+}
+
+const chartTitle = {
+    position: 'sticky',
+    marginBottom: "-1px"
+}
+
+
+
 
 const chartData = {
     // x-axis labels
@@ -196,90 +240,107 @@ function Home() {
         getNews()
     }, [])
 
+    useEffect(() => {
+        document.body.style.overflow = "hidden";
+    })
+
     return (
-        <div>
-            <Card sx={cardStyle}>
-                <CardContent>
-                    <Typography variant='h5'>
-                        Account Balance
-                    </Typography>
-                    <Typography variant='h6'>
-                        $1,000,000
-                    </Typography>
-                    <br />
-                    <Typography variant='h5'>
-                        Buying Power
-                    </Typography>
-                    <Typography variant='h6'>
-                        $1,000,000
-                    </Typography>
-                    <br />
-                    <Typography variant='h5'>
-                        Cash Value
-                    </Typography>
-                    <Typography variant='h6'>
-                        $1,000,000
-                    </Typography>
-                </CardContent>
-            </Card>
+        <div style={pageStyle}>
+            <div style={leftStyle}>
+                <div style={accountStyle}>
+                    <div style={accountSummaryStyle}>
+                        <h1 style={accountTitle}>
+                            Account Summary
+                        </h1>
+                        <Card sx={cardStyle}>
+                            <CardContent>
+                                <Typography variant='h5'>
+                                    Account Balance
+                                </Typography>
+                                <Typography variant='h6'>
+                                    $1,000,000
+                                </Typography>
+                                <br />
+                                <Typography variant='h5'>
+                                    Buying Power
+                                </Typography>
+                                <Typography variant='h6'>
+                                    $1,000,000
+                                </Typography>
+                                <br />
+                                <Typography variant='h5'>
+                                    Cash Value
+                                </Typography>
+                                <Typography variant='h6'>
+                                    $1,000,000
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </div>
+                    
+                    <div style={chartStyle}>
+                        <h1 style={chartTitle}>
+                            Performance History
+                        </h1>
 
-            <h1 style={chartTitle}>
-                Performance History
-            </h1>
+                        <div style={graphStyle}>
+                            <LineChart chartData={chartData}/>
+                        </div>
+                    </div>
+                </div>
 
-            <div style={chartStyle}>
-                <LineChart chartData={chartData}/>
+                <div style={tableStyle}>
+                    <h1 style={tableTitle}>
+                        Top Stock Gainers
+                    </h1>
+
+                    <TableContainer component={Paper} sx={tableStocksStyle}>
+                        <Table>
+                            <TableHead style={tableHeadStyle}>
+                                <TableRow>
+                                    <TableCell> Symbol </TableCell>
+                                    <TableCell align='right'> Change&nbsp;(%) </TableCell>
+                                    <TableCell align='right'> Close Price </TableCell>
+                                    <TableCell align='right'> Volume </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {topGainers.map((gainer) => (
+                                    <TableRow sx={{height: 10}}>
+                                        <TableCell component="th" scope="row">
+                                            {gainer.symbol}
+                                        </TableCell>
+                                        <TableCell align="right">{gainer.change}</TableCell>
+                                        <TableCell align="right">{gainer.price}</TableCell>
+                                        <TableCell align="right">{gainer.volume}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </div>
             </div>
 
+            <div style={newsStyle}>
+                <h1 style={newsTitle}>
+                    Stock Market News
+                </h1>
 
-            <h1 style={tableTitle}>
-                Top Stock Gainers
-            </h1>
-
-            <TableContainer component={Paper} sx={tableStyle}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell> Symbol </TableCell>
-                            <TableCell align='right'> Change&nbsp;(%) </TableCell>
-                            <TableCell align='right'> Close Price </TableCell>
-                            <TableCell align='right'> Volume </TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {topGainers.map((gainer) => (
-                            <TableRow sx={{height: 10}}>
-                                <TableCell component="th" scope="row">
-                                    {gainer.symbol}
-                                </TableCell>
-                                <TableCell align="right">{gainer.change}</TableCell>
-                                <TableCell align="right">{gainer.price}</TableCell>
-                                <TableCell align="right">{gainer.volume}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-
-
-            <h1 style={newsTitle}>
-                Stock Market News
-            </h1>
-
-            <List component={Paper} sx={newsStyle}>
-                {news.map((snews) => (
-                    <ListItem>
-                        <ListItemAvatar>
-                        <Avatar
-                            alt="Logo"
-                            src={snews.img}
-                            variant="square"
-                        />
-                        </ListItemAvatar>
-                        <ListItemText primary={snews.title} secondary={snews.desc} />
-                    </ListItem>
-                        ))}
-            </List>
+                <List component={Paper} sx={newsArticles}>
+                    {news.map((snews) => (
+                        <ListItem>
+                            <ListItemAvatar>
+                            <Avatar
+                                alt="Logo"
+                                src={snews.img}
+                                variant="square"
+                            />
+                            </ListItemAvatar>
+                            <ListItemText primary={snews.title} secondary={snews.desc} />
+                        </ListItem>
+                            ))}
+                </List>
+            </div>
         </div>
     )
 }
