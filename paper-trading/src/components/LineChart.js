@@ -3,12 +3,16 @@ import { Line } from "react-chartjs-2";
 import {Chart as ChartJS} from 'chart.js/auto'
 
 
-function LineChart({ chartData }) {
+export function PerformanceChart({ chartData }) {
     return (
         <div className="LineChart">
             <Line
                 data={chartData}
+                width={500}
+                height={300}
                 options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             display: false
@@ -27,4 +31,30 @@ function LineChart({ chartData }) {
     )
 }
 
-export default LineChart
+export function StockChart({ chartData }) {
+    return (
+        <div className="LineChart">
+            <Line
+                data={chartData}
+                width={650}
+                height={350}
+                options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                display: false
+                            }
+                        }
+                    }
+                }}
+            />
+        </div>
+    )
+}

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
-import LineChart from '../components/LineChart';
+import { PerformanceChart } from '../components/LineChart';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -43,6 +43,7 @@ const tableHeadStyle = {
 
 
 const graphStyle = {
+    //height: 400
 }
 
 const tableStyle = {
@@ -99,7 +100,8 @@ const cardStyle = {
 }
 
 const chartStyle = {
-    height: "40%",
+    maxHeight: 500,
+    height: "100%",
     width: "60%",
     float: "right",
     textAlign: "center"
@@ -284,7 +286,7 @@ function Home() {
                         </h1>
 
                         <div style={graphStyle}>
-                            <LineChart chartData={chartData}/>
+                            <PerformanceChart chartData={chartData}/>
                         </div>
                     </div>
                 </div>

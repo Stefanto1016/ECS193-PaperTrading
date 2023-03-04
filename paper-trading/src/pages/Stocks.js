@@ -2,7 +2,7 @@ import React from 'react'
 import { useState } from 'react';
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
-import LineChart from '../components/LineChart';
+import { StockChart } from '../components/LineChart';
 import NavBar from '../components/NavBar';
 
 import Button from '@mui/material/Button';
@@ -19,6 +19,10 @@ import MenuItem from '@mui/material/MenuItem'
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+
 
 import Stack from '@mui/material/Stack';
 import { minWidth } from '@mui/system';
@@ -27,7 +31,8 @@ import { minWidth } from '@mui/system';
 function Stocks() {
 
   const chartStyle = {
-    width: 650,
+    //width: 650,
+    //height: 500,
     position: 'absolute',
     top: 175,
     left: 775,
@@ -144,72 +149,123 @@ function Stocks() {
 
   function secondaryData() {
     return (
-      <Stack direction="row" spacing={2}>
-        <List sx={{width: "100%", maxWidth: 360, ml:1.5}}>
-          <ListItem>
-            <ListItemText primary="Volume (current)" />
-            <ListItemText align='right' primary={stockInfo.volume} />
-          </ListItem>
-          <Divider />
-          <ListItem>
-            <ListItemText primary="Today's High ($)" />
-            <ListItemText align='right' primary={stockInfo.high} />
-          </ListItem>
-          <Divider />
-          <ListItem>
-            <ListItemText primary="Today's Low ($)" />
-            <ListItemText align='right' primary={stockInfo.low} />
-          </ListItem>
-        </List>
+      <div>
+        <Stack direction="row" spacing={2}>
+          <List sx={{width: "100%", maxWidth: 360, ml:1.5}}>
+            <ListItem>
+              <ListItemText primary="Volume (current)" />
+              <ListItemText align='right' primary={stockInfo.volume} />
+            </ListItem>
+            <Divider />
+            <ListItem>
+              <ListItemText primary="Today's High ($)" />
+              <ListItemText align='right' primary={stockInfo.high} />
+            </ListItem>
+            <Divider />
+            <ListItem>
+              <ListItemText primary="Today's Low ($)" />
+              <ListItemText align='right' primary={stockInfo.low} />
+            </ListItem>
+          </List>
 
-        <List sx={{width: "100%", maxWidth: 360}}>
-          <ListItem>
-            <ListItemText primary="52 Week High ($)" />
-            <ListItemText align='right' primary={stockInfo.week52High} />
-          </ListItem>
-          <Divider />
-          <ListItem>
-            <ListItemText primary="Bid/Ask Price ($)" />
-            <ListItemText align='right' primary={stockInfo.bidPrice + '/' + stockInfo.askPrice} />
-          </ListItem>
-          <Divider />
-          <ListItem>
-            <ListItemText primary="52 Week Low ($)" />
-            <ListItemText align='right' primary={stockInfo.week52Low} />
-          </ListItem>
-        </List>
+          <List sx={{width: "100%", maxWidth: 360}}>
+            <ListItem>
+              <ListItemText primary="52 Week High ($)" />
+              <ListItemText align='right' primary={stockInfo.week52High} />
+            </ListItem>
+            <Divider />
+            <ListItem>
+              <ListItemText primary="Bid/Ask Price ($)" />
+              <ListItemText align='right' primary={stockInfo.bidPrice + '/' + stockInfo.askPrice} />
+            </ListItem>
+            <Divider />
+            <ListItem>
+              <ListItemText primary="52 Week Low ($)" />
+              <ListItemText align='right' primary={stockInfo.week52Low} />
+            </ListItem>
+          </List>
       
-      </Stack>
+        </Stack>
+
+
+        <Box sx={{ width: '100%', maxWidth: 1000}}>
+          <List component={Stack} direction='row' sx={{maxWidth: 700, ml:3}}>
+            <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
+                           primary={'Account Balance ($): ' + balance}/>
+            <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
+                           primary={'Amount of Stocks Owned: ' + ownedStocks}/>
+          </List>
+        </Box>
+      </div>
     )
   }
 
   const [option, setOption] = useState('')
+  const [quantity, setQuantity] = useState(0)
+  const [balance, setBalance] = useState(1000000)
+  const [ownedStocks, setOwnedStocks] = useState(500)
 
   function changeOption(event) {
     setOption(event.target.value)
   }
 
+  function changeQuantity(event) {
+    setQuantity(parseInt(event.target.value))
+  }
+
+  function handleTransaction() {
+    //console.log('Hi')
+    if (!Number.isInteger(quantity) && quantity < 0) {
+      return
+    }
+
+    //console.log(stockInfo.mark)
+    //console.log(typeof stockInfo.mark)
+
+    if (option == 'buy') {
+      if (quantity * stockInfo.mark > balance) {
+        return
+      } else {
+        setBalance(parseFloat((balance - quantity * stockInfo.mark).toFixed(2)))
+        //console.log(typeof ownedStocks)
+        //console.log(typeof quantity)
+        setOwnedStocks(ownedStocks + quantity)
+      }
+    } else if (option == 'sell') {
+      if (ownedStocks < quantity) {
+        return
+      } else {
+        console.log(typeof balance)
+        //console.log(balance + quantity)
+        setBalance(parseFloat((balance + quantity * parseFloat(stockInfo.mark)).toFixed(2)))
+        setOwnedStocks(ownedStocks - quantity)
+      }
+    }
+  }
+
   function purchasingOptions() {
     return (
-      <Box sx={{ width: '100%', maxWidth:700}}>
-
-
+      <Box sx={{ width: '100%', maxWidth:10000}}>
         <FormControl>
-          <InputLabel sx={{m:3}}>Action</InputLabel>
+          <InputLabel sx={{mt:1, ml:3}}>Action</InputLabel>
           <Select
             value={option}
             label='Action'
             onChange={changeOption}
-            sx={{minWidth:250, m:3}}
+            sx={{minWidth:250, mt: 1, ml: 3}}
           >
             <MenuItem value={'buy'}> Buy </MenuItem>
             <MenuItem value={'sell'}> Sell </MenuItem>
           </Select>
         </FormControl>
 
-        <TextField id="outlined-basic" label="Quantity" variant="outlined" sx={{mt:3}}/>
+        <TextField id="outlined-basic" 
+                   label="Quantity" 
+                   variant="outlined" 
+                   onChange={changeQuantity} 
+                   sx={{mt:1, ml:3}}/>
 
-        <Button variant='contained' sx={{height: 50, mt:3.3, ml: 3}}>
+        <Button variant='contained' onClick={handleTransaction} sx={{height: 50, mt:3.3, mt:1, ml: 3}}>
           Confirm
         </Button>
       </Box>
@@ -340,7 +396,7 @@ function Stocks() {
     {dataVisibility && secondaryData()}
     {(dataVisibility) &&
       <div style={chartStyle}>
-        {(<LineChart chartData={chartData}/>)}
+        {(<StockChart chartData={chartData}/>)}
       </div>
     }
     {dataVisibility && purchasingOptions()}
