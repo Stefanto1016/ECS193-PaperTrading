@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const cacheSchema = require('./cacheSchema');
 
-
 /* addCacheStock(symbol, history)
 Adds a singular stock to the cache (Does error catching for if a stock is added already)
 symbol => the symbol of the stock you want to add

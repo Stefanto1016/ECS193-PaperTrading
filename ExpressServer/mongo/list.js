@@ -1,8 +1,5 @@
 const mongoose = require('mongoose');
-const cacheSchema = require('./cacheSchema');
 const listSchema = require('./listSchema');
-
-
 
 /* addList(listName, stocks)
 This function adds a new list to the 'listInfo' collection
