@@ -45,7 +45,6 @@ Error Catching implemented */
 async function addUser(email, buyingPower, stocks, balance)
 {
     try {
-        connect();
         const emailCheck = await userSchema.findOne({email : email});
 
         if (emailCheck != undefined) {
@@ -63,8 +62,7 @@ async function addUser(email, buyingPower, stocks, balance)
             
         }
     } catch(error) {
-        console.log(error);
-        
+        console.log(error); 
     }
     
 }
@@ -91,7 +89,6 @@ Returns an Array of Strings of emails => Ex: [ 'garretthilyer@gmail.com', 'thoma
 async function getAccountList()
 {
     try{
-        connect();
         const allUsers = await userSchema.find();
         
         const emails = []
@@ -114,7 +111,6 @@ stock => {"symbol" : Quantity}  */
 async function addStock(email, stock)
 {
     try {
-        connect();
         const user = await userSchema.findOne({email : email});
         if (user == undefined) {
             console.log("ERROR: Unable to Add Stock: email does not exist in database");
@@ -147,7 +143,6 @@ async function updateStock(email, symbol, newQuantity)
         if (newQuantity == 0) {
             deleteStock(email, symbol);
         } else {
-            connect();
             const user = await userSchema.findOne({email : email});
             user.stocks[symbol] = newQuantity;
             await userSchema(user).save()
@@ -168,7 +163,6 @@ symbol => the stock that will be removed from "stocks" object*/
 async function deleteStock(email, symbol)
 {
     try {
-        connect();
         const user = await userSchema.findOne({email : email});
         delete user.stocks[symbol];
         await userSchema(user).save()
@@ -185,7 +179,6 @@ This function returns the number of shares of a stock that the user owns  */
 async function stockQuantity(email, symbol)
 {
     try {
-        connect();
         const user = await userSchema.findOne({email : email});
 
         if (user.stocks[symbol] == undefined) { 
@@ -207,7 +200,6 @@ Returns the object of key-value pairs of stocks when given users email */
 async function getUserStockList(email)
 {
     try{
-        connect();
         const user = await userSchema.findOne({email : email});
         if (user == undefined) {
             console.log("ERROR: Unable to get stock list: email does not exist in database");
@@ -228,7 +220,6 @@ Returns the buying power of the user when given their email*/
 async function getBuyingPower(email)
 {
     try{
-        connect();
         const user = await userSchema.findOne({email : email});
         if (user == undefined) {
             console.log("ERROR: Unable to get stock list: email does not exist in database");
@@ -250,7 +241,6 @@ buyingPower => A number that the buyingPower will be set too on the database*/
 async function updateBuyingPower(email, buyingPower)
 {
     try{
-        connect();
         const user = await userSchema.findOne({email : email});
         if (user == undefined) {
             console.log("ERROR: Unable to get stock list: email does not exist in database");
@@ -273,7 +263,6 @@ balance => {"date" : Number Amount}  */
 async function addBalance(email, balance)
 {
     try {
-        connect();
         const user = await userSchema.findOne({email : email});
         if (user == undefined) {
             console.log("ERROR: Unable to Update Balance: email does not exist in database");
@@ -302,7 +291,6 @@ The old balance is wiped completely and newBalance takes its place  */
 async function updateBalance(email, newBalance)
 {
     try{
-        connect();
         const user = await userSchema.findOne({email : email});
         if (user == undefined) {
             console.log("ERROR: Unable to get stock list: email does not exist in database");
