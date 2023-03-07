@@ -1,10 +1,12 @@
 const query = require('./query');
 const database = require('./mongo/database');
+const cache = require('./mongo/cache');
+const list = require('./mongo/list');
 const express = require('express');
 const app = express();
 const port = 3000;
-//const MSinHour = 24*60*60*1000;
-const MSinDay = 1000;
+const MSinDay = 24*60*60*1000;
+//const MSinDay = 1000*60*5;
 
 
 
@@ -20,51 +22,61 @@ process.on('exit', function()
     console.log("closing");
 });
 
-setInterval(function() 
-{
-  console.log("updating");
-  //updateStockList();
-  //updatePortfolioValues();
-  //flushCache();
-}, MSinDay);
+setInterval(update, MSinDay);
 
+
+
+app.get('/update', (req, res) => 
+{
+    update();
+})
 
 // /buyStock?userKey=thomasguelk@gmail.com&stock=AAPL&amount=10
 
-app.get('/buyStock', (req, res) => 
+app.get('/buyStock', async (req, res) => 
 {
     const userKey = req.query.userKey;
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
-    const ret = buyStock(userKey, stock, amount);
+    const ret = await buyStock(userKey, stock, amount);
     res.send(ret);
 })
 
 
-app.get('/sellStock', (req, res) => 
+app.get('/sellStock', async (req, res) => 
 {
     const userKey = req.query.userKey;
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
-    const ret = sellStock(userKey, stock, amount);
+    const ret = await sellStock(userKey, stock, amount);
     res.send(ret);
 })
 
-app.get('/sellAllStock', (req, res) => 
+
+
+app.get('/getPortfolioData', async (req, res) => 
 {
     const userKey = req.query.userKey;
+    const ret = await getPortfolioData(userKey);
+    res.send(ret);
+})
+
+
+app.get('/getHistoricalData', async (req, res) => 
+{
     const stock = req.query.stock;
-    const ret = sellStock(userKey, stock);
+    const ret = await getHistoricalData(stock);
     res.send(ret);
 })
 
 
-app.get('/getPortfolioData', (req, res) => 
+async function update()
 {
-    const userKey = req.query.userKey;
-    const ret = getPortfolioData(userKey);
-    res.send(ret);
-})
+    console.log("updating");
+    updateStockList();
+    updatePortfolioValues();
+    flushCache();
+}
 
 
 async function buyStock(userKey, stock, amount)
@@ -123,14 +135,23 @@ async function sellAllStock(userKey, stock)
 
 async function getPortfolioData(userKey)
 {
-    let portfolioData = await database.getPortfolioData(userKey);
+    let portfolioData = await database.getUser(userKey);
     return(portfolioData);
 }
 
 
+async function getHistoricalData(stock)
+{
+    let numDataPoints = await query.getNumDataPoints("GOOG")
+    let historicalData = await query.getPreviousData(stock, numDataPoints);
+    return(historicalData);
+}
+
+
+
 async function updateStockList()
 {
-    const oldStockList = await database.getStockList();
+    const oldStockList = await list.getList("ALL_STOCKS");
     const newStockList = await query.getStockList();
     let hashmap = new Map();
     var removedStocks = [];
@@ -145,7 +166,7 @@ async function updateStockList()
             removedStocks.push(oldStockList[i]);
         }
     }
-    await database.setStockList(newStockList);
+    await list.setList("ALL_STOCKS", newStockList);
     await handleRemovedStocks(removedStocks);
 }
 
@@ -166,7 +187,7 @@ async function handleRemovedStocks(removedStocks)
 }
 
 
-async function updatePortfolioValues()
+async function updatePortfolioValues() //update
 {
     let accountList = await database.getAccountList();
     for(let i = 0; i < accountList.length; i++)
@@ -180,23 +201,22 @@ async function updatePortfolioValues()
             let stockPrice = stockData[stock]["askPrice"];
             userBalance += stockAmount*stockPrice;
         }
-        let portfolioData = await database.getPortfolioData(accountList[i]);
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        portfolioData.push([userBalance, yesterday]);
-        await database.updatePortfolioData(accountList[i], portfolioData);
+        let portfolioData = {yesterday : userBalance};
+        await database.addBalance(accountList[i], portfolioData);
     }
 }
 
 
 async function flushCache()
 {
-    let stockList = await database.getCachedStocks();
+    let stockList = await list.getList("CACHE_STOCKS");
     let numDataPoints = await query.getNumDataPoints();
     for(let i = 0; i < stockList.length; i++)
     {
-      let stockData = await query.getPreviousData(stockList[i], numDataPoints);
-      await database.updateStockCache(stockList[i], stockData);
+        let stockData = await query.getPreviousData(stockList[i]["symbol"], numDataPoints);
+        await cache.updateCacheStock(stockList[i], stockData);
     }
 }
