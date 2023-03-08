@@ -4,11 +4,19 @@ const cache = require('./mongo/cache');
 const list = require('./mongo/list');
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = 8000;
 const MSinDay = 24*60*60*1000;
 //const MSinDay = 1000*60*5;
 
+/*var cors = require("cors");
+app.use(cors);*/
 
+app.use((req, res, next) => {
+    res.append('Access-Control-Allow-Origin', '*');
+    res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.append('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+})
 
 app.listen(port, () => 
 {
@@ -61,6 +69,16 @@ app.get('/getPortfolioData', async (req, res) =>
     res.send(ret);
 })
 
+app.get('/getSpecificStock', async (req, res) => 
+{
+    const userKey = req.query.userKey;
+    const stock = req.query.stock;
+    const st = await stockQuantity(userKey, stock);
+    const ret = {quantity: st};
+    res.send(ret);
+})
+
+
 
 app.get('/getHistoricalData', async (req, res) => 
 {
@@ -102,7 +120,7 @@ async function buyStock(userKey, stock, amount)
 
 async function sellStock(userKey, stock, amount)
 {
-    let stockData = await query.getCurrentData([removedStocks[i]]);
+    let stockData = await query.getCurrentData(stock);
     let stockPrice = stockData[stock]["bidPrice"];
     let stocksHeld = await database.stockQuantity(userKey, stock);
     if(stocksHeld < amount)
@@ -124,7 +142,7 @@ async function sellStock(userKey, stock, amount)
 
 async function sellAllStock(userKey, stock)
 {
-    let stockData = await query.getCurrentData([removedStocks[i]]);
+    let stockData = await query.getCurrentData(stock);
     let stockPrice = stockData[stock]["bidPrice"];
     let stocksHeld = await database.stockQuantity(userKey, stock);
     let currentBuyingPower = await database.getBuyingPower(userKey);
@@ -145,6 +163,12 @@ async function getHistoricalData(stock)
     let numDataPoints = await query.getNumDataPoints("GOOG")
     let historicalData = await query.getPreviousData(stock, numDataPoints);
     return(historicalData);
+}
+
+async function stockQuantity(userKey, stock)
+{
+    let stockQuantity = await database.stockQuantity(userKey, stock)
+    return(stockQuantity);
 }
 
 
