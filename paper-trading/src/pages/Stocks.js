@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useEffect} from 'react'
 import { useState } from 'react';
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
@@ -29,6 +29,7 @@ import { minWidth } from '@mui/system';
 
 
 function Stocks() {
+
 
   const chartStyle = {
     //width: 650,
@@ -191,7 +192,7 @@ function Stocks() {
         <Box sx={{ width: '100%', maxWidth: 1000}}>
           <List component={Stack} direction='row' sx={{maxWidth: 700, ml:3}}>
             <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
-                           primary={'Account Balance ($): ' + balance}/>
+                           primary={'Account Buying Power ($): ' + balance}/>
             <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
                            primary={'Amount of Stocks Owned: ' + ownedStocks}/>
           </List>
@@ -202,8 +203,17 @@ function Stocks() {
 
   const [option, setOption] = useState('')
   const [quantity, setQuantity] = useState(0)
-  const [balance, setBalance] = useState(1000000)
+  const [balance, setBalance] = useState(0)
   const [ownedStocks, setOwnedStocks] = useState(500)
+
+
+  useEffect ( () => {fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+          userKey: "grkoziol@ucdavis.edu"
+    })).then(res => {return res.json()})
+    .then(data => {setBalance(data.buyingPower)});
+  }, []);
+
+
 
   function changeOption(event) {
     setOption(event.target.value)
@@ -230,6 +240,11 @@ function Stocks() {
         //console.log(typeof ownedStocks)
         //console.log(typeof quantity)
         setOwnedStocks(ownedStocks + quantity)
+        fetch("http://localhost:8000/buyStock?" + new URLSearchParams({
+          userKey: "grkoziol@ucdavis.edu",
+          stock: stockInfo.symbol.toUpperCase(),
+          amount: quantity
+          }));
       }
     } else if (option == 'sell') {
       if (ownedStocks < quantity) {
@@ -239,6 +254,11 @@ function Stocks() {
         //console.log(balance + quantity)
         setBalance(parseFloat((balance + quantity * parseFloat(stockInfo.mark)).toFixed(2)))
         setOwnedStocks(ownedStocks - quantity)
+        fetch("http://localhost:8000/sellStock?" + new URLSearchParams({
+          userKey: "grkoziol@ucdavis.edu",
+          stock: stockInfo.symbol.toUpperCase(),
+          amount: quantity
+          }));
       }
     }
   }
@@ -274,7 +294,7 @@ function Stocks() {
 
   function handleClick(stock) {
     const array = [stock]
-    
+  
     getCurrentData(array).then(response =>
       {
         //console.log(response)
@@ -341,6 +361,12 @@ function Stocks() {
         }
       }
     )
+
+    fetch("http://localhost:8000/getSpecificStock?" + new URLSearchParams({
+          userKey: "grkoziol@ucdavis.edu",
+          stock: stock.toString().toUpperCase()
+      })).then(res => {return res.json()})
+      .then(data => setOwnedStocks(data.quantity));
   }
 
   const [searchStock, setStock] = useState('')
