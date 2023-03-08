@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
-import { PerformanceChart } from '../components/LineChart';
+import { PerformanceChart, StockChart } from '../components/LineChart';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -19,6 +19,8 @@ import Avatar from "@mui/material/Avatar";
 import {List, ListItem, ListItemText, Typography } from '@mui/material';
 import { textAlign } from '@mui/system';
 
+import { NumericFormat } from 'react-number-format'
+
 const pageStyle = {
     maxHeight: "90vh",
     height: "90vh",
@@ -32,7 +34,7 @@ const leftStyle = {
 
 }
 const accountStyle = {
-    height: "40%"
+    height: "30%"
 }
 
 const tableHeadStyle = {
@@ -43,11 +45,10 @@ const tableHeadStyle = {
 
 
 const graphStyle = {
-    //height: 400
 }
 
 const tableStyle = {
-    height: "58%",
+    height: "80%",
     width: "100%",
     float: "left",
     textAlign: "center"
@@ -100,29 +101,28 @@ const cardStyle = {
 }
 
 const chartStyle = {
-    maxHeight: 500,
     height: "100%",
-    width: "60%",
+    width: "65%",
     float: "right",
-    textAlign: "center"
+    textAlign: "center",
 }
 
 const chartTitle = {
     position: 'sticky',
-    marginBottom: "-1px"
+    marginBottom: "10px"
 }
 
 
 
 
-const chartData = {
+const emptyChart = {
     // x-axis labels
-    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    labels: [],
     datasets: [
       {
-        label: "Total Balance (in the hundred thousands)",
+        label: '',
         // corresponding y values
-        data: [3.2, 2.7, 1.9, 2.5, 3.0, 3.1, 4.0, 3.5, 3.2, 3.6, 3.9, 3.4],
+        data: [],
         fill: true,
         borderColor: "blue",
         tension: 0.1
@@ -200,6 +200,17 @@ const news = [
 function Home() {
     const [topGainers, setTopGainers] = useState([]);
     const [news, setNews] = useState([]);
+    const [accBalance, setAccBalance] = useState(0);
+    const [buyPower, setBuyPower] = useState(0);
+    const [chartData, setChartData] = useState(emptyChart);
+
+    useEffect ( () => {fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+          userKey: "grkoziol@ucdavis.edu"
+    })).then(res => {return res.json()})
+    .then(data => {setAccBalance(data.balance[Object.keys(data.balance)[0]]);
+                setBuyPower(data.buyingPower);
+                getChartData(data)});
+  }, []);
 
     async function retryFetch(url) {
        var data = await fetch(url);
@@ -246,6 +257,41 @@ function Home() {
         document.body.style.overflow = "hidden";
     })
 
+    function getChartData(data)
+    {
+        //console.log(response[0])
+
+        let times = []
+        let prices = []
+        for (const prev in data.balance) {
+            times.push(prev)
+            prices.push(data.balance[prev])
+        }
+        times = times.reverse();
+        prices = prices.reverse();
+        //console.log(times)
+        //console.log(prices)
+        const chartData = {
+        // x-axis labels
+        labels: times,
+        datasets: [
+        {
+            label: "Stock Price ($)",
+            // corresponding y values
+            data: prices,
+            fill: true,
+            borderColor: "blue",
+            tension: 0.1
+        }
+        ]
+        }
+        console.log(chartData)
+
+        setChartData(chartData)
+        
+        
+    }
+
     return (
         <div style={pageStyle}>
             <div style={leftStyle}>
@@ -259,23 +305,13 @@ function Home() {
                                 <Typography variant='h5'>
                                     Account Balance
                                 </Typography>
-                                <Typography variant='h6'>
-                                    $1,000,000
-                                </Typography>
+                                <NumericFormat value={accBalance} displayType={'text'} thousandSeparator={true} prefix={'$'} />
                                 <br />
                                 <Typography variant='h5'>
                                     Buying Power
                                 </Typography>
-                                <Typography variant='h6'>
-                                    $1,000,000
-                                </Typography>
+                                <NumericFormat value={buyPower} displayType={'text'} thousandSeparator={true} prefix={'$'} />
                                 <br />
-                                <Typography variant='h5'>
-                                    Cash Value
-                                </Typography>
-                                <Typography variant='h6'>
-                                    $1,000,000
-                                </Typography>
                             </CardContent>
                         </Card>
                     </div>
