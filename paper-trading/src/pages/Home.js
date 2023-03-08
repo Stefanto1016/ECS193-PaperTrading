@@ -208,7 +208,7 @@ function Home() {
           userKey: "grkoziol@ucdavis.edu"
     })).then(res => {return res.json()})
     .then(data => {setAccBalance(data.balance[Object.keys(data.balance)[0]]);
-                setBuyPower(data.buyingPower);
+                setBuyPower(Math.ceil(data.buyingPower * 100)/100);
                 getChartData(data)});
   }, []);
 
