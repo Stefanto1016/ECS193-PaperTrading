@@ -46,7 +46,8 @@ app.get('/buyStock', async (req, res) =>
     const userKey = req.query.userKey;
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
-    const ret = await buyStock(userKey, stock, amount);
+    const st = await buyStock(userKey, stock, amount);
+    const ret = {buyingPower: st};
     res.send(ret);
 })
 
@@ -56,7 +57,8 @@ app.get('/sellStock', async (req, res) =>
     const userKey = req.query.userKey;
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
-    const ret = await sellStock(userKey, stock, amount);
+    const st = await sellStock(userKey, stock, amount);
+    const ret = {buyingPower: st};
     res.send(ret);
 })
 
@@ -113,7 +115,7 @@ async function buyStock(userKey, stock, amount)
         let newBuyingPower = buyingPower-stockPrice*amount;
         await database.updateStock(userKey, stock, stocksHeld+amount);
         await database.updateBuyingPower(userKey, newBuyingPower);
-        return(true);
+        return(newBuyingPower);
     }
 }
 
@@ -135,7 +137,9 @@ async function sellStock(userKey, stock, amount)
     {
         await database.updateStock(userKey, stock, stocksHeld-amount);
         let currentBuyingPower = await database.getBuyingPower(userKey);
-        await database.updateBuyingPower(userKey, currentBuyingPower+amount*stockPrice);
+        let newBuyingPower = currentBuyingPower+stockPrice*amount;
+        await database.updateBuyingPower(userKey, newBuyingPower);
+        return newBuyingPower;
     }
 }
 
