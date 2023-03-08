@@ -179,8 +179,8 @@ const topGainers = [
 
 const newsimage = 'https://cdn.pixabay.com/photo/2022/11/01/11/30/breaking-news-7562021__340.jpg'
 
-function createNews(title, desc, img) {
-    return {title, desc, img}
+function createNews(title, desc, img, url) {
+    return {title, desc, img, url}
 }
 
 /*
@@ -241,7 +241,7 @@ function Home() {
         var news = []
         for(const entry of data.feed)
         {
-          news.push(createNews(entry.title, entry.summary, entry.banner_image))
+          news.push(createNews(entry.title, entry.summary, entry.banner_image, entry.url))
         }
     
         //console.log(news)
@@ -256,6 +256,10 @@ function Home() {
     useEffect(() => {
         document.body.style.overflow = "hidden";
     })
+
+    function newsClick(snews){
+        window.open(snews.url);
+    }
 
     function getChartData(data)
     {
@@ -366,12 +370,13 @@ function Home() {
 
                 <List component={Paper} sx={newsArticles}>
                     {news.map((snews) => (
-                        <ListItem>
+                        <ListItem onClick={() => newsClick(snews)}>
                             <ListItemAvatar>
-                            <Avatar
+                            <Avatar 
                                 alt="Logo"
                                 src={snews.img}
                                 variant="square"
+                                
                             />
                             </ListItemAvatar>
                             <ListItemText primary={snews.title} secondary={snews.desc} />
