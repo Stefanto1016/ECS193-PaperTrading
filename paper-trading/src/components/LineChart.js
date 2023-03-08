@@ -8,8 +8,6 @@ export function PerformanceChart({ chartData }) {
         <div className="LineChart">
             <Line
                 data={chartData}
-                width={500}
-                height={300}
                 options={{
                     responsive: true,
                     maintainAspectRatio: false,
