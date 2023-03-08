@@ -122,7 +122,7 @@ async function addStock(email, stock)
             ...stock
         };
         const update = {stocks: mergeStocks};
-        await userSchema.findOneAndUpdate(user, update);
+        await userSchema.findOneAndUpdate({email : email}, update);
         
     } catch(error) {
         console.log(error)
@@ -248,7 +248,7 @@ async function updateBuyingPower(email, buyingPower)
             return;
         }
         const update = {buyingPower: buyingPower};
-        await userSchema.findOneAndUpdate(user, update);
+        await userSchema.findOneAndUpdate({email : email}, update);
         
     } catch (error) {
         console.log(error);
@@ -275,7 +275,7 @@ async function addBalance(email, balance)
         };
 
         const update = {balance: mergeBalance};
-        await userSchema.findOneAndUpdate(user, update);
+        await userSchema.findOneAndUpdate({email : email}, update);
         
     } catch(error) {
         console.log(error);
@@ -298,7 +298,7 @@ async function updateBalance(email, newBalance)
             return;
         }
         const update = {balance: newBalance};
-        await userSchema.findOneAndUpdate(user, update);
+        await userSchema.findOneAndUpdate({email : email}, update);
         
     } catch (error) {
         console.log(error);
@@ -328,3 +328,6 @@ module.exports =
 //getUser("garretthilyer@gmail.com");
 //deleteStock("garretthilyer@gmail.com", "AAPL");
 //stockQuantity("garretthilyer@gmail.com", "XOM");
+connect();
+updateBuyingPower("thomasguelk@gmail.com", 3200);
+disconnect();

@@ -42,7 +42,7 @@ async function setList(listName, stocks)
             return;
         } else {
             const update = {stocks : stocks};
-            await listSchema.findOneAndUpdate(list, update);
+            await listSchema.findOneAndUpdate({listName : listName}, update);
         }
     } catch(error) {
         console.log(error);

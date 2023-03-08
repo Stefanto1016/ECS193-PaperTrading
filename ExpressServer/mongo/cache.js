@@ -40,7 +40,7 @@ async function updateCacheStock(symbol, history)
             return;
         } else {
             const update = {history : history};
-            await cacheSchema.findOneAndUpdate(stock, update);
+            await cacheSchema.findOneAndUpdate({symbol: symbol}, update);
         }
     } catch(error) {
         console.log(error);
