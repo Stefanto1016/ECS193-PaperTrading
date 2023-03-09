@@ -237,7 +237,7 @@ function Stocks() {
       if (quantity * stockInfo.mark > balance) {
         return
       } else {
-        //setBalance(parseFloat((balance - quantity * stockInfo.mark).toFixed(2)))
+        setBalance(parseFloat((balance - quantity * stockInfo.askPrice).toFixed(2)))
         //console.log(typeof ownedStocks)
         //console.log(typeof quantity)
         setOwnedStocks(ownedStocks + quantity)
@@ -245,23 +245,20 @@ function Stocks() {
           userKey: "grkoziol@ucdavis.edu",
           stock: stockInfo.symbol.toUpperCase(),
           amount: quantity
-          })).then(res => {return res.json()})
-          .then(data => {setBalance(Math.ceil(data.buyingPower * 100)/100)});
+          }))
       }
     } else if (option == 'sell') {
       if (ownedStocks < quantity) {
         return
       } else {
-        console.log(typeof balance)
         //console.log(balance + quantity)
-        //setBalance(parseFloat((balance + quantity * parseFloat(stockInfo.mark)).toFixed(2)))
+        setBalance(parseFloat((balance + quantity * parseFloat(stockInfo.bidPrice)).toFixed(2)))
         setOwnedStocks(ownedStocks - quantity)
         fetch("http://localhost:8000/sellStock?" + new URLSearchParams({
           userKey: "grkoziol@ucdavis.edu",
           stock: stockInfo.symbol.toUpperCase(),
           amount: quantity
-          })).then(res => {return res.json()})
-          .then(data => {setBalance(Math.ceil(data.buyingPower * 100)/100)});
+          }));
       }
     }
   }
