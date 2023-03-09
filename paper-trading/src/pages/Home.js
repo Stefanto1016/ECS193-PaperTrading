@@ -289,7 +289,6 @@ function Home() {
         }
         ]
         }
-        console.log(chartData)
 
         setChartData(chartData)
         
