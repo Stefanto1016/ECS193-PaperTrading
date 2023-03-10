@@ -18,11 +18,12 @@ export function PerformanceChart({ chartData }) {
                     },
                     scales: {
                         x: {
+                            display: false,
                             ticks: {
                                 // For a category axis, the val is the index so the lookup via getLabelForValue is needed
                                 callback: function(val, index) {
                                 // Hide every 2nd tick label
-                                    return index % 3 === 0 ? this.getLabelForValue(val) : '';
+                                    return index % 1 === 0 ? this.getLabelForValue(val) : '';
                                 },     
                             }
                         }
