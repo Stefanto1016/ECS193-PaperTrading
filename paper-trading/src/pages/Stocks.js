@@ -332,7 +332,9 @@ function Stocks() {
                 let prices = []
                 for (const candle of response[0]) {
                   //console.log(candle)
-                  times.push(new Date(candle.datetime))
+                  var date = new Date(candle.datetime)
+                  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                  times.push(date.toLocaleString('en', options))
                   prices.push(candle.close)
                 }
                 //console.log(times)
