@@ -42,6 +42,17 @@ export function StockChart({ chartData }) {
                 width={650}
                 height={350}
                 options={{
+                    elements: {
+                        point: {
+                            borderWidth: 0,
+                            backgroundColor: 'rgba(0,0,0,0)'
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'nearest',
+                        axis: 'x'
+                    },
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
@@ -54,7 +65,7 @@ export function StockChart({ chartData }) {
                             ticks: {
                                 // For a category axis, the val is the index so the lookup via getLabelForValue is needed
                                 callback: function(val, index) {
-                                // Hide every 2nd tick label
+                                // Hide every 4th tick label
                                     return index % 4 === 0 ? this.getLabelForValue(val) : '';
                                 },     
                             }

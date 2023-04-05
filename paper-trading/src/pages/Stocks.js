@@ -23,6 +23,13 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 
+import Snackbar from '@mui/material/Snackbar';
+
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import Stack from '@mui/material/Stack';
 import { minWidth } from '@mui/system';
@@ -70,6 +77,8 @@ function Stocks() {
     return(data);
   }
 
+
+  // Get quote of a desired stock symbol
   async function getCurrentData(companyList)//pass as array of strings listing company tag in caps without spaces
   {
     //console.log(companyList)
@@ -87,13 +96,22 @@ function Stocks() {
      return(data);
   }
 
+  const [histData, setHistData] = useState([]);
+
+  // Gather historical data of stock market for various intervals
   async function getNumDataPoints(company)
   {
      var client_id = 'Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK' 
      var retArr = [];
      const url = `https://api.tdameritrade.com/v1/marketdata/${company}/pricehistory?`;
-     var params = new URLSearchParams({apikey: client_id, periodType: "month", period: 1, frequencyType: "daily", frequency: 1});
+     var params = new URLSearchParams({apikey: client_id, periodType: "day", period: 1, frequencyType: "minute", frequency: 5});
      var data = await retryFetch(url + params);
+     retArr.push(data["candles"]);
+     params = new URLSearchParams({apikey: client_id, periodType: "day", period: 5, frequencyType: "minute", frequency: 30});
+     data = await retryFetch(url + params);
+     retArr.push(data["candles"]); 
+     params = new URLSearchParams({apikey: client_id, periodType: "month", period: 1, frequencyType: "daily", frequency: 1});
+     data = await retryFetch(url + params);
      retArr.push(data["candles"]);
      params = new URLSearchParams({apikey: client_id, periodType: "month", period: 6, frequencyType: "daily", frequency: 1});
      data = await retryFetch(url + params);
@@ -101,16 +119,20 @@ function Stocks() {
      params = new URLSearchParams({apikey: client_id, periodType: "year", period: 1, frequencyType: "daily", frequency: 1});
      data = await retryFetch(url + params);
      retArr.push(data["candles"]);
-     params = new URLSearchParams({apikey: client_id, periodType: "year", period: 5, frequencyType: "daily", frequency: 1});
+     params = new URLSearchParams({apikey: client_id, periodType: "year", period: 5, frequencyType: "weekly", frequency: 1});
      data = await retryFetch(url + params);
      retArr.push(data["candles"]);
-     params = new URLSearchParams({apikey: client_id, periodType: "year", period: 20, frequencyType: "daily", frequency: 1});
+     params = new URLSearchParams({apikey: client_id, periodType: "year", period: 20, frequencyType: "weekly", frequency: 1});
+     data = await retryFetch(url + params);
+     retArr.push(data["candles"]);
+     params = new URLSearchParams({apikey: client_id, periodType: "ytd", period: 1, frequencyType: "daily", frequency: 1});
      data = await retryFetch(url + params);
      retArr.push(data["candles"]);
      return(retArr);
   }
 
-  function primaryData() {
+  // Displays primary data regarding a given stock
+  function PrimaryData() {
     return (
       <div>
         <List component={Stack} direction='row' sx={{maxWidth: 800, ml:3}}>
@@ -149,7 +171,8 @@ function Stocks() {
     )
   }
 
-  function secondaryData() {
+  // Displays secondary data given a stock
+  function SecondaryData() {
     return (
       <div>
         <Stack direction="row" spacing={2}>
@@ -206,6 +229,11 @@ function Stocks() {
   const [quantity, setQuantity] = useState(0)
   const [balance, setBalance] = useState(0)
   const [ownedStocks, setOwnedStocks] = useState(500)
+  const [buyError, setBuyError] = useState(false)
+  const [sellError, setSellError] = useState(false)
+  const [actionError, setActionError] = useState(false)
+  const [quantityError, setQuantityError] = useState(false)
+  const [validTransaction, setValidTransaction] = useState(false)
 
 
   useEffect ( () => {fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
@@ -215,57 +243,118 @@ function Stocks() {
   }, []);
 
 
-
+  // Change between option of buying/selling stock
   function changeOption(event) {
     setOption(event.target.value)
   }
 
+  // Change the amount of stocks to buy or sell
   function changeQuantity(event) {
-    setQuantity(parseInt(event.target.value))
+    const regex = /^[0-9\b]+$/;
+    // Textfield for quantity only accepts integers
+    if (event.target.value === "" || regex.test(event.target.value)) {
+      setQuantity(event.target.value)
+    }
+
+    //setQuantity(parseInt(event.target.value))
   }
 
   function handleTransaction() {
     //console.log('Hi')
-    if (!Number.isInteger(quantity) && quantity < 0) {
-      return
+    //setBuyError(false)
+    //setSellError(false)
+    //setValidTransaction(false)
+    
+    if (quantity === '') {
+        setBuyError(false)
+        setSellError(false)
+        setValidTransaction(false)
+        setActionError(false)
+        setQuantityError(true)
+        return
     }
 
     //console.log(stockInfo.mark)
     //console.log(typeof stockInfo.mark)
+    const numericQuantity = parseInt(quantity)
 
     if (option == 'buy') {
-      if (quantity * stockInfo.mark > balance) {
-        return
+      if (numericQuantity * parseFloat(stockInfo.mark) > balance) {
+        setBuyError(true)
+        setSellError(false)
+        setValidTransaction(false)
+        setActionError(false)
+        setQuantityError(false)
       } else {
-        setBalance(parseFloat((balance - quantity * stockInfo.askPrice).toFixed(2)))
+        setBalance(parseFloat((balance - numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
         //console.log(typeof ownedStocks)
         //console.log(typeof quantity)
-        setOwnedStocks(ownedStocks + quantity)
+        setOwnedStocks(ownedStocks + numericQuantity)
         fetch("http://localhost:8000/buyStock?" + new URLSearchParams({
           userKey: "grkoziol@ucdavis.edu",
           stock: stockInfo.symbol.toUpperCase(),
-          amount: quantity
+          amount: numericQuantity
           }))
+        
+        setBuyError(false)
+        setSellError(false)
+        setValidTransaction(true)
+        setActionError(false)
+        setQuantityError(false)
       }
     } else if (option == 'sell') {
-      if (ownedStocks < quantity) {
-        return
+      if (ownedStocks < numericQuantity) {
+        setBuyError(false)
+        setSellError(true)
+        setValidTransaction(false)
+        setActionError(false)
+        setQuantityError(false)
       } else {
-        //console.log(balance + quantity)
-        setBalance(parseFloat((balance + quantity * parseFloat(stockInfo.bidPrice)).toFixed(2)))
-        setOwnedStocks(ownedStocks - quantity)
+        //console.log("here")
+        //console.log(parseFloat(stockInfo.bidPrice))
+        //console.log(balance + numericQuantity * parseFloat(stockInfo.bidPrice))
+        setBalance(parseFloat((balance + numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
+        setOwnedStocks(ownedStocks - numericQuantity)
         fetch("http://localhost:8000/sellStock?" + new URLSearchParams({
           userKey: "grkoziol@ucdavis.edu",
           stock: stockInfo.symbol.toUpperCase(),
-          amount: quantity
+          amount: numericQuantity
           }));
+        
+          setBuyError(false)
+          setSellError(false)
+          setValidTransaction(true)
+          setActionError(false)
+          setQuantityError(false)
       }
+    } else {
+          setBuyError(false)
+          setSellError(false)
+          setValidTransaction(false)
+          setActionError(true)
+          setQuantityError(false)
     }
   }
 
-  function purchasingOptions() {
+// Handle closing of popup transaction alert
+const handleClose = (event, reason) => {
+  // Need this condition so alert doesn't go away on mouse click
+  if (reason === 'clickaway') {
+    return;
+  }
+
+  // Close any of the possible alerts
+  setBuyError(false)
+  setSellError(false)
+  setValidTransaction(false)
+  setActionError(false)
+  setQuantityError(false)
+};
+
+  // GUI for purchasing or selling stock
+  function PurchasingOptions() {
     return (
-      <Box sx={{ width: '100%', maxWidth:10000}}>
+      <Box sx={{ width: '100%', maxWidth: 10000}}>
         <FormControl>
           <InputLabel sx={{mt:1, ml:3}}>Action</InputLabel>
           <Select
@@ -280,27 +369,115 @@ function Stocks() {
         </FormControl>
 
         <TextField id="outlined-basic" 
-                   label="Quantity" 
+                   label="Quantity"
                    variant="outlined" 
-                   onChange={changeQuantity} 
+                   onChange={changeQuantity}
+                   value={quantity} 
                    sx={{mt:1, ml:3}}/>
 
-        <Button variant='contained' onClick={handleTransaction} sx={{height: 50, mt:3.3, mt:1, ml: 3}}>
+        <Button variant='contained' onClick={handleTransaction} sx={{height: 50, mt:3.3, mt:1.3, ml: 3}}>
           Confirm
         </Button>
-      </Box>
+
+
+        <Snackbar open={validTransaction} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} autoHideDuration={2000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
+            Transaction Completed
+          </Alert>
+        </Snackbar>
+
+        <Snackbar open={buyError} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} autoHideDuration={2000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
+            Insufficient Funds
+          </Alert>
+        </Snackbar>
+
+        <Snackbar open={sellError} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} autoHideDuration={2000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
+            Insufficient Shares
+          </Alert>
+        </Snackbar>
+
+        <Snackbar open={actionError} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} autoHideDuration={2000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
+            No Selected Action
+          </Alert>
+        </Snackbar>
+
+        <Snackbar open={quantityError} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} autoHideDuration={2000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
+            No Quantity Provided
+          </Alert>
+        </Snackbar>
+
+      {/*
+        {buyError && 
+          <Alert severity="error">
+            <AlertTitle>Error</AlertTitle>
+            Insufficient funds
+          </Alert>
+        }
+        {sellError &&
+          <Alert severity="error">
+            <AlertTitle>Error</AlertTitle>
+            Insufficient shares
+          </Alert>
+        }
+        {validTransaction &&
+          <Alert severity="success">
+            <AlertTitle>Success</AlertTitle>
+            Transaction complete
+          </Alert>
+        }
+    */}
+      
+      
+      
+      </Box>      
     )
   }
 
+
+
+  // All possible time intervals for stock graph  
+  const intervals = [
+    <ToggleButton value="1D" key="1D">
+      1D
+    </ToggleButton>,
+    <ToggleButton value="5D" key="5D">
+      5D
+    </ToggleButton>,
+    <ToggleButton value="1M" key="1M">
+      1M
+    </ToggleButton>,
+    <ToggleButton value="6M" key="6M">
+      6M
+    </ToggleButton>,
+    <ToggleButton value="1Y" key="1Y">
+      1Y
+    </ToggleButton>,
+    <ToggleButton value="5Y" key="5Y">
+      5Y
+    </ToggleButton>,
+    <ToggleButton value="Max" key="Max">
+      Max
+    </ToggleButton>,
+    <ToggleButton value="YTD" key="YTD">
+      YTD
+    </ToggleButton>,
+  ];
+
+  // Get information related to a given stock
   function handleClick(stock) {
     const array = [stock]
   
-    getCurrentData(array).then(response =>
+    getCurrentData(array).then(async response =>
       {
         //console.log(response)
         if (Object.keys(response).length === 0 || stock == '') {
-        
+          setIsValidStock(false)
         } else {
+            setIsValidStock(true)
             const stockAllCaps = stock.toUpperCase()
           
             setStockInfo(
@@ -323,41 +500,43 @@ function Stocks() {
               }
             )
 
-
-            getNumDataPoints(stockAllCaps).then(response =>
-              {
+            const res = await getNumDataPoints(stockAllCaps)
+            setHistData(res)
+            //getNumDataPoints(stockAllCaps).then(response =>
                 //console.log(response[0])
+                //setHistData(response)
+                //console.log(response)
                 
-                let times = []
-                let prices = []
-                for (const candle of response[0]) {
-                  //console.log(candle)
-                  var date = new Date(candle.datetime)
-                  const options = { year: 'numeric', month: 'short', day: 'numeric' };
-                  times.push(date.toLocaleString('en', options))
-                  prices.push(candle.close)
-                }
-                //console.log(times)
-                //console.log(prices)
-                const chartData = {
-                  // x-axis labels
-                  labels: times,
-                  datasets: [
-                  {
-                    label: "Stock Price ($)",
-                    // corresponding y values
-                    data: prices,
-                    fill: true,
-                    borderColor: "blue",
-                    tension: 0.1
-                  }
-                  ]
-                }
-                console.log(chartData)
-
-                setChartData(chartData)
+            let times = []
+            let prices = []
+            for (const candle of res[2]) {
+              //console.log(candle)
+              var date = new Date(candle.datetime)
+              const options = { year: 'numeric', month: 'short', day: 'numeric' };
+              times.push(date.toLocaleString('en', options))
+              prices.push(candle.close)
+            }
+            //console.log(times)
+            //console.log(prices)
+            const chartData = {
+            // x-axis labels
+              labels: times,
+              datasets: [
+              {
+                label: "Stock Price ($)",
+                // corresponding y values
+                data: prices,
+                fill: true,
+                borderColor: "blue",
+                tension: 0.1
               }
-            )
+              ]
+            }
+            console.log(chartData)
+
+            setChartData(chartData)
+
+            setInterval('1M')
 
             setDataVisibility(true)
         }
@@ -389,16 +568,122 @@ function Stocks() {
                                             week52High: '',
                                             week52Low: '',
                                           })
+  const [isValidStock, setIsValidStock] = useState(true)
   
+  // Button used to search for stock
   const SearchButton = () => (
     <IconButton onClick={() => handleClick(searchStock)}>
       <SearchIcon />
     </IconButton>
     )
 
-    function changeStock(event) {
-      setStock(event.target.value)
+  // Set stock to be searched
+  function changeStock(event) {
+    setStock(event.target.value)
+  }
+
+  // To change the time intervals displayed by stock graph
+  const [interval, setInterval] = useState('1M')
+  function changeInterval(event) {
+    //console.log(event.target.value)
+    //setInterval(event.target.value)
+    let times = []
+    let prices = []
+
+    switch(event.target.value) {
+      case "1D":
+        for (const candle of histData[0]) {
+          //console.log(candle)
+          var date = new Date(candle.datetime)
+          const options = { hour: '2-digit', minute: '2-digit' };
+          times.push(date.toLocaleString('en', options))
+          prices.push(candle.close)
+        }
+        break
+      case "5D":
+        for (const candle of histData[1]) {
+          //console.log(candle)
+          var date = new Date(candle.datetime)
+          const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+          times.push(date.toLocaleString('en', options))
+          prices.push(candle.close)
+        }
+        break
+      case "1M":
+        for (const candle of histData[2]) {
+          //console.log(candle)
+          var date = new Date(candle.datetime)
+          const options = { month: 'short', day: 'numeric' };
+          times.push(date.toLocaleString('en', options))
+          prices.push(candle.close)
+        }
+        break
+      case "6M":
+        for (const candle of histData[3]) {
+          //console.log(candle)
+          var date = new Date(candle.datetime)
+          const options = { year: 'numeric', month: 'short', day: 'numeric' };
+          times.push(date.toLocaleString('en', options))
+          prices.push(candle.close)
+        }
+        break
+      case "1Y":
+        for (const candle of histData[4]) {
+          //console.log(candle)
+          var date = new Date(candle.datetime)
+          const options = { year: 'numeric', month: 'short', day: 'numeric' };
+          times.push(date.toLocaleString('en', options))
+          prices.push(candle.close)
+        }
+        break
+      case "5Y":
+        for (const candle of histData[5]) {
+          //console.log(candle)
+          var date = new Date(candle.datetime)
+          const options = { year: 'numeric', month: 'short', day: 'numeric' };
+          times.push(date.toLocaleString('en', options))
+          prices.push(candle.close)
+        }
+        break
+      case "Max":
+        for (const candle of histData[6]) {
+          //console.log(candle)
+          var date = new Date(candle.datetime)
+          const options = { year: 'numeric', month: 'short', day: 'numeric' };
+          times.push(date.toLocaleString('en', options))
+          prices.push(candle.close)
+        }
+        break
+      case "YTD":
+        for (const candle of histData[7]) {
+          //console.log(candle)
+          var date = new Date(candle.datetime)
+          const options = { month: 'short', day: 'numeric' };
+          times.push(date.toLocaleString('en', options))
+          prices.push(candle.close)
+        }
+        break
     }
+    
+    const chartData = {
+      // x-axis labels
+      labels: times,
+      datasets: [
+      {
+        label: "Stock Price ($)",
+        // corresponding y values
+        data: prices,
+        fill: true,
+        borderColor: "blue",
+        tension: 0.1
+      }
+      ]
+    }
+    console.log(chartData)
+
+    setInterval(event.target.value)
+    setChartData(chartData) 
+  }
 
   return (
     <div className='Stocks'>
@@ -416,26 +701,29 @@ function Stocks() {
                  variant="standard"
                  onChange={changeStock}
                  InputProps={{endAdornment: <SearchButton />}}
+                 error={!isValidStock}
+                 helperText={
+                  !isValidStock ? 'Invalid Symbol' : null
+                 }
       />
 
     </Box>
-    
-    {dataVisibility && primaryData()}
-    {dataVisibility && secondaryData()}
+
+    {dataVisibility && <PrimaryData/>}
+    {dataVisibility && <SecondaryData/>}
+
     {(dataVisibility) &&
       <div style={chartStyle}>
+        <Box textAlign='center'>
+          <ToggleButtonGroup onChange={changeInterval} value={interval}>
+            {intervals}
+          </ToggleButtonGroup>
+        </Box>
         {(<StockChart chartData={chartData}/>)}
       </div>
     }
-    {dataVisibility && purchasingOptions()}
+    {dataVisibility && PurchasingOptions()}
 
-     {/*
-      <button onClick={() => setChartData(chartData1)}> Chart 1 </button>
-      <button onClick={() => setChartData(chartData2)}> Chart 2 </button>
-      <div style={chartStyle}>
-        <LineChart chartData={chartData}/>
-      </div>
-      */}
     </div>
 
   )

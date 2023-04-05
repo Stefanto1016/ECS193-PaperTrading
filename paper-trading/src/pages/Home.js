@@ -130,72 +130,16 @@ const emptyChart = {
     ]
   }
 
-  /*
-  async function retryFetch(url)
-  {
-       var data = await fetch(url);
-       while(data.status == 429)
-       {
-            await new Promise(r => setTimeout(r, 200));
-            var data = await fetch(url);
-       }
-       data = await data.json();
-       return(data);
-  }*/
-
-
-//let topGainers = []
-
-/*
-async function getTopGainers() {
-    var url = 'https://api.tdameritrade.com/v1/marketdata/$COMPX/movers?apikey=Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK&direction=up&change=percent'
-    var data = await retryFetch(url);
-    var topGainers = []
-     for(const entry of data)
-     {
-        topGainers.push(createData(entry.symbol, entry.change, entry.close, entry.totalVolume))
-     }
-
-     console.log(topGainers)
-}*/
-
 function createData(symbol, change, price, volume) {
     return {symbol, change, price, volume}
 }
 
-/*
-const topGainers = [
-    createData('TEST', 42.00, 13, 5000000),
-    createData('TEST', 42.00, 13, 5000000),
-    createData('TEST', 42.00, 13, 5000000),
-    createData('TEST', 42.00, 13, 5000000),
-    createData('TEST', 42.00, 13, 5000000),
-    createData('TEST', 42.00, 13, 5000000),
-    createData('TEST', 42.00, 13, 5000000),
-    createData('TEST', 42.00, 13, 5000000),
-    createData('TEST', 42.00, 13, 5000000),
-    createData('TEST', 42.00, 13, 5000000)
-]*/
 
 const newsimage = 'https://cdn.pixabay.com/photo/2022/11/01/11/30/breaking-news-7562021__340.jpg'
 
 function createNews(title, desc, img, url) {
     return {title, desc, img, url}
 }
-
-/*
-const news = [
-    createNews('This is the Title of the News Article', 'This is the Desc of the News Article'),
-    createNews('This is the Title of the News Article', 'This is the Desc of the News Article'),
-    createNews('This is the Title of the News Article', 'This is the Desc of the News Article'),
-    createNews('This is the Title of the News Article', 'This is the Desc of the News Article'),
-    createNews('This is the Title of the News Article', 'This is the Desc of the News Article'),
-    createNews('This is the Title of the News Article', 'This is the Desc of the News Article'),
-    createNews('This is the Title of the News Article', 'This is the Desc of the News Article'),
-    createNews('This is the Title of the News Article', 'This is the Desc of the News Article'),
-    createNews('This is the Title of the News Article', 'This is the Desc of the News Article'),
-    createNews('This is the Title of the News Article', 'This is the Desc of the News Article'),
-]*/
 
 function Home() {
     const [topGainers, setTopGainers] = useState([]);
