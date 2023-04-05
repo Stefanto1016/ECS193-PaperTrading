@@ -218,7 +218,7 @@ function Stocks() {
             <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
                            primary={'Account Buying Power ($): ' + balance}/>
             <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
-                           primary={'Amount of Stocks Owned: ' + ownedStocks}/>
+                           primary={'Shares Owned: ' + ownedStocks}/>
           </List>
         </Box>
       </div>
