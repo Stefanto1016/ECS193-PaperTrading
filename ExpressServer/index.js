@@ -185,13 +185,13 @@ async function updateStockList()
     var removedStocks = [];
     for(let i = 0; i < newStockList.length; i++)
     {
-        hashmap.set(newStockList[i], 1);
+        hashmap.set(newStockList[i]["symbol"], 1);
     }
     for(let i = 0; i < oldStockList.length; i++)
     {
-        if(hashmap.has(oldStockList[i]) == false)
+        if(hashmap.has(oldStockList[i]["symbol"]) == false)
         {
-            removedStocks.push(oldStockList[i]);
+            removedStocks.push(oldStockList[i]["symbol"]);
         }
     }
     await list.setList("ALL_STOCKS", newStockList);
@@ -245,6 +245,7 @@ async function flushCache()
     let numDataPoints = await query.getNumDataPoints();
     for(let i = 0; i < stockList.length; i++)
     {
+
         let stockData = await query.getPreviousData(stockList[i]["symbol"], numDataPoints);
         await cache.updateCacheStock(stockList[i], stockData);
     }
