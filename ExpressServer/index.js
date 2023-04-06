@@ -2,6 +2,7 @@ const query = require('./query');
 const database = require('./mongo/database');
 const cache = require('./mongo/cache');
 const list = require('./mongo/list');
+const tree = require('./tree');
 const express = require('express');
 const app = express();
 const port = 8000;
@@ -88,6 +89,14 @@ app.get('/getHistoricalData', async (req, res) =>
     const ret = await getHistoricalData(stock);
     res.send(ret);
 })
+
+app.get('/getStocks', async(req, res) =>
+{
+    const heading = req.query.heading;
+    let array = await tree.getStocks(heading);
+    res.send(array);
+}
+)
 
 
 async function update()
