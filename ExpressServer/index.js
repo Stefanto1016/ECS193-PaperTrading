@@ -215,18 +215,19 @@ async function handleRemovedStocks(removedStocks)
 }
 
 
-async function updatePortfolioValues() //update
+async function updatePortfolioValues()
 {
     let accountList = await database.getAccountList();
     for(let i = 0; i < accountList.length; i++)
     {
         let userStockList = await database.getUserStockList(accountList[i]);
+        userStockList = Object.keys(userStockList);
         let userBalance = await database.getBuyingPower(accountList[i]);
         for(let j = 0; j < userStockList.length; j++)
         {
-            let stockAmount = database.stockQuantity(getAccountList[i], userStockList[j]);
-            let stockData = await query.getCurrentData([removedStocks[i]]);
-            let stockPrice = stockData[stock]["askPrice"];
+            let stockAmount = await database.stockQuantity(accountList[i], userStockList[j]);
+            let stockData = await query.getCurrentData(userStockList[j]);
+            let stockPrice = stockData[userStockList[j]]["askPrice"];
             userBalance += stockAmount*stockPrice;
         }
         const today = new Date();
