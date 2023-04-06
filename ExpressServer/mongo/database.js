@@ -328,6 +328,6 @@ module.exports =
 //getUser("garretthilyer@gmail.com");
 //deleteStock("garretthilyer@gmail.com", "AAPL");
 //stockQuantity("garretthilyer@gmail.com", "XOM");
-connect();
-updateBuyingPower("thomasguelk@gmail.com", 3200);
-disconnect();
+//connect();
+//updateBuyingPower("thomasguelk@gmail.com", 3200);
+//disconnect();
