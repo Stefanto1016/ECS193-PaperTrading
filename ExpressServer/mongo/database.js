@@ -17,6 +17,7 @@ var url = "mongodb+srv://compubrain:papertrading101@compubrain.z2orex5.mongodb.n
  getBuyingPower(email)
  updateBuyingPower(email, buyingPower)
  addBalance(email, balance)
+ updateDate(email, date, newBalance) 
  updateBalance(email, newBalance)
 */
 
@@ -278,6 +279,31 @@ async function addBalance(email, balance)
         await userSchema.findOneAndUpdate({email : email}, update);
         
     } catch(error) {
+        console.log(error);
+        
+    }
+}
+
+/* updateDate(email, date, newBalance) 
+Update a dates balance of a specific user
+email => the email of a given user
+date => the date of the balance that needs to be changed
+newBalance => the new balance the key date's value should be set to.. */
+async function updateDate(email, date, newBalance)
+{
+    try {
+        const user = await userSchema.findOne({email : email});
+        if (user == undefined) {
+            console.log("ERROR: Unable to get stock list: email does not exist in database");
+            
+            return;
+        }
+
+        user.balance[date] = newBalance;
+        const update = {balance: user.balance};
+        await userSchema.findOneAndUpdate({email : email}, update);
+
+    } catch (error) {
         console.log(error);
         
     }
