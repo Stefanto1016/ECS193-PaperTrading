@@ -19,10 +19,12 @@ app.use((req, res, next) => {
     next();
 })
 
-app.listen(port, () => 
+app.listen(port, async () => 
 {
-    database.connect();
     console.log("starting");
+    await database.connect();
+    await tree.createTree();
+    console.log("started");
 })
 
 process.on('exit', function() 
@@ -105,6 +107,7 @@ async function update()
     updateStockList();
     updatePortfolioValues();
     flushCache();
+    tree.createTree();
 }
 
 

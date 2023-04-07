@@ -1,30 +1,30 @@
 const query = require('./query');
+let root;
 
 async function getStocks(heading)
 {
     let array = [];
-    let root = await createTree();
+    let traversalRoot = root;
     for(let i = 0; i < heading.length; i++)
     {
-        if(root.children[heading.charCodeAt(i)-65] == null)
+        if(traversalRoot.children[heading.charCodeAt(i)-65] == null)
         {
             return(array);
         }
-        root = root.children[heading.charCodeAt(i)-65]
+        traversalRoot = traversalRoot.children[heading.charCodeAt(i)-65]
     }
-    root.traverse(array, heading);
+    traversalRoot.traverse(array, heading);
     return(array);
 }
 
 async function createTree()
 {
     let stockList = await query.getStockList();
-    let root = new Node();
+    root = new Node();
     for(let i = 0; i < stockList.length; i++)
     {
         root.addChild(stockList[i]["symbol"]);
     }
-    return(root);
 }
 
 
