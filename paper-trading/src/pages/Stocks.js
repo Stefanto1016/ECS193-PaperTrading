@@ -8,6 +8,8 @@ import NavBar from '../components/NavBar';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import SearchIcon from '@mui/icons-material/Search';
+import InfoIcon from '@mui/icons-material/Info';
+import Tooltip from '@mui/material/Tooltip';
 
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -33,7 +35,9 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import Stack from '@mui/material/Stack';
 import { minWidth } from '@mui/system';
+import { ListItemIcon } from '@mui/material';
 
+import { useLocation } from 'react-router';
 
 
 function Stocks() {
@@ -63,6 +67,10 @@ function Stocks() {
       }
     ]
   }
+
+  // Accessing stock info from other pages
+  const [externalStock, setExternalStock] = useState(useLocation().state)
+
 
   const [chartData, setChartData] = useState(emptyChart);
   const [dataVisibility, setDataVisibility] = useState(false)
@@ -160,11 +168,20 @@ function Stocks() {
           </List>
         </Box>
 
-        <Box sx={{ width: '100%', maxWidth: 360}}>
+        <Box sx={{ width: '100%', maxWidth: 400}}>
           <List component={Stack} direction='row' sx={{maxWidth: 800, ml:3}}>
             <ListItemText primary={stockInfo.exchangeName} secondary='EXCHANGE'/>
             <ListItemText primary={stockInfo.volatility} secondary='VOLATILITY'/>
             <ListItemText primary={stockInfo.peRatio} secondary='P/E'/>
+            <Tooltip title={<span style={{ whiteSpace: 'pre-line' }}>
+                                  {'Exchange: The market where stocks are bought and sold\n\n' +
+                                   'Voltaility: The rate at which a stock price increases or decreases over a given period\n\n' +
+                                   'P/E: The relation between a company\'s share price and its earnings per share'}                  
+                            </span>} placement='top'>
+                <IconButton disableRipple size='small'>
+                  <InfoIcon />
+                 </IconButton>
+            </Tooltip>
           </List>
         </Box>
       </div>
@@ -178,35 +195,65 @@ function Stocks() {
         <Stack direction="row" spacing={2}>
           <List sx={{width: "100%", maxWidth: 360, ml:1.5}}>
             <ListItem>
-              <ListItemText primary="Volume (current)" />
-              <ListItemText align='right' primary={stockInfo.volume} />
+              <ListItemText primary={"Volume (current): " + stockInfo.volume} />
+              <Tooltip title="The number of shares of a stock traded today" placement='top'>
+                <IconButton disableRipple size='small'>
+                  <InfoIcon />
+                 </IconButton>
+              </Tooltip>
+              {/*<ListItemText align='right' primary={stockInfo.volume} />*/}
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary="Today's High ($)" />
-              <ListItemText align='right' primary={stockInfo.high} />
+              <ListItemText primary={"Today's High ($): " + stockInfo.high}/>
+              <Tooltip title="The highest price of the share today" placement='top'>
+                <IconButton disableRipple size='small'>
+                  <InfoIcon />
+                 </IconButton>
+              </Tooltip>
+              {/*<ListItemText align='right' primary={stockInfo.high} />*/}
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary="Today's Low ($)" />
-              <ListItemText align='right' primary={stockInfo.low} />
+              <ListItemText primary={"Today's Low ($): " + stockInfo.low}/>
+              <Tooltip title="The lowest price of the share today" placement='top'>
+                <IconButton disableRipple size='small'>
+                  <InfoIcon />
+                 </IconButton>
+              </Tooltip>
+              {/*<ListItemText align='right' primary={stockInfo.low} />*/}
             </ListItem>
           </List>
 
-          <List sx={{width: "100%", maxWidth: 360}}>
+          <List sx={{width: "100%", maxWidth: 360, justifyContent: 'flex-start'}}>
             <ListItem>
-              <ListItemText primary="52 Week High ($)" />
-              <ListItemText align='right' primary={stockInfo.week52High} />
+              <ListItemText primary={"52 Week High ($): " + stockInfo.week52High}/>
+              <Tooltip title="The highest price of the share within a 52 week period" placement='top'>
+                <IconButton disableRipple size='small'>
+                  <InfoIcon />
+                 </IconButton>
+              </Tooltip>
+              {/*<ListItemText align='right' primary={stockInfo.week52High} />*/}
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary="Bid/Ask Price ($)" />
-              <ListItemText align='right' primary={stockInfo.bidPrice + '/' + stockInfo.askPrice} />
+              <ListItemText primary={"Bid/Ask Price ($): " + stockInfo.bidPrice + ' / ' + stockInfo.askPrice}/>
+              <Tooltip title="The max/min price willing to be paid for a share" placement='top'>
+                <IconButton disableRipple size='small'>
+                  <InfoIcon />
+                 </IconButton>
+              </Tooltip>
+              {/*<ListItemText align='right' primary={stockInfo.bidPrice + '/' + stockInfo.askPrice} />*/}
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary="52 Week Low ($)" />
-              <ListItemText align='right' primary={stockInfo.week52Low} />
+              <ListItemText primary={"52 Week Low ($): " + stockInfo.week52Low}/>
+              <Tooltip title="The lowest price of the share within a 52 week period" placement='top'>
+                <IconButton disableRipple size='small'>
+                  <InfoIcon />
+                 </IconButton>
+              </Tooltip>
+              {/*<ListItemText align='right' primary={stockInfo.week52Low} />*/}
             </ListItem>
           </List>
       
@@ -502,22 +549,15 @@ const handleClose = (event, reason) => {
 
             const res = await getNumDataPoints(stockAllCaps)
             setHistData(res)
-            //getNumDataPoints(stockAllCaps).then(response =>
-                //console.log(response[0])
-                //setHistData(response)
-                //console.log(response)
                 
             let times = []
             let prices = []
             for (const candle of res[2]) {
-              //console.log(candle)
               var date = new Date(candle.datetime)
               const options = { year: 'numeric', month: 'short', day: 'numeric' };
               times.push(date.toLocaleString('en', options))
               prices.push(candle.close)
             }
-            //console.log(times)
-            //console.log(prices)
             const chartData = {
             // x-axis labels
               labels: times,
@@ -532,13 +572,14 @@ const handleClose = (event, reason) => {
               }
               ]
             }
-            console.log(chartData)
 
             setChartData(chartData)
 
             setInterval('1M')
 
             setDataVisibility(true)
+
+
         }
       }
     )
@@ -685,9 +726,20 @@ const handleClose = (event, reason) => {
     setChartData(chartData) 
   }
 
+  // To display stock information redirected from prev page
+  function displayStock(symbol) {
+    handleClick(symbol)
+    setExternalStock(null)
+  }
+
   return (
     <div className='Stocks'>
-      <NavBar/> 
+      <NavBar/>
+
+      {externalStock ? (
+        displayStock(externalStock)
+      ) : null
+      }
 
       <Box
       sx={{
@@ -700,6 +752,11 @@ const handleClose = (event, reason) => {
                  label="Search for Symbol" 
                  variant="standard"
                  onChange={changeStock}
+                 onKeyPress= {(e) => {
+                  if (e.key === 'Enter') {
+                    handleClick(searchStock)
+                  }
+                 }}
                  InputProps={{endAdornment: <SearchButton />}}
                  error={!isValidStock}
                  helperText={

@@ -21,6 +21,8 @@ import { textAlign } from '@mui/system';
 
 import { NumericFormat } from 'react-number-format'
 
+import { useNavigate } from 'react-router';
+
 const pageStyle = {
     maxHeight: "90vh",
     height: "90vh",
@@ -112,9 +114,6 @@ const chartTitle = {
     marginBottom: "10px"
 }
 
-
-
-
 const emptyChart = {
     // x-axis labels
     labels: [],
@@ -134,9 +133,6 @@ function createData(symbol, change, price, volume) {
     return {symbol, change, price, volume}
 }
 
-
-const newsimage = 'https://cdn.pixabay.com/photo/2022/11/01/11/30/breaking-news-7562021__340.jpg'
-
 function createNews(title, desc, img, url) {
     return {title, desc, img, url}
 }
@@ -147,6 +143,10 @@ function Home() {
     const [accBalance, setAccBalance] = useState(0);
     const [buyPower, setBuyPower] = useState(0);
     const [chartData, setChartData] = useState(emptyChart);
+
+    const navigate = useNavigate()
+
+    
 
     useEffect ( () => {fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
           userKey: "grkoziol@ucdavis.edu"
@@ -293,7 +293,11 @@ function Home() {
                                 {topGainers.map((gainer) => (
                                     <TableRow sx={{height: 10}}>
                                         <TableCell component="th" scope="row">
-                                            {gainer.symbol}
+                                            <Typography variant='subtitle2' 
+                                                        onClick={() => navigate('/stocks', { state: gainer.symbol})}
+                                                        sx={{textDecoration: 'underline', cursor: 'pointer', maxWidth: '5px'}}>
+                                                {gainer.symbol} 
+                                            </Typography>
                                         </TableCell>
                                         <TableCell align="right">{gainer.change}</TableCell>
                                         <TableCell align="right">{gainer.price}</TableCell>
