@@ -8,7 +8,13 @@ import { Link } from 'react-router-dom'
 
 import { IconButton } from '@mui/material';
 
+import {googleLogout} from '@react-oauth/google';
+
 export default function NavBar() {
+    const logOut = () => {
+        googleLogout();
+        localStorage.setItem("profile", "");
+    }
     return(
         <div className="NavBar">
             <AppBar position="fixed">
@@ -22,7 +28,7 @@ export default function NavBar() {
                     <Button component={Link} to='/portfolio' color='inherit'> Portfolio </Button>
                     <Button component={Link} to='/stocks' color='inherit'> Stocks </Button>
                     <Button component={Link} to='/learning' color='inherit'> Learning </Button>
-                    <Button component={Link} to='/logout' color='inherit'> LogOut </Button>
+                    <Button onClick={logOut} component={Link} to='/logout' color='inherit'> LogOut </Button>
                 </Toolbar>
             </AppBar>
             <Toolbar/>
