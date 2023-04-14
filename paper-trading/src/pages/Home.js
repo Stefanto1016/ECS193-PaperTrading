@@ -138,13 +138,22 @@ function createNews(title, desc, img, url) {
 }
 
 function Home() {
+    const navigate = useNavigate();
+    useEffect(() => {
+        if(localStorage.getItem("profile") == ""){
+            navigate("/login");
+        }else{
+            setProfile(localStorage.getItem("profile"))
+        }
+    })
+
+    const [profile, setProfile] = useState(null);
+
     const [topGainers, setTopGainers] = useState([]);
     const [news, setNews] = useState([]);
     const [accBalance, setAccBalance] = useState(0);
     const [buyPower, setBuyPower] = useState(0);
     const [chartData, setChartData] = useState(emptyChart);
-
-    const navigate = useNavigate()
 
     
 
@@ -240,6 +249,8 @@ function Home() {
     }
 
     return (
+        <div>
+            {profile ? (
         <div style={pageStyle}>
             <div style={leftStyle}>
                 <div style={accountStyle}>
@@ -331,6 +342,10 @@ function Home() {
                             ))}
                 </List>
             </div>
+        </div>
+            ) : (
+                <div></div>
+            )}
         </div>
     )
 }
