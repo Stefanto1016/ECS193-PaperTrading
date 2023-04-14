@@ -16,7 +16,44 @@ import { PerformanceChart, StockChart } from '../components/LineChart';
 import {List, ListItem, ListItemText, Typography } from '@mui/material';
 import { NumericFormat } from 'react-number-format'
 
+import {useNavigate} from 'react-router-dom';
+
 const client_id = "Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK";
+
+const leftStyle = {
+    height: "100%",
+    width: "100%",
+    display: "flex"
+}
+
+const accountStyle = {
+    width: "40%",
+    justifyContent: "center",
+    alignItems: "center"
+}
+
+const cardStyle = {
+    width: "100%",
+    height: "85%",
+    float: "left",
+    textAlign: "center",
+    justifyContent: "center"
+}
+
+const PerformanceStyle = {
+    height: "100%",
+    width: "55%",
+    float: "right"
+}
+
+const ChartStyle = {
+    height: "100%",
+    width: "70%",
+    float: "right"
+}
+const PerformanceTitleStyle = {
+    textAlign: "center"
+}
 
 const emptyChart = {
     // x-axis labels
@@ -34,6 +71,16 @@ const emptyChart = {
   }
 
 function Portfolio() {
+    const navigate = useNavigate();
+    useEffect(() => {
+        if(localStorage.getItem("profile") == ""){
+            navigate("/login");
+        }
+    })
+
+    const profile = JSON.parse(localStorage.getItem("profile"));
+
+
     const [stocks, setStocks] = useState([]);
     const [chartData, setChartData] = useState(emptyChart);
     const [accBalance, setAccBalance] = useState(0);
@@ -43,12 +90,13 @@ function Portfolio() {
         document.body.style.overflow = "scroll";
     })
 
-    useEffect ( () => {fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
-          userKey: "grkoziol@ucdavis.edu"
-    })).then(res => {return res.json()})
-    .then(data => {setAccBalance(data.balance[Object.keys(data.balance)[0]]);
-                setBuyPower(Math.ceil(data.buyingPower * 100)/100);
-                getChartData(data)});
+    useEffect ( () => {
+        fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+            userKey: profile["email"]
+        })).then(res => {return res.json()})
+        .then(data => {setAccBalance(data.balance[Object.keys(data.balance)[0]].toFixed(2));
+                    setBuyPower(Math.ceil(data.buyingPower * 100)/100);
+                    getChartData(data)});
   }, []);
 
     function getChartData(data)
@@ -114,37 +162,38 @@ function Portfolio() {
     async function getStocks(data){
         let keys = Object.keys(data);
         let st = [];
-        let final = [];
         for(const entry of keys)
         {
             let stData = await getCurrentData(entry);
-            console.log(stData)
             st.push(createData(entry, (stData[entry]['netChange']), stData[entry]['closePrice'], data[entry]));
         }
         setStocks(st);
     }
 
 
-    useEffect ( () => {fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
-        userKey: "grkoziol@ucdavis.edu"
-        })).then(res => {return res.json()})
-        .then(data => {getStocks(data.stocks)});
+    useEffect ( () => {
+        fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+            userKey: profile["email"]
+            })).then(res => {return res.json()})
+            .then(data => {getStocks(data.stocks)});
     }, []);
 
     return (
+        <div>
+        {profile ? (
         <div>
             <NavBar/> 
             <h1>
                 Portfolio Page
             </h1>
             <div>
-            <div>
-                    <div>
-                        <h1>
+                <div style={leftStyle}>
+                    <div style={accountStyle}>
+                        <h1 style={PerformanceTitleStyle}>
                             Account Summary
                         </h1>
                         <Card>
-                            <CardContent>
+                            <CardContent style={cardStyle}>
                                 <Typography variant='h5'>
                                     Account Balance
                                 </Typography>
@@ -159,16 +208,17 @@ function Portfolio() {
                         </Card>
                     </div>
                     
-                    <div>
-                        <h1>
+                    <div style={PerformanceStyle}>
+                        <h1 style={PerformanceTitleStyle}>
                             Performance History
                         </h1>
 
-                        <div>
+                        <div style={ChartStyle}>
                             <PerformanceChart chartData={chartData}/>
                         </div>
                     </div>
                 </div>
+
                     <h1>
                         My Stocks
                     </h1>
@@ -198,6 +248,11 @@ function Portfolio() {
                         </Table>
                     </TableContainer>
                 </div>
+        </div>
+        ) : (
+            <div>
+            </div>
+        )}
         </div>
     )
 }

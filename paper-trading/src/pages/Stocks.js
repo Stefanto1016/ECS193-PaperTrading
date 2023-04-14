@@ -38,10 +38,19 @@ import { minWidth } from '@mui/system';
 import { ListItemIcon } from '@mui/material';
 
 import { useLocation } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 
 
 function Stocks() {
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    if(localStorage.getItem("profile") == ""){
+        navigate("/login");
+    }
+  })
+
+  const profile = JSON.parse(localStorage.getItem("profile"))['email'];
 
   const chartStyle = {
     //width: 650,
@@ -283,8 +292,9 @@ function Stocks() {
   const [validTransaction, setValidTransaction] = useState(false)
 
 
-  useEffect ( () => {fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
-          userKey: "grkoziol@ucdavis.edu"
+  useEffect ( () => {
+    fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+          userKey: profile.toString()
     })).then(res => {return res.json()})
     .then(data => {setBalance(Math.ceil(data.buyingPower * 100)/100)});
   }, []);
@@ -338,7 +348,7 @@ function Stocks() {
         //console.log(typeof quantity)
         setOwnedStocks(ownedStocks + numericQuantity)
         fetch("http://localhost:8000/buyStock?" + new URLSearchParams({
-          userKey: "grkoziol@ucdavis.edu",
+          userKey: profile.toString(),
           stock: stockInfo.symbol.toUpperCase(),
           amount: numericQuantity
           }))
@@ -363,7 +373,7 @@ function Stocks() {
         setBalance(parseFloat((balance + numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
         setOwnedStocks(ownedStocks - numericQuantity)
         fetch("http://localhost:8000/sellStock?" + new URLSearchParams({
-          userKey: "grkoziol@ucdavis.edu",
+          userKey: profile.toString(),
           stock: stockInfo.symbol.toUpperCase(),
           amount: numericQuantity
           }));
@@ -583,9 +593,8 @@ const handleClose = (event, reason) => {
         }
       }
     )
-
     fetch("http://localhost:8000/getSpecificStock?" + new URLSearchParams({
-          userKey: "grkoziol@ucdavis.edu",
+          userKey: profile.toString(),
           stock: stock.toString().toUpperCase()
       })).then(res => {return res.json()})
       .then(data => setOwnedStocks(data.quantity));
@@ -733,6 +742,8 @@ const handleClose = (event, reason) => {
   }
 
   return (
+    <div>
+      {profile ? (
     <div className='Stocks'>
       <NavBar/>
 
@@ -780,6 +791,12 @@ const handleClose = (event, reason) => {
       </div>
     }
     {dataVisibility && PurchasingOptions()}
+
+    </div>
+      ) : (
+        <div>
+        </div>
+      )}
 
     </div>
 

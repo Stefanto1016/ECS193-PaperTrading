@@ -11,17 +11,20 @@ import { Typography } from '@mui/material';
 function Login() {
     //Google User Data
   const navigate = useNavigate();
+  useEffect(() => {
+    if(localStorage.getItem("profile") != ""){
+        navigate("/App");
+    }
+  })
+
   const [user, setUser] = useState([]);
   const [profile, setProfile] = useState(null);
 
   const login = useGoogleLogin({
-    onSuccess: (res) => {setUser(res); handleNav();},
+    onSuccess: (res) => {setUser(res);},
     onError: (err) => console.log("Login failed, ", err)
   });
 
-  const handleNav = (e) => {
-    navigate("/App");
-  }
 
   useEffect(
     () => {
@@ -44,7 +47,18 @@ function Login() {
   const logOut = () => {
     googleLogout();
     setProfile(null);
+    localStorage.setItem("profile", "");
   }
+
+  useEffect(
+    () => {
+      if (profile) {
+        console.log(profile);
+        localStorage.setItem("profile", JSON.stringify(profile));
+        navigate("/App");
+      }
+    }
+  )
 
   const pageStyle = {
     backgroundColor: "#e5e8eb",
@@ -121,7 +135,7 @@ function Login() {
           <br></br>
           {profile ? (
             <div>
-              <button onClick={logOut}>Log Out</button>
+            
             </div>
           ) : (
             <div>
