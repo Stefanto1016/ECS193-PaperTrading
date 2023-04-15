@@ -98,17 +98,14 @@ function Stocks() {
   // Get quote of a desired stock symbol
   async function getCurrentData(companyList)//pass as array of strings listing company tag in caps without spaces
   {
-    //console.log(companyList)
      var companies = "";
      for(var i = 0; i < companyList.length; i++)
      {
           companies = companies.concat([companyList[i]]); //throw error if fail
      }
-     //console.log(companies)
      const queryType = "quotes";
      const url = `https://api.tdameritrade.com/v1/marketdata/${queryType}?`;
      const params = new URLSearchParams({apikey: 'Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK', symbol: companies});
-     //console.log(url+params)
      var data = await retryFetch(url + params);
      return(data);
   }
@@ -210,7 +207,6 @@ function Stocks() {
                   <InfoIcon />
                  </IconButton>
               </Tooltip>
-              {/*<ListItemText align='right' primary={stockInfo.volume} />*/}
             </ListItem>
             <Divider />
             <ListItem>
@@ -220,7 +216,6 @@ function Stocks() {
                   <InfoIcon />
                  </IconButton>
               </Tooltip>
-              {/*<ListItemText align='right' primary={stockInfo.high} />*/}
             </ListItem>
             <Divider />
             <ListItem>
@@ -230,7 +225,6 @@ function Stocks() {
                   <InfoIcon />
                  </IconButton>
               </Tooltip>
-              {/*<ListItemText align='right' primary={stockInfo.low} />*/}
             </ListItem>
           </List>
 
@@ -242,7 +236,6 @@ function Stocks() {
                   <InfoIcon />
                  </IconButton>
               </Tooltip>
-              {/*<ListItemText align='right' primary={stockInfo.week52High} />*/}
             </ListItem>
             <Divider />
             <ListItem>
@@ -252,7 +245,6 @@ function Stocks() {
                   <InfoIcon />
                  </IconButton>
               </Tooltip>
-              {/*<ListItemText align='right' primary={stockInfo.bidPrice + '/' + stockInfo.askPrice} />*/}
             </ListItem>
             <Divider />
             <ListItem>
@@ -262,7 +254,6 @@ function Stocks() {
                   <InfoIcon />
                  </IconButton>
               </Tooltip>
-              {/*<ListItemText align='right' primary={stockInfo.week52Low} />*/}
             </ListItem>
           </List>
       
@@ -312,16 +303,9 @@ function Stocks() {
     if (event.target.value === "" || regex.test(event.target.value)) {
       setQuantity(event.target.value)
     }
-
-    //setQuantity(parseInt(event.target.value))
   }
 
   function handleTransaction() {
-    //console.log('Hi')
-    //setBuyError(false)
-    //setSellError(false)
-    //setValidTransaction(false)
-    
     if (quantity === '') {
         setBuyError(false)
         setSellError(false)
@@ -331,8 +315,6 @@ function Stocks() {
         return
     }
 
-    //console.log(stockInfo.mark)
-    //console.log(typeof stockInfo.mark)
     const numericQuantity = parseInt(quantity)
 
     if (option == 'buy') {
@@ -344,8 +326,6 @@ function Stocks() {
         setQuantityError(false)
       } else {
         setBalance(parseFloat((balance - numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
-        //console.log(typeof ownedStocks)
-        //console.log(typeof quantity)
         setOwnedStocks(ownedStocks + numericQuantity)
         fetch("http://localhost:8000/buyStock?" + new URLSearchParams({
           userKey: profile.toString(),
@@ -367,9 +347,6 @@ function Stocks() {
         setActionError(false)
         setQuantityError(false)
       } else {
-        //console.log("here")
-        //console.log(parseFloat(stockInfo.bidPrice))
-        //console.log(balance + numericQuantity * parseFloat(stockInfo.bidPrice))
         setBalance(parseFloat((balance + numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
         setOwnedStocks(ownedStocks - numericQuantity)
         fetch("http://localhost:8000/sellStock?" + new URLSearchParams({
@@ -465,31 +442,7 @@ const handleClose = (event, reason) => {
           <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
             No Quantity Provided
           </Alert>
-        </Snackbar>
-
-      {/*
-        {buyError && 
-          <Alert severity="error">
-            <AlertTitle>Error</AlertTitle>
-            Insufficient funds
-          </Alert>
-        }
-        {sellError &&
-          <Alert severity="error">
-            <AlertTitle>Error</AlertTitle>
-            Insufficient shares
-          </Alert>
-        }
-        {validTransaction &&
-          <Alert severity="success">
-            <AlertTitle>Success</AlertTitle>
-            Transaction complete
-          </Alert>
-        }
-    */}
-      
-      
-      
+        </Snackbar>            
       </Box>      
     )
   }
@@ -530,7 +483,6 @@ const handleClose = (event, reason) => {
   
     getCurrentData(array).then(async response =>
       {
-        //console.log(response)
         if (Object.keys(response).length === 0 || stock == '') {
           setIsValidStock(false)
         } else {
@@ -635,15 +587,13 @@ const handleClose = (event, reason) => {
   // To change the time intervals displayed by stock graph
   const [interval, setInterval] = useState('1M')
   function changeInterval(event) {
-    //console.log(event.target.value)
-    //setInterval(event.target.value)
+
     let times = []
     let prices = []
 
     switch(event.target.value) {
       case "1D":
         for (const candle of histData[0]) {
-          //console.log(candle)
           var date = new Date(candle.datetime)
           const options = { hour: '2-digit', minute: '2-digit' };
           times.push(date.toLocaleString('en', options))
@@ -652,7 +602,6 @@ const handleClose = (event, reason) => {
         break
       case "5D":
         for (const candle of histData[1]) {
-          //console.log(candle)
           var date = new Date(candle.datetime)
           const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
           times.push(date.toLocaleString('en', options))
@@ -661,7 +610,6 @@ const handleClose = (event, reason) => {
         break
       case "1M":
         for (const candle of histData[2]) {
-          //console.log(candle)
           var date = new Date(candle.datetime)
           const options = { month: 'short', day: 'numeric' };
           times.push(date.toLocaleString('en', options))
@@ -670,7 +618,6 @@ const handleClose = (event, reason) => {
         break
       case "6M":
         for (const candle of histData[3]) {
-          //console.log(candle)
           var date = new Date(candle.datetime)
           const options = { year: 'numeric', month: 'short', day: 'numeric' };
           times.push(date.toLocaleString('en', options))
@@ -679,7 +626,6 @@ const handleClose = (event, reason) => {
         break
       case "1Y":
         for (const candle of histData[4]) {
-          //console.log(candle)
           var date = new Date(candle.datetime)
           const options = { year: 'numeric', month: 'short', day: 'numeric' };
           times.push(date.toLocaleString('en', options))
@@ -688,7 +634,6 @@ const handleClose = (event, reason) => {
         break
       case "5Y":
         for (const candle of histData[5]) {
-          //console.log(candle)
           var date = new Date(candle.datetime)
           const options = { year: 'numeric', month: 'short', day: 'numeric' };
           times.push(date.toLocaleString('en', options))
@@ -697,7 +642,6 @@ const handleClose = (event, reason) => {
         break
       case "Max":
         for (const candle of histData[6]) {
-          //console.log(candle)
           var date = new Date(candle.datetime)
           const options = { year: 'numeric', month: 'short', day: 'numeric' };
           times.push(date.toLocaleString('en', options))
@@ -706,7 +650,6 @@ const handleClose = (event, reason) => {
         break
       case "YTD":
         for (const candle of histData[7]) {
-          //console.log(candle)
           var date = new Date(candle.datetime)
           const options = { month: 'short', day: 'numeric' };
           times.push(date.toLocaleString('en', options))
