@@ -3,11 +3,12 @@ const database = require('./mongo/database');
 const cache = require('./mongo/cache');
 const list = require('./mongo/list');
 const tree = require('./tree');
+const challenge = require('./challenge');
 const express = require('express');
 const app = express();
 const port = 8000;
-const MSinDay = 24*60*60*1000;
-//const MSinDay = 1000*60*5;
+const MSinMin = 1000;
+var currentDate = new Date();
 
 /*var cors = require("cors");
 app.use(cors);*/
@@ -24,6 +25,7 @@ app.listen(port, async () =>
     console.log("starting");
     await database.connect();
     await tree.createTree();
+    await challenge.createDailyChallenge();
     console.log("started");
 })
 
@@ -33,16 +35,8 @@ process.on('exit', function()
     console.log("closing");
 });
 
-setInterval(update, MSinDay);
+setInterval(update, MSinMin);
 
-
-
-app.get('/update', (req, res) => 
-{
-    update();
-})
-
-// /buyStock?userKey=thomasguelk@gmail.com&stock=AAPL&amount=10
 
 app.get('/buyStock', async (req, res) => 
 {
@@ -100,14 +94,152 @@ app.get('/getStocks', async(req, res) =>
 }
 )
 
+app.get('/challengeGetStockData', async(req, res) =>
+{
+    const daily = req.query.daily;
+    var stockData = 0;
+    if(daily == 1)
+    {
+        stockData = challenge.getDailyChallenge().stockData;
+    }
+    else
+    {
+        const userKey = req.query.userKey;
+        stockData = 0;
+    }
+    res.send(stockData);
+}
+)
+
+app.get('/challengeGetBuyingPower', async(req, res) =>
+{
+    const daily = req.query.daily;
+    const userKey = req.query.userKey;
+    var buyingPower = 0;
+    if(daily == 1)
+    {
+        buyingPower = challenge.getDailyChallengeProfiles().get(userKey).buyingPower;
+    }
+    else
+    {
+        buyingPower = 0;
+    }
+    res.send({buyingPower : buyingPower});
+}
+)
+
+app.get('/challengeGetBalance', async(req, res) =>
+{
+    const daily = req.query.daily;
+    const userKey = req.query.userKey;
+    var balance = 0;
+    if(daily == 1)
+    {
+        balance = challenge.getDailyChallengeProfiles().get(userKey).balance;
+    }
+    else
+    {
+        balance = 0;
+    }
+    res.send({balance : balance});
+}
+)
+
+//http://localhost:8000/challengeGetStocks?daily=1&userKey=thomasguelk@gmail.com
+/*will return an array representing the number of each stock owned by the user*/
+app.get('/challengeGetStocks', async(req, res) =>
+{
+    const daily = req.query.daily;
+    const userKey = req.query.userKey;
+    var stocks = [];
+    if(daily == 1)
+    {
+        stocks = challenge.getDailyChallengeProfiles().get(userKey).stocks;
+    }
+    else
+    {
+        stocks = 0;
+    }
+    res.send(stocks);
+}
+)
+
+//http://localhost:8000/challengeBuyStock?daily=1&userKey=thomasguelk@gmail.com&stock=0&amount=2
+
+app.get('/challengeBuyStock', async(req, res) =>
+{
+    const daily = req.query.daily;
+    const userKey = req.query.userKey;
+    const stock = req.query.stock;
+    const amount = parseInt(req.query.amount);
+    var buyingPower = 0;
+    if(daily == 1)
+    {
+        buyingPower = challenge.getDailyChallengeProfiles().get(userKey).buy(stock, amount);
+    }
+    else
+    {
+        buyingPower = 0;
+    }
+    res.send({buyingPower : buyingPower});
+}
+)
+
+app.get('/challengeSellStock', async(req, res) =>
+{
+    const daily = req.query.daily;
+    const userKey = req.query.userKey;
+    const stock = req.query.stock;
+    const amount = parseInt(req.query.amount);
+    var buyingPower = 0;
+    if(daily == 1)
+    {
+        buyingPower = challenge.getDailyChallengeProfiles().get(userKey).sell(stock, amount);
+    }
+    else
+    {
+        buyingPower = 0;
+    }
+    res.send({buyingPower : buyingPower});
+}
+)
+
+
+app.get('/challengeNextDay', async(req, res) =>
+{
+    const daily = req.query.daily;
+    const userKey = req.query.userKey;
+    var isFinished = 0;
+    if(daily == 1)
+    {
+        isFinished = challenge.getDailyChallengeProfiles().get(userKey).nextDay();
+    }
+    else
+    {
+        isFinished = 0;
+    }
+    res.send({isFinished : isFinished});
+}
+)
+
+
+
 
 async function update()
 {
-    console.log("updating");
-    updateStockList();
-    updatePortfolioValues();
-    flushCache();
-    tree.createTree();
+    var newDate = new Date();
+    if(newDate.getDate() != currentDate.getDate())
+    {
+        currentDate = newDate;
+        updateStockList();
+        updatePortfolioValues();
+        flushCache();
+        tree.createTree();
+        if(newDate.getDay() == 0)
+        {
+            challenge.createDailyChallenge();
+        }
+    }
 }
 
 
