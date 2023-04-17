@@ -16,7 +16,7 @@ import { PerformanceChart, StockChart } from '../components/LineChart';
 import {List, ListItem, ListItemText, Typography } from '@mui/material';
 import { NumericFormat } from 'react-number-format'
 
-import {useNavigate} from 'react-router-dom';
+import {Navigate} from 'react-router-dom';
 
 const client_id = "Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK";
 
@@ -71,15 +71,8 @@ const emptyChart = {
   }
 
 function Portfolio() {
-    const navigate = useNavigate();
-    useEffect(() => {
-        if(localStorage.getItem("profile") == ""){
-            navigate("/login");
-        }
-    })
 
-    const profile = JSON.parse(localStorage.getItem("profile"));
-
+    const profile = localStorage.getItem("profile");
 
     const [stocks, setStocks] = useState([]);
     const [chartData, setChartData] = useState(emptyChart);
@@ -91,12 +84,15 @@ function Portfolio() {
     })
 
     useEffect ( () => {
-        fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
-            userKey: profile["email"]
-        })).then(res => {return res.json()})
-        .then(data => {setAccBalance(data.balance[Object.keys(data.balance)[0]].toFixed(2));
-                    setBuyPower(Math.ceil(data.buyingPower * 100)/100);
-                    getChartData(data)});
+        if(profile){
+            const prof = JSON.parse(localStorage.getItem("profile"));
+            fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+                userKey: prof["email"]
+            })).then(res => {return res.json()})
+            .then(data => {setAccBalance(data.balance[Object.keys(data.balance)[0]].toFixed(2));
+                        setBuyPower(Math.ceil(data.buyingPower * 100)/100);
+                        getChartData(data)});
+        }
   }, []);
 
     function getChartData(data)
@@ -172,10 +168,13 @@ function Portfolio() {
 
 
     useEffect ( () => {
-        fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
-            userKey: profile["email"]
-            })).then(res => {return res.json()})
-            .then(data => {getStocks(data.stocks)});
+        if(profile){
+            const prof = JSON.parse(localStorage.getItem("profile"));
+            fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+                userKey: prof["email"]
+                })).then(res => {return res.json()})
+                .then(data => {getStocks(data.stocks)});
+        }
     }, []);
 
     return (
@@ -250,8 +249,7 @@ function Portfolio() {
                 </div>
         </div>
         ) : (
-            <div>
-            </div>
+            <Navigate to="/login"/>
         )}
         </div>
     )

@@ -38,19 +38,13 @@ import { minWidth } from '@mui/system';
 import { ListItemIcon } from '@mui/material';
 
 import { useLocation } from 'react-router';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 
 
 function Stocks() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if(localStorage.getItem("profile") == ""){
-        navigate("/login");
-    }
-  })
-
-  const profile = JSON.parse(localStorage.getItem("profile"))['email'];
+  const profile = localStorage.getItem("profile");
 
   const chartStyle = {
     //width: 650,
@@ -284,10 +278,13 @@ function Stocks() {
 
 
   useEffect ( () => {
-    fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
-          userKey: profile.toString()
-    })).then(res => {return res.json()})
-    .then(data => {setBalance(Math.ceil(data.buyingPower * 100)/100)});
+    if (profile){
+      const prof = JSON.parse(localStorage.getItem("profile"));
+      fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+            userKey: prof["email"],
+      })).then(res => {return res.json()})
+      .then(data => {setBalance(Math.ceil(data.buyingPower * 100)/100)});
+    }
   }, []);
 
 
@@ -327,11 +324,14 @@ function Stocks() {
       } else {
         setBalance(parseFloat((balance - numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
         setOwnedStocks(ownedStocks + numericQuantity)
-        fetch("http://localhost:8000/buyStock?" + new URLSearchParams({
-          userKey: profile.toString(),
-          stock: stockInfo.symbol.toUpperCase(),
-          amount: numericQuantity
-          }))
+        if(profile){
+          const prof = JSON.parse(localStorage.getItem("profile"));
+          fetch("http://localhost:8000/buyStock?" + new URLSearchParams({
+            userKey: prof["email"],
+            stock: stockInfo.symbol.toUpperCase(),
+            amount: numericQuantity
+            }));
+        }
         
         setBuyError(false)
         setSellError(false)
@@ -349,11 +349,14 @@ function Stocks() {
       } else {
         setBalance(parseFloat((balance + numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
         setOwnedStocks(ownedStocks - numericQuantity)
-        fetch("http://localhost:8000/sellStock?" + new URLSearchParams({
-          userKey: profile.toString(),
-          stock: stockInfo.symbol.toUpperCase(),
-          amount: numericQuantity
-          }));
+        if (profile){
+          const prof = JSON.parse(localStorage.getItem("profile"));
+          fetch("http://localhost:8000/sellStock?" + new URLSearchParams({
+            userKey: prof["email"],
+            stock: stockInfo.symbol.toUpperCase(),
+            amount: numericQuantity
+            }));
+        }
         
           setBuyError(false)
           setSellError(false)
@@ -545,11 +548,14 @@ const handleClose = (event, reason) => {
         }
       }
     )
-    fetch("http://localhost:8000/getSpecificStock?" + new URLSearchParams({
-          userKey: profile.toString(),
-          stock: stock.toString().toUpperCase()
-      })).then(res => {return res.json()})
-      .then(data => setOwnedStocks(data.quantity));
+    if(profile){
+      const prof = JSON.parse(localStorage.getItem("profile"));
+      fetch("http://localhost:8000/getSpecificStock?" + new URLSearchParams({
+            userKey: prof["email"],
+            stock: stock.toString().toUpperCase()
+        })).then(res => {return res.json()})
+        .then(data => setOwnedStocks(data.quantity));
+    }
   }
 
   const [searchStock, setStock] = useState('')
@@ -737,8 +743,7 @@ const handleClose = (event, reason) => {
 
     </div>
       ) : (
-        <div>
-        </div>
+        <Navigate to="/login"/>
       )}
 
     </div>

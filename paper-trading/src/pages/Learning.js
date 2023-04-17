@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import "./learning.scss";
 
 function newsClick(news){
@@ -8,17 +8,7 @@ function newsClick(news){
 }
 
 function Learning() {
-    const navigate = useNavigate();
-    useEffect(() => {
-        if(localStorage.getItem("profile") == ""){
-            navigate("/login");
-        }else{
-            setProfile(localStorage.getItem("profile"))
-        }
-    })
-
-
-    const [profile, setProfile] = useState(null);
+    const profile = localStorage.getItem("profile");
 
     return (
         <div>
@@ -35,7 +25,7 @@ function Learning() {
             </div>
         </div>
             ) : (
-                <div></div>
+                <Navigate to="/login"/>
             )}
         </div>
     )

@@ -21,7 +21,7 @@ import { textAlign } from '@mui/system';
 
 import { NumericFormat } from 'react-number-format'
 
-import { useNavigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 
 const pageStyle = {
     maxHeight: "90vh",
@@ -138,16 +138,8 @@ function createNews(title, desc, img, url) {
 }
 
 function Home() {
+    const profile = localStorage.getItem("profile");
     const navigate = useNavigate();
-    useEffect(() => {
-        if(localStorage.getItem("profile") == ""){
-            navigate("/login");
-        }else{
-            setProfile(localStorage.getItem("profile"))
-        }
-    })
-
-    const [profile, setProfile] = useState(null);
 
     const [topGainers, setTopGainers] = useState([]);
     const [news, setNews] = useState([]);
@@ -344,7 +336,7 @@ function Home() {
             </div>
         </div>
             ) : (
-                <div></div>
+                <Navigate to="/login"/>
             )}
         </div>
     )
