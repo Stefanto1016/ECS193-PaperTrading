@@ -1,20 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
-import { useNavigate } from 'react-router';
+import { Navigate } from 'react-router';
 
 
 function App() { 
-  const navigate = useNavigate();
-  useEffect(() => {
-    if(localStorage.getItem("profile") == ""){
-        navigate("/login");
-    }else{
-        setProfile(localStorage.getItem("profile"))
-    }
-})
-
-const [profile, setProfile] = useState(null);
+  const profile = localStorage.getItem("profile");
 
   return (
     <div>
@@ -24,7 +15,7 @@ const [profile, setProfile] = useState(null);
       <Home/>
     </div>
       ) : (
-        <div></div>
+        <Navigate to="/login"/>
       )}
     </div>
   );
