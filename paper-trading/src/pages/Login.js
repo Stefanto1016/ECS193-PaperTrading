@@ -11,11 +11,11 @@ import { Typography } from '@mui/material';
 function Login() {
     //Google User Data
   const navigate = useNavigate();
-  useEffect(() => {
+  /*useEffect(() => {
     if(localStorage.getItem("profile") != ""){
         navigate("/App");
     }
-  })
+  })*/
 
   const [user, setUser] = useState([]);
   const [profile, setProfile] = useState(null);
