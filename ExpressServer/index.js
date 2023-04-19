@@ -26,6 +26,7 @@ app.listen(port, async () =>
     await database.connect();
     await tree.createTree();
     await challenge.createDailyChallenge();
+    await challenge.createPersonalChallengeList();
     console.log("started");
 })
 
@@ -94,6 +95,15 @@ app.get('/getStocks', async(req, res) =>
 }
 )
 
+app.get('/challengeCreatePersonalChallenge', async(req, res) =>
+{
+    const userKey = req.query.userKey;
+    await challenge.createPersonalChallenge(userKey);
+    var stockData = await challenge.getPersonalChallengeProfiles().get(userKey).challenge.stockData;
+    res.send(stockData);
+}
+)
+
 app.get('/challengeGetStockData', async(req, res) =>
 {
     const daily = req.query.daily;
@@ -105,7 +115,7 @@ app.get('/challengeGetStockData', async(req, res) =>
     else
     {
         const userKey = req.query.userKey;
-        stockData = 0;
+        stockData = await challenge.getPersonalChallengeProfiles().get(userKey).challenge.stockData;
     }
     res.send(stockData);
 }
@@ -122,7 +132,7 @@ app.get('/challengeGetBuyingPower', async(req, res) =>
     }
     else
     {
-        buyingPower = 0;
+        buyingPower = challenge.getPersonalChallengeProfiles().get(userKey).buyingPower;
     }
     res.send({buyingPower : buyingPower});
 }
@@ -139,7 +149,7 @@ app.get('/challengeGetBalance', async(req, res) =>
     }
     else
     {
-        balance = 0;
+        balance = challenge.getPersonalChallengeProfiles().get(userKey).balance;
     }
     res.send({balance : balance});
 }
@@ -158,7 +168,7 @@ app.get('/challengeGetStocks', async(req, res) =>
     }
     else
     {
-        stocks = 0;
+        stocks = challenge.getPersonalChallengeProfiles().get(userKey).stocks;
     }
     res.send(stocks);
 }
@@ -179,7 +189,7 @@ app.get('/challengeBuyStock', async(req, res) =>
     }
     else
     {
-        buyingPower = 0;
+        buyingPower = challenge.getPersonalChallengeProfiles().get(userKey).buy(stock, amount);
     }
     res.send({buyingPower : buyingPower});
 }
@@ -198,7 +208,7 @@ app.get('/challengeSellStock', async(req, res) =>
     }
     else
     {
-        buyingPower = 0;
+        buyingPower = challenge.getPersonalChallengeProfiles().get(userKey).sell(stock, amount);
     }
     res.send({buyingPower : buyingPower});
 }
@@ -216,7 +226,53 @@ app.get('/challengeNextDay', async(req, res) =>
     }
     else
     {
-        isFinished = 0;
+        isFinished = challenge.getPersonalChallengeProfiles().get(userKey).nextDay();
+    }
+    res.send({isFinished : isFinished});
+}
+)
+
+app.get('/challengeNextWeek', async(req, res) =>
+{
+    const daily = req.query.daily;
+    const userKey = req.query.userKey;
+    var isFinished = 0;
+    if(daily == 1)
+    {
+        for(let i = 0; i < 5; i++)
+        {
+            isFinished = challenge.getDailyChallengeProfiles().get(userKey).nextDay();
+        }
+    }
+    else
+    {
+        for(let i = 0; i < 5; i++)
+        {
+            isFinished = challenge.getPersonalChallengeProfiles().get(userKey).nextDay();
+        }
+    }
+    res.send({isFinished : isFinished});
+}
+)
+
+app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im lazy, might change later
+{
+    const daily = req.query.daily;
+    const userKey = req.query.userKey;
+    var isFinished = 0;
+    if(daily == 1)
+    {
+        for(let i = 0; i < 20; i++)
+        {
+            isFinished = challenge.getDailyChallengeProfiles().get(userKey).nextDay();
+        }
+    }
+    else
+    {
+        for(let i = 0; i < 20; i++)
+        {
+            isFinished = challenge.getPersonalChallengeProfiles().get(userKey).nextDay();
+        }
     }
     res.send({isFinished : isFinished});
 }

@@ -57,6 +57,10 @@ async function getStockListDate(company)
      const url = `https://api.tdameritrade.com/v1/marketdata/${company}/pricehistory?`;
      const params = new URLSearchParams({apikey: client_id, periodType: "year", period: 20, frequencyType: "daily", frequency: 1});
      const data = await retryFetch(url + params);
+     if(data["candles"].length == 0)
+     {
+          return(Number.MAX_SAFE_INTEGER);
+     }
      return(data["candles"][0]["datetime"]);
 }
 
@@ -110,6 +114,29 @@ async function getPreviousData(company, numDataPoints)
      return(returnArr);
 }
 
+/*This function will return an array containing all daily data points for a company withing the given time period inclusive. Pass to
+the function the company symbol in caps as well as the start and end date as instances of the date class. will return a 2d array where
+the first dimension in the data point and the second dimension determines whether you get the price at that data point or the epoch time of that data point*/
+
+
+async function getPreviousDataRange(company, startDate, endDate)
+{
+     const url = `https://api.tdameritrade.com/v1/marketdata/${company}/pricehistory?`;
+     const params = new URLSearchParams({apikey: client_id, periodType: "year", period: 20, frequencyType: "daily", frequency: 1});
+     var data = await retryFetch(url + params);
+     var returnArr = [];
+     for(let i = 0; i < data["candles"].length; i++)
+     {
+          if(data["candles"][i]["datetime"] >= startDate.getTime() && data["candles"][i]["datetime"] <= endDate.getTime())
+          {
+               returnArr.push([data["candles"][i]["close"], data["candles"][i]["datetime"]]);
+          }
+     }
+     return(returnArr);
+}
+
+
+
 /*
 This function will return a list the symbols of all elligible stocks. As of now, that is simply any stock listed
 on the NYSE or the NASDAQ
@@ -134,5 +161,5 @@ async function getStockList()
 
 module.exports = 
 {
-     getNumDataPoints, getStockListDate, getCurrentData, getPreviousData, getStockList
+     getNumDataPoints, getStockListDate, getCurrentData, getPreviousData, getPreviousDataRange, getStockList
 }
