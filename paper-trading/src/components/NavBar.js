@@ -28,6 +28,7 @@ export default function NavBar() {
                     <Button component={Link} to='/portfolio' color='inherit'> Portfolio </Button>
                     <Button component={Link} to='/stocks' color='inherit'> Stocks </Button>
                     <Button component={Link} to='/learning' color='inherit'> Learning </Button>
+                    <Button component={Link} to='/game' color='inherit'> Game </Button>
                     <Button onClick={logOut} component={Link} to='/logout' color='inherit'> LogOut </Button>
                 </Toolbar>
             </AppBar>

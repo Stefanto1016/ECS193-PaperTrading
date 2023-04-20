@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Portfolio from './pages/Portfolio';
 import Stocks from './pages/Stocks';
 import Learning from './pages/Learning';
+import Game from './pages/Game';
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -22,6 +23,7 @@ root.render(
           <Route path='/portfolio' element={<Portfolio/>} />
           <Route path='/stocks' element={<Stocks/>} />
           <Route path='/learning' element={<Learning/>} />
+          <Route path='/game' element={<Game/>} />
           <Route path='/logout' element={<Login/>} />
         </Routes>
       </Router>
