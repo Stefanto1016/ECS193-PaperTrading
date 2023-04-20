@@ -7,6 +7,7 @@ function newsClick(news){
     window.open(news);
 }
 
+const url = "https://www.amakella.com/resources-for-beginners-to-learn-how-the-stock-market-works/";
 function Learning() {
     const profile = localStorage.getItem("profile");
 
@@ -15,11 +16,16 @@ function Learning() {
             {profile ? (
         <div>
             <NavBar/> 
-            <h1>
-                Learning Page
-            </h1>
             <div className="page-container">
-  
+                <div >
+                  <BlogCard />
+                </div>
+                <BlogCard />
+                <BlogCard />
+                <BlogCard />
+                <BlogCard />
+                <BlogCard />
+                <BlogCard />
                 <BlogCard />
 
             </div>
@@ -50,7 +56,7 @@ function Learning() {
       return (
   
   
-        <div onMouseEnter={this.flip} onMouseLeave={this.flip} onClick={newsClick("https://www.nerdwallet.com/article/investing/stock-market-basics-everything-beginner-investors-know")} className={"card-container" + (this.state.flipped ? " flipped" : "")}>
+        <div onMouseEnter={this.flip} onMouseLeave={this.flip} className={"card-container" + (this.state.flipped ? " flipped" : "")}>
   
           <Front />
           <Back />
@@ -72,11 +78,13 @@ function Learning() {
   }
   
   class Back extends React.Component {
+    
     render() {
       return (
         <div className="back">
           <p>Stocks Stocks Stocks</p>
           <p>noun: stock market; plural noun: stock markets; noun: stockmarket; plural noun: stockmarkets a stock exchange. "he plans to invest in the stock market"</p>
+          <button onClick={() => newsClick(url)}>Open this article!</button>
         </div>
       )
     }
