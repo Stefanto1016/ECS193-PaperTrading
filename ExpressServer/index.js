@@ -9,9 +9,15 @@ const app = express();
 const port = 8000;
 const MSinMin = 1000;
 var currentDate = new Date();
+var started = 0;
 
 /*var cors = require("cors");
 app.use(cors);*/
+
+function sleep(ms) 
+{
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 app.use((req, res, next) => {
     res.append('Access-Control-Allow-Origin', '*');
@@ -28,6 +34,7 @@ app.listen(port, async () =>
     await challenge.createDailyChallenge();
     await challenge.createPersonalChallengeList();
     console.log("started");
+    started = 1;
 })
 
 process.on('exit', function() 
@@ -41,6 +48,10 @@ setInterval(update, MSinMin);
 
 app.get('/buyStock', async (req, res) => 
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const userKey = req.query.userKey;
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
@@ -52,6 +63,10 @@ app.get('/buyStock', async (req, res) =>
 
 app.get('/sellStock', async (req, res) => 
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const userKey = req.query.userKey;
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
@@ -64,6 +79,10 @@ app.get('/sellStock', async (req, res) =>
 
 app.get('/getPortfolioData', async (req, res) => 
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const userKey = req.query.userKey;
     const ret = await getPortfolioData(userKey);
     res.send(ret);
@@ -71,6 +90,10 @@ app.get('/getPortfolioData', async (req, res) =>
 
 app.get('/getSpecificStock', async (req, res) => 
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const userKey = req.query.userKey;
     const stock = req.query.stock;
     const st = await stockQuantity(userKey, stock);
@@ -82,6 +105,10 @@ app.get('/getSpecificStock', async (req, res) =>
 
 app.get('/getHistoricalData', async (req, res) => 
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const stock = req.query.stock;
     const ret = await getHistoricalData(stock);
     res.send(ret);
@@ -89,6 +116,10 @@ app.get('/getHistoricalData', async (req, res) =>
 
 app.get('/getStocks', async(req, res) =>
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const heading = req.query.heading;
     let array = await tree.getStocks(heading);
     res.send(array);
@@ -97,6 +128,10 @@ app.get('/getStocks', async(req, res) =>
 
 app.get('/challengeCreatePersonalChallenge', async(req, res) =>
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const userKey = req.query.userKey;
     await challenge.createPersonalChallenge(userKey);
     var stockData = await challenge.getPersonalChallengeProfiles().get(userKey).challenge.stockData;
@@ -106,6 +141,10 @@ app.get('/challengeCreatePersonalChallenge', async(req, res) =>
 
 app.get('/challengeGetStockData', async(req, res) =>
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const daily = req.query.daily;
     var stockData = 0;
     if(daily == 1)
@@ -123,6 +162,10 @@ app.get('/challengeGetStockData', async(req, res) =>
 
 app.get('/challengeGetBuyingPower', async(req, res) =>
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const daily = req.query.daily;
     const userKey = req.query.userKey;
     var buyingPower = 0;
@@ -140,6 +183,10 @@ app.get('/challengeGetBuyingPower', async(req, res) =>
 
 app.get('/challengeGetBalance', async(req, res) =>
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const daily = req.query.daily;
     const userKey = req.query.userKey;
     var balance = 0;
@@ -159,6 +206,10 @@ app.get('/challengeGetBalance', async(req, res) =>
 /*will return an array representing the number of each stock owned by the user*/
 app.get('/challengeGetStocks', async(req, res) =>
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const daily = req.query.daily;
     const userKey = req.query.userKey;
     var stocks = [];
@@ -178,6 +229,10 @@ app.get('/challengeGetStocks', async(req, res) =>
 
 app.get('/challengeBuyStock', async(req, res) =>
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const daily = req.query.daily;
     const userKey = req.query.userKey;
     const stock = req.query.stock;
@@ -197,6 +252,10 @@ app.get('/challengeBuyStock', async(req, res) =>
 
 app.get('/challengeSellStock', async(req, res) =>
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const daily = req.query.daily;
     const userKey = req.query.userKey;
     const stock = req.query.stock;
@@ -217,6 +276,10 @@ app.get('/challengeSellStock', async(req, res) =>
 
 app.get('/challengeNextDay', async(req, res) =>
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const daily = req.query.daily;
     const userKey = req.query.userKey;
     var isFinished = 0;
@@ -234,6 +297,10 @@ app.get('/challengeNextDay', async(req, res) =>
 
 app.get('/challengeNextWeek', async(req, res) =>
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const daily = req.query.daily;
     const userKey = req.query.userKey;
     var isFinished = 0;
@@ -257,6 +324,10 @@ app.get('/challengeNextWeek', async(req, res) =>
 
 app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im lazy, might change later
 {
+    while(started == 0)
+    {
+        await sleep(100);
+    }
     const daily = req.query.daily;
     const userKey = req.query.userKey;
     var isFinished = 0;
@@ -291,10 +362,7 @@ async function update()
         updatePortfolioValues();
         flushCache();
         tree.createTree();
-        if(newDate.getDay() == 0)
-        {
-            challenge.createDailyChallenge();
-        }
+        challenge.createDailyChallenge();
     }
 }
 
