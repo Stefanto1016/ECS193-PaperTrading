@@ -519,7 +519,7 @@ const handleClose = (event, reason) => {
             let prices = []
             for (const candle of res[2]) {
               var date = new Date(candle.datetime)
-              const options = { year: 'numeric', month: 'short', day: 'numeric' };
+              const options = { month: 'short', day: 'numeric' };
               times.push(date.toLocaleString('en', options))
               prices.push(candle.close)
             }
