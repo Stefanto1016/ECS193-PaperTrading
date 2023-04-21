@@ -225,12 +225,12 @@ function Game() {
     function StartInfo() {
         return (
             <Box display="flex" 
-                    width={500} height={600} 
+                    width={500} height={625} 
                     mx='auto'
                     mt={3}
                     border={0}>
                     <Paper elevation={3} sx={{width: 500,
-                    height: 600}}>
+                    height: 625}}>
                         <Typography fontWeight='bold' variant='h3' textAlign='center' mt={3}>
                             The CompuTrade Stock Game
                         </Typography>
@@ -262,7 +262,7 @@ function Game() {
                             </Button>
                         </Stack>
 
-                        <Typography variant='body2' mx='auto' textAlign='center' mt={1.75} border={0}>
+                        <Typography variant='body2' mx='auto' textAlign='center' mt={3} border={0}>
                             or <span onClick={goPlay} style={{textDecoration: 'underline', cursor: 'pointer', color: 'blue'}}> play against yourself! </span>
                         </Typography>
                     </Paper>
@@ -283,12 +283,12 @@ function Game() {
     function LeaderboardInfo() {
         return (
             <Box display="flex" 
-                    width={500} height={600} 
+                    width={500} height={625} 
                     mx='auto'
                     mt={3}
                     border={0}>
                     <Paper elevation={3} sx={{width: 500,
-                    height: 600}}>
+                    height: 625}}>
                         <IconButton onClick={goStart} sx={{mt:2, ml:2, borderRadius:0, border:0}}>
                             <ArrowBackIcon/>
                             <Typography fontWeight='bold'>
@@ -297,12 +297,12 @@ function Game() {
                         </IconButton>
 
 
-                        <Typography fontWeight='bold' variant='h4' textAlign='center' mt={1}>
+                        <Typography fontWeight='bold' variant='h4' textAlign='center' mt={2}>
                             Game Leaderboard
                         </Typography>
 
                         <TableContainer>
-                            <Table sx={{ maxWidth: 450, mt: 1, mx: 'auto', border: 0}}>
+                            <Table sx={{ maxWidth: 450, mt: 2, mx: 'auto', border: 0}}>
                                 <TableHead>
                                 <TableRow sx={{ maxHeight: 50}}>
                                     <TableCell> # </TableCell>
@@ -548,17 +548,17 @@ function Game() {
     function EndInfo() {
         return (
             <Box display="flex" 
-                 width={500} height={600} 
+                 width={500} height={275} 
                  mx='auto'
-                 mt={3}
+                 mt={20}
                  border={0}>
-                <Paper elevation={3} sx={{width: 500, height: 600}}>
+                <Paper elevation={3} sx={{width: 500, height: 275}}>
                     <Typography fontWeight='bold' variant='h3' textAlign='center' mt={3}>
                         Game Over!
                     </Typography>
 
                     <Typography variant='h4' display='block' textAlign='center' mt={6} mx={4}>
-                        {'Final Balance: ' + balance}
+                        {'Final Balance: $' + balance}
                     </Typography>
 
                     <Box sx={{display:'flex', justifyContent:'center', mt: 5}}>
