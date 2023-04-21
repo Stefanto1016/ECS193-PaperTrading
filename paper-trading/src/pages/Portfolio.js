@@ -16,7 +16,7 @@ import { PerformanceChart, StockChart } from '../components/LineChart';
 import {List, ListItem, ListItemText, Typography } from '@mui/material';
 import { NumericFormat } from 'react-number-format'
 
-import {Navigate} from 'react-router-dom';
+import {Navigate, useNavigate} from 'react-router-dom';
 
 const client_id = "Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK";
 
@@ -71,7 +71,7 @@ const emptyChart = {
   }
 
 function Portfolio() {
-
+    const navigate = useNavigate();
     const profile = localStorage.getItem("profile");
 
     const [stocks, setStocks] = useState([]);
@@ -235,11 +235,11 @@ function Portfolio() {
                             <TableBody>
                                 {stocks.map((gainer) => (
                                     <TableRow sx={{height: 10}}>
-                                        <TableCell component="th" scope="row">
+                                        <TableCell component="th" scope="row" onClick={() => navigate('/stocks', { state: gainer.symbol})} sx={{textDecoration: 'underline', cursor: 'pointer', maxWidth: '5px'}}>
                                             {gainer.symbol}
                                         </TableCell>
-                                        <TableCell align="right">{gainer.change}</TableCell>
-                                        <TableCell align="right">{gainer.price}</TableCell>
+                                        <TableCell align="right">{gainer.change.toFixed(2)}</TableCell>
+                                        <TableCell align="right">{gainer.price.toFixed(2)}</TableCell>
                                         <TableCell align="right">{gainer.quantity}</TableCell>
                                     </TableRow>
                                 ))}

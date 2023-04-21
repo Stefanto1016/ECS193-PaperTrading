@@ -7,16 +7,16 @@ body {
     height: 100%;
     width: 100%;
     margin: 0;
-    background: rgb(209, 182, 214);
     position: absolute;
     box-sizing: border-box;
     #root {
         height: 100%;
+
         .page-container {
             position: relative;
             width: 100%;
             height: 100%;
-            display: block;
+            display: inline;
             perspective: 1000px;
             .card-container {
                 height: 350px;
@@ -24,8 +24,9 @@ body {
                 padding: 0;
                 top: 20px;
                 width: 330px;
-                margin-left: 35%;
-              margin-right: 35%;
+                margin-left: 1%;
+                margin-bottom: 1%;
+                float: left;
                 position: relative;
                 transform-style: preserve-3d;
                 box-sizing: border-box;
@@ -39,6 +40,7 @@ body {
                 }
                 .front,
                 .back {
+                    justify-content: center;
                     box-sizing: border-box;
                     height: 100%;
                     width: 100%;
@@ -64,51 +66,36 @@ body {
                     padding: 20px;
                     font-size: 20px;
                     /* back tile styles go here! */
+                    .newsButton {
+                        border-radius: 12px;
+                        border-color: $new-white;
+                        position: absolute;
+                        bottom: 45px;
+                        left: 105px;
+                        background-color: #1876d1;
+                        color: white;
+                        padding: 10px;
+                    }
                 }
                 .image-container {
+                    height: 100%;
                     position: relative;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                     .card-image {
-                        width: 100%;
+                        width: 75%;
+                        height: 60%;
+                        min-height: 100px;
                         border-radius: 10px;
                     }
                     .title {
-                        font-size: 34px;
+                        font-size: 20px;
                         position: absolute;
-                        margin-bottom: $text-margin;
-                        margin-left: $text-margin;
-                        bottom: 0;
-                        left: 0;
+                        bottom: -12px;
                         color: $new-white;
-                    }
-                }
-                .main-area {
-                    margin-left: $text-margin;
-                    margin-top: $text-margin;
-                    margin-right: $text-margin;
-                    
-                    .blog-post {
-                        height: 100%;
+                        text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
                         
-                        .date {
-                        margin-top: $text-margin;
-                        margin-bottom: 5px;
-                        font-size: 20px;
-                    }
-                    .read-more {
-                        font-size: 20px;
-                        position: relative;
-                        bottom: 0px;
-                        text-align: right;
-                    }
-                        .blog-content {
-                            height: 90%;
-                            display: block;
-                            margin-top: $text-margin;
-                            margin-bottom: $text-margin;
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                        }
                     }
                 }
             }
