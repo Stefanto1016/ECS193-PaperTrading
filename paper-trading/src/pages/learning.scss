@@ -66,51 +66,36 @@ body {
                     padding: 20px;
                     font-size: 20px;
                     /* back tile styles go here! */
+                    .newsButton {
+                        border-radius: 12px;
+                        border-color: $new-white;
+                        position: absolute;
+                        bottom: 45px;
+                        left: 105px;
+                        background-color: #1876d1;
+                        color: white;
+                        padding: 10px;
+                    }
                 }
                 .image-container {
+                    height: 100%;
                     position: relative;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                     .card-image {
-                        width: 100%;
+                        width: 75%;
+                        height: 75%;
+                        min-height: 263px;
                         border-radius: 10px;
                     }
                     .title {
-                        font-size: 34px;
+                        font-size: 20px;
                         position: absolute;
-                        margin-bottom: $text-margin;
-                        margin-left: $text-margin;
-                        bottom: 0;
-                        left: 0;
+                        bottom: -12px;
                         color: $new-white;
-                    }
-                }
-                .main-area {
-                    margin-left: $text-margin;
-                    margin-top: $text-margin;
-                    margin-right: $text-margin;
-                    
-                    .blog-post {
-                        height: 100%;
+                        text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
                         
-                        .date {
-                        margin-top: $text-margin;
-                        margin-bottom: 5px;
-                        font-size: 20px;
-                    }
-                    .read-more {
-                        font-size: 20px;
-                        position: relative;
-                        bottom: 0px;
-                        text-align: right;
-                    }
-                        .blog-content {
-                            height: 90%;
-                            display: block;
-                            margin-top: $text-margin;
-                            margin-bottom: $text-margin;
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                        }
                     }
                 }
             }
