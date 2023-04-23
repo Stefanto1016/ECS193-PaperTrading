@@ -8,6 +8,12 @@ var dailyChallengeProfiles = null;
 var personalChallengeProfiles = null;
 
 
+function sleep(ms) 
+{
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
 class Challenge
 {
     constructor()
@@ -15,6 +21,7 @@ class Challenge
         this.startDate = getRandomDate();
         this.stocks = [];
         this.stockData = [];
+        this.initialized = 0;
     }
 
     InitializeCopy(startDate, stocks, stockData)
@@ -22,6 +29,7 @@ class Challenge
         this.startDate = startDate
         this.stocks = stocks;
         this.stockData = stockData;
+        this.initialized = 1;
     }
 
     async initialize()
@@ -33,6 +41,7 @@ class Challenge
             console.log("retrying challenge initialization");
             await this.initialize();
         }
+        this.initialized = 1;
     }
 }
 
@@ -87,8 +96,6 @@ class ChallengeProgress
             console.log("challenge finished");
             return(1);
         }
-        console.log(this.day);
-        console.log(this.challenge.stockData[0].length);
         var newBalance = this.buyingPower;
         for(let i = 0; i < numStocks; i++)
         {
@@ -137,14 +144,15 @@ async function createPersonalChallenge(userKey)
     personalChallengeProfiles.set(userKey, new ChallengeProgress(challenge));
 }
 
-function getDailyChallengeProfiles()
+function getDailyChallengeProfile(userKey)
 {
-    return(dailyChallengeProfiles);
+    return(dailyChallengeProfiles.get(userKey));
 }
 
-function getPersonalChallengeProfiles()
+function getPersonalChallengeProfile(userKey)
 {
-    return(personalChallengeProfiles);
+    const profile = personalChallengeProfiles.get(userKey);
+    return(profile);
 }
 
 function getDailyChallenge()
@@ -172,11 +180,14 @@ async function getRandomStocks(startDate)
     startDateMinusYear.setFullYear(startDate.getFullYear()-1);
     startDatePlusYear.setFullYear(startDate.getFullYear()+1);
     const googleArrayLength = (await query.getPreviousDataRange("GOOG", new Date(startDateMinusYear), new Date(startDatePlusYear))).length;
+    //console.log(startDateMinusYear);
     while (retList.length < numStocks)
     {
         var randNum = Math.floor(Math.random()*stockList.length);
         if(stockList[randNum] != null)
         {
+            //console.log(stockList[randNum]["symbol"]);
+            //console.log(retList.length);
             if(await query.getStockListDate(stockList[randNum]["symbol"]) < startDateMinusYear.getTime() && ((await query.getPreviousDataRange(stockList[randNum]["symbol"], new Date(startDateMinusYear), new Date(startDatePlusYear))).length == googleArrayLength))
             {
                 retList.push(stockList[randNum]["symbol"]);
@@ -210,5 +221,5 @@ async function getStockData(startDate, stocks)
 
 module.exports = 
 {
-     createDailyChallenge, getDailyChallengeProfiles, getDailyChallenge, createPersonalChallengeList, createPersonalChallenge, getPersonalChallengeProfiles
+     createDailyChallenge, getDailyChallengeProfile, getDailyChallenge, createPersonalChallengeList, createPersonalChallenge, getPersonalChallengeProfile
 }

@@ -3,13 +3,17 @@ const database = require('./mongo/database');
 const cache = require('./mongo/cache');
 const list = require('./mongo/list');
 const tree = require('./tree');
+const queue = require('./queue');
 const challenge = require('./challenge');
 const express = require('express');
 const app = express();
 const port = 8000;
 const MSinMin = 1000;
-var currentDate = new Date();
 var started = 0;
+var currentDate = new Date();
+var globalQueue = queue.createQueue();
+var userQueues = new Map();
+var userChallengeQueues = new Map();
 
 /*var cors = require("cors");
 app.use(cors);*/
@@ -30,11 +34,24 @@ app.listen(port, async () =>
 {
     console.log("starting");
     await database.connect();
+    var userList = await database.getAccountList();
+    for(var i = 0; i < userList.length; i++)
+    {
+        userQueues.set(userList[i], queue.createQueue());
+        userChallengeQueues.set(userList[i], queue.createQueue());
+    }
+    started = 1;
     await tree.createTree();
     await challenge.createDailyChallenge();
     await challenge.createPersonalChallengeList();
     console.log("started");
-    started = 1;
+    for(var i = 0; i < userList.length; i++)
+    {
+        userQueues.get(userList[i]).run();
+        userChallengeQueues.get(userList[i]).run();
+    }
+    globalQueue.run();
+
 })
 
 process.on('exit', function() 
@@ -48,30 +65,50 @@ setInterval(update, MSinMin);
 
 app.get('/buyStock', async (req, res) => 
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
-    const userKey = req.query.userKey;
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
     const st = await buyStock(userKey, stock, amount);
     const ret = {buyingPower: st};
+    alert.unalert();
     res.send(ret);
 })
 
 
 app.get('/sellStock', async (req, res) => 
-{
-    while(started == 0)
+{ 
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
-    const userKey = req.query.userKey;
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
     const st = await sellStock(userKey, stock, amount);
     const ret = {buyingPower: st};
+    alert.unalert();
     res.send(ret);
 })
 
@@ -79,25 +116,45 @@ app.get('/sellStock', async (req, res) =>
 
 app.get('/getPortfolioData', async (req, res) => 
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
-    const userKey = req.query.userKey;
     const ret = await getPortfolioData(userKey);
+    alert.unalert();
     res.send(ret);
 })
 
 app.get('/getSpecificStock', async (req, res) => 
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
-    const userKey = req.query.userKey;
     const stock = req.query.stock;
     const st = await stockQuantity(userKey, stock);
     const ret = {quantity: st};
+    alert.unalert();
     res.send(ret);
 })
 
@@ -105,99 +162,151 @@ app.get('/getSpecificStock', async (req, res) =>
 
 app.get('/getHistoricalData', async (req, res) => 
 {
-    while(started == 0)
+    var alert = queue.createAlert();
+    globalQueue.enqueue(alert);
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
     const stock = req.query.stock;
     const ret = await getHistoricalData(stock);
+    alert.unalert();
     res.send(ret);
 })
 
 app.get('/getStocks', async(req, res) =>
 {
-    while(started == 0)
+    var alert = queue.createAlert();
+    globalQueue.enqueue(alert);
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
     const heading = req.query.heading;
     let array = await tree.getStocks(heading);
+    alert.unalert();
     res.send(array);
 }
 )
 
 app.get('/challengeCreatePersonalChallenge', async(req, res) =>
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
-    const userKey = req.query.userKey;
     await challenge.createPersonalChallenge(userKey);
-    var stockData = await challenge.getPersonalChallengeProfiles().get(userKey).challenge.stockData;
+    var stockData = (await challenge.getPersonalChallengeProfile(userKey)).challenge.stockData;
+    alert.unalert();
     res.send(stockData);
 }
 )
 
 app.get('/challengeGetStockData', async(req, res) =>
 {
-    while(started == 0)
-    {
-        await sleep(100);
-    }
     const daily = req.query.daily;
     var stockData = 0;
     if(daily == 1)
     {
-        stockData = challenge.getDailyChallenge().stockData;
+        var alert = queue.createAlert();
+        globalQueue.enqueue(alert);
+        while(alert.alerted == 0)
+        {
+            await sleep(100);
+        }
+        stockData = (await challenge.getDailyChallenge()).stockData;
     }
     else
     {
         const userKey = req.query.userKey;
-        stockData = await challenge.getPersonalChallengeProfiles().get(userKey).challenge.stockData;
+        var alert = queue.createAlert();
+        if(started == 0)
+        {
+            globalQueue.enqueue(alert);
+        }
+        else
+        {
+            userChallengeQueues.get(userKey).enqueue(alert);
+        }
+        while(alert.alerted == 0)
+        {
+            await sleep(100);
+        }
+        stockData = (await challenge.getPersonalChallengeProfile(userKey)).challenge.stockData;
     }
+    alert.unalert();
     res.send(stockData);
 }
 )
 
 app.get('/challengeGetBuyingPower', async(req, res) =>
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
     const daily = req.query.daily;
-    const userKey = req.query.userKey;
     var buyingPower = 0;
     if(daily == 1)
     {
-        buyingPower = challenge.getDailyChallengeProfiles().get(userKey).buyingPower;
+        buyingPower = challenge.getDailyChallengeProfile(userKey).buyingPower;
     }
     else
     {
-        buyingPower = challenge.getPersonalChallengeProfiles().get(userKey).buyingPower;
+        buyingPower = challenge.getPersonalChallengeProfile(userKey).buyingPower;
     }
+    alert.unalert();
     res.send({buyingPower : buyingPower});
 }
 )
 
 app.get('/challengeGetBalance', async(req, res) =>
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
     const daily = req.query.daily;
-    const userKey = req.query.userKey;
     var balance = 0;
     if(daily == 1)
     {
-        balance = challenge.getDailyChallengeProfiles().get(userKey).balance;
+        balance = challenge.getDailyChallengeProfile(userKey).balance;
     }
     else
     {
-        balance = challenge.getPersonalChallengeProfiles().get(userKey).balance;
+        balance = challenge.getPersonalChallengeProfile(userKey).balance;
     }
+    alert.unalert();
     res.send({balance : balance});
 }
 )
@@ -206,21 +315,31 @@ app.get('/challengeGetBalance', async(req, res) =>
 /*will return an array representing the number of each stock owned by the user*/
 app.get('/challengeGetStocks', async(req, res) =>
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
     const daily = req.query.daily;
-    const userKey = req.query.userKey;
     var stocks = [];
     if(daily == 1)
     {
-        stocks = challenge.getDailyChallengeProfiles().get(userKey).stocks;
+        stocks = challenge.getDailyChallengeProfile(userKey).stocks;
     }
     else
     {
-        stocks = challenge.getPersonalChallengeProfiles().get(userKey).stocks;
+        stocks = challenge.getPersonalChallengeProfile(userKey).stocks;
     }
+    alert.unalert();
     res.send(stocks);
 }
 )
@@ -229,46 +348,66 @@ app.get('/challengeGetStocks', async(req, res) =>
 
 app.get('/challengeBuyStock', async(req, res) =>
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
     const daily = req.query.daily;
-    const userKey = req.query.userKey;
     const stock = req.query.stock;
     const amount = parseInt(req.query.amount);
     var buyingPower = 0;
     if(daily == 1)
     {
-        buyingPower = challenge.getDailyChallengeProfiles().get(userKey).buy(stock, amount);
+        buyingPower = challenge.getDailyChallengeProfile(userKey).buy(stock, amount);
     }
     else
     {
-        buyingPower = challenge.getPersonalChallengeProfiles().get(userKey).buy(stock, amount);
+        buyingPower = challenge.getPersonalChallengeProfile(userKey).buy(stock, amount);
     }
+    alert.unalert();
     res.send({buyingPower : buyingPower});
 }
 )
 
 app.get('/challengeSellStock', async(req, res) =>
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
     const daily = req.query.daily;
-    const userKey = req.query.userKey;
     const stock = req.query.stock;
     const amount = parseInt(req.query.amount);
     var buyingPower = 0;
     if(daily == 1)
     {
-        buyingPower = challenge.getDailyChallengeProfiles().get(userKey).sell(stock, amount);
+        buyingPower = challenge.getDailyChallengeProfile(userKey).sell(stock, amount);
     }
     else
     {
-        buyingPower = challenge.getPersonalChallengeProfiles().get(userKey).sell(stock, amount);
+        buyingPower = challenge.getPersonalChallengeProfile(userKey).sell(stock, amount);
     }
+    alert.unalert();
     res.send({buyingPower : buyingPower});
 }
 )
@@ -276,75 +415,105 @@ app.get('/challengeSellStock', async(req, res) =>
 
 app.get('/challengeNextDay', async(req, res) =>
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
     const daily = req.query.daily;
-    const userKey = req.query.userKey;
     var isFinished = 0;
     if(daily == 1)
     {
-        isFinished = challenge.getDailyChallengeProfiles().get(userKey).nextDay();
+        isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
     }
     else
     {
-        isFinished = challenge.getPersonalChallengeProfiles().get(userKey).nextDay();
+        isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
     }
+    alert.unalert();
     res.send({isFinished : isFinished});
 }
 )
 
 app.get('/challengeNextWeek', async(req, res) =>
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
     const daily = req.query.daily;
-    const userKey = req.query.userKey;
     var isFinished = 0;
     if(daily == 1)
     {
         for(let i = 0; i < 5; i++)
         {
-            isFinished = challenge.getDailyChallengeProfiles().get(userKey).nextDay();
+            isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
         }
     }
     else
     {
         for(let i = 0; i < 5; i++)
         {
-            isFinished = challenge.getPersonalChallengeProfiles().get(userKey).nextDay();
+            isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
         }
     }
+    alert.unalert();
     res.send({isFinished : isFinished});
 }
 )
 
 app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im lazy, might change later
 {
-    while(started == 0)
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
     {
         await sleep(100);
     }
     const daily = req.query.daily;
-    const userKey = req.query.userKey;
     var isFinished = 0;
     if(daily == 1)
     {
         for(let i = 0; i < 20; i++)
         {
-            isFinished = challenge.getDailyChallengeProfiles().get(userKey).nextDay();
+            isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
         }
     }
     else
     {
         for(let i = 0; i < 20; i++)
         {
-            isFinished = challenge.getPersonalChallengeProfiles().get(userKey).nextDay();
+            isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
         }
     }
+    alert.unalert();
     res.send({isFinished : isFinished});
 }
 )
