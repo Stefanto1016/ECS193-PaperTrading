@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const userSchema = require('./userSchema')
+const userSchema = require('./userSchema');
+const leaderboard = require('./leaderboard');
 var url = "mongodb+srv://compubrain:papertrading101@compubrain.z2orex5.mongodb.net/paperTrade?retryWrites=true&w=majority";
 /**
  LIST OF ALL FUNCTIONS (in order)
@@ -332,10 +333,38 @@ async function updateBalance(email, newBalance)
     }
 }
 
+async function getLeaderboard()
+{
+    let date = new Date();
+    let dateString = String(date.getFullYear())+String(date.getMonth())+String(date.getDate());
+    return(await leaderboard.find({date: dateString}).sort({score: -1}));
+}
+
+async function addScore(userKey, score)
+{
+    let date = new Date();
+    let dateString = String(date.getFullYear())+String(date.getMonth())+String(date.getDate());
+    await new leaderboard({
+        userKey: userKey,
+        score: score,
+        date: dateString
+    }).save();
+}
+
+async function clearLeaderboard()
+{
+    let today = new Date();
+    let yesterday = new Date();
+    yesterday.setDate(today.getDate()-1);
+    let dateStringToday = String(today.getFullYear())+String(today.getMonth())+String(today.getDate());
+    let dateStringYesterday = String(yesterday.getFullYear())+String(yesterday.getMonth())+String(yesterday.getDate());
+    await leaderboard.deleteMany({ date: { $nin: [dateStringToday, dateStringYesterday] } });
+}
+
 
 module.exports = 
 {
-     addUser, getUser, getAccountList, addStock, updateStock, deleteStock, stockQuantity, getUserStockList, getBuyingPower, updateBuyingPower, addBalance, updateBalance, connect, disconnect
+     addUser, getUser, getAccountList, addStock, updateStock, deleteStock, stockQuantity, getUserStockList, getBuyingPower, updateBuyingPower, addBalance, updateBalance, updateDate, getLeaderboard, clearLeaderboard, addScore, connect, disconnect
 }
 
 
