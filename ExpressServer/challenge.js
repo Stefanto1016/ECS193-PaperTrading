@@ -54,6 +54,7 @@ class ChallengeProgress
         this.challenge = challenge;
         this.stocks = new Array(numStocks).fill(0);
         this.day = Math.floor(this.challenge.stockData[0].length/2);
+        this.finished = 0;
     }
 
     buy(stock, amount)
@@ -90,9 +91,14 @@ class ChallengeProgress
 
     nextDay()
     {
+        if(this.finished == 1)
+        {
+            return(1);
+        }
         this.day += 1;
         if(this.day >= this.challenge.stockData[0].length)
         {
+            this.finished = 1;
             console.log("challenge finished");
             return(1);
         }
@@ -137,6 +143,11 @@ async function createPersonalChallengeList()
     personalChallengeProfiles = profiles;
 }
 
+async function createDailyChallengeProfile(userKey)
+{
+    personalChallengeProfiles.set(userKey, new ChallengeProgress(dailyChallenge));
+}
+
 async function createPersonalChallenge(userKey)
 {
     var challenge = new Challenge();
@@ -144,7 +155,7 @@ async function createPersonalChallenge(userKey)
     personalChallengeProfiles.set(userKey, new ChallengeProgress(challenge));
 }
 
-function getDailyChallengeProfile(userKey)
+function getDailyChallengeProfile(userKey) //should make async
 {
     return(dailyChallengeProfiles.get(userKey));
 }
@@ -221,5 +232,5 @@ async function getStockData(startDate, stocks)
 
 module.exports = 
 {
-     createDailyChallenge, getDailyChallengeProfile, getDailyChallenge, createPersonalChallengeList, createPersonalChallenge, getPersonalChallengeProfile
+     createDailyChallenge, getDailyChallengeProfile, getDailyChallenge, createPersonalChallengeList, createPersonalChallenge, getPersonalChallengeProfile, createDailyChallengeProfile
 }
