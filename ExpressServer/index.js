@@ -44,13 +44,17 @@ app.listen(port, async () =>
     await tree.createTree();
     await challenge.createDailyChallenge();
     await challenge.createPersonalChallengeList();
+    globalQueue.run();
+    while(globalQueue.getSize() != 0)
+    {
+        await sleep(20);
+    }
     console.log("started");
     for(var i = 0; i < userList.length; i++)
     {
         userQueues.get(userList[i]).run();
         userChallengeQueues.get(userList[i]).run();
     }
-    globalQueue.run();
 
 })
 
@@ -61,6 +65,20 @@ process.on('exit', function()
 });
 
 setInterval(update, MSinMin);
+
+app.get('/createAccount', async (req, res) => 
+{
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    globalQueue.enqueue(alert);
+    while(alert.alerted == 0)
+    {
+        await sleep(100);
+    }
+    const ret = createAccount(userKey);
+    alert.unalert();
+    res.send(ret);
+})
 
 
 app.get('/buyStock', async (req, res) => 
@@ -209,6 +227,53 @@ app.get('/challengeCreatePersonalChallenge', async(req, res) =>
     var stockData = (await challenge.getPersonalChallengeProfile(userKey)).challenge.stockData;
     alert.unalert();
     res.send(stockData);
+}
+)
+
+app.get('/challengeGetLeaderboard', async(req, res) =>
+{
+    var alert = queue.createAlert();
+    globalQueue.enqueue(alert);
+    while(alert.alerted == 0)
+    {
+        await sleep(100);
+    }
+    let leaderboard = await database.getLeaderboard();
+    leaderboard.slice(0, 7);
+    alert.unalert();
+    res.send(leaderboard);
+}
+)
+
+app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
+{
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
+    {
+        await sleep(100);
+    }
+    let leaderboard = await database.getLeaderboard();
+    let position = null;
+    for(let i = 0; i < leaderboard.size; i++)
+    {
+        if(leaderboard[i]["userKey"] == userKey)
+        {
+            position = i;
+            i = leaderboard.size;
+        }
+    }
+    leaderboard.slice(max(0, position-4), min(i-1, position+4));
+    alert.unalert();
+    res.send({position: position, leaderboard: leaderboard});
 }
 )
 
@@ -433,7 +498,12 @@ app.get('/challengeNextDay', async(req, res) =>
     var isFinished = 0;
     if(daily == 1)
     {
+        var wasFinished = challenge.getDailyChallengeProfile(userKey).finished;
         isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
+        if(wasFinished != isFinished)
+        {
+            database.addScore(userKey, challenge.getDailyChallengeProfile(userKey).balance);
+        }
     }
     else
     {
@@ -466,7 +536,12 @@ app.get('/challengeNextWeek', async(req, res) =>
     {
         for(let i = 0; i < 5; i++)
         {
+            var wasFinished = challenge.getDailyChallengeProfile(userKey).finished;
             isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
+            if(wasFinished != isFinished)
+            {
+                database.addScore(userKey, challenge.getDailyChallengeProfile(userKey).balance);
+            }
         }
     }
     else
@@ -503,7 +578,12 @@ app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im
     {
         for(let i = 0; i < 20; i++)
         {
+            var wasFinished = challenge.getDailyChallengeProfile(userKey).finished;
             isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
+            if(wasFinished != isFinished)
+            {
+                database.addScore(userKey, challenge.getDailyChallengeProfile(userKey).balance);
+            }
         }
     }
     else
@@ -532,8 +612,24 @@ async function update()
         flushCache();
         tree.createTree();
         challenge.createDailyChallenge();
+        database.clearLeaderboard();
     }
 }
+
+
+async function createAccount(userKey)
+{
+    await database.addUser(userKey, 10000, [], 10000);
+    userQueues.set(userKey, queue.createQueue());
+    userChallengeQueues.set(userKey, queue.createQueue());
+    challenge.createDailyChallengeProfile(userKey);
+}
+
+/*async function removeAccount(userKey)
+{
+    userQueues.delete(userKey);
+    userChallengeQueues.delete(userKey);
+}*/
 
 
 async function buyStock(userKey, stock, amount)
