@@ -1,10 +1,14 @@
 const query = require('./query');
-let root;
+let symbolRoot = null;
+let nameRoot = null;
+let lookupTable = new Map();
 
 async function getStocks(heading)
 {
-    let array = [];
-    let traversalRoot = root;
+    let symbolArray = [];
+    let nameArray = [];
+    let returnArr = [symbolArray, nameArray];
+    let traversalRoot = symbolRoot;
     for(let i = 0; i < heading.length; i++)
     {
         if(traversalRoot.children[heading.charCodeAt(i)-65] == null)
@@ -13,17 +17,41 @@ async function getStocks(heading)
         }
         traversalRoot = traversalRoot.children[heading.charCodeAt(i)-65]
     }
-    traversalRoot.traverse(array, heading);
-    return(array);
+    traversalRoot.traverse(symbolArray, heading);
+    traversalRoot = nameRoot;
+    for(let i = 0; i < heading.length; i++)
+    {
+        if(traversalRoot.children[heading.charCodeAt(i)-65] == null)
+        {
+            return(array);
+        }
+        traversalRoot = traversalRoot.children[heading.charCodeAt(i)-65]
+    }
+    traversalRoot.traverse(nameArray, heading);
+    for(let i = 0; i < nameArray.length; i++)
+    {
+        nameArray[i] = lookupTable.get(nameArray[i]);
+    }
+    return(returnArr);
 }
 
 async function createTree()
 {
     let stockList = await query.getStockList();
-    root = new Node();
+    symbolRoot = new Node();
+    nameRoot = new Node();
     for(let i = 0; i < stockList.length; i++)
     {
-        root.addChild(stockList[i]["symbol"]);
+        symbolRoot.addChild(stockList[i]["symbol"]);
+    }
+    for(let i = 0; i < stockList.length; i++)
+    {
+        if(stockList[i]["description"] != null && stockList[i]["description"] != "Symbol not found")
+        {
+            let desc = stockList[i]["description"].replace(/[^a-zA-Z]/g, "").toUpperCase();
+            lookupTable.set(desc, [stockList[i]["symbol"], stockList[i]["description"]]);
+            nameRoot.addChild(desc);
+        }
     }
 }
 
@@ -32,7 +60,7 @@ class Node
 {
     constructor()
     {
-        this.children = new Array(26).fill(null);;
+        this.children = new Array(26).fill(null);
         this.end = 0;
     }
 

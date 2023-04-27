@@ -67,6 +67,10 @@ class Queue
     }
 }
 
+var globalQueue = new Queue();
+var userQueues = new Map();
+var userChallengeQueues = new Map();
+
 function createQueue()
 {
     return(new Queue());
@@ -96,9 +100,24 @@ function createAlert()
     return(new Alert());
 }
 
+function getGlobalQueue()
+{
+    return(globalQueue);
+}
+
+function getUserQueue()
+{
+    return(userQueues);
+}
+
+function getUserChallengeQueue()
+{
+    return(userChallengeQueues);
+}
+
 module.exports = 
 {
-     createQueue, createAlert
+     createQueue, createAlert, getGlobalQueue, getUserQueue, getUserChallengeQueue
 }
 
 

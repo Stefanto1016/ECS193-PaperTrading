@@ -1,6 +1,6 @@
 const query = require('./query');
 const database = require('./mongo/database');
-const daysIn20Years = 7305;
+const daysIn10Years = 3650;
 const msInYear = 31536000000; // not leap year
 const numStocks = 10;
 var dailyChallenge = null;
@@ -130,6 +130,7 @@ async function createDailyChallenge()
         profiles.set(accountList[i], new ChallengeProgress(dailyChallenge));
     }
     dailyChallengeProfiles = profiles;
+    await dailyChallenge.initialize();
 }
 
 async function createPersonalChallengeList()
@@ -145,7 +146,7 @@ async function createPersonalChallengeList()
 
 async function createDailyChallengeProfile(userKey)
 {
-    personalChallengeProfiles.set(userKey, new ChallengeProgress(dailyChallenge));
+    dailyChallengeProfiles.set(userKey, new ChallengeProgress(dailyChallenge));
 }
 
 async function createPersonalChallenge(userKey)
@@ -155,8 +156,12 @@ async function createPersonalChallenge(userKey)
     personalChallengeProfiles.set(userKey, new ChallengeProgress(challenge));
 }
 
-function getDailyChallengeProfile(userKey) //should make async
+async function getDailyChallengeProfile(userKey)
 {
+    while(dailyChallenge.initialized == 0)
+    {
+        await sleep(50);
+    }
     return(dailyChallengeProfiles.get(userKey));
 }
 
@@ -171,13 +176,19 @@ function getDailyChallenge()
     return(dailyChallenge);
 }
 
+function deleteUser(userKey)
+{
+    personalChallengeProfiles.delete(userKey);
+    dailyChallengeProfiles.delete(userKey);
+}
+
 
 
 
 function getRandomDate()
 {
     var date = new Date();
-    const randNum = Math.floor(Math.random()*(daysIn20Years-730)+365);
+    const randNum = Math.floor(Math.random()*(daysIn10Years-730)+365);
     date.setDate(date.getDate()-randNum);
     return(date);
 }
@@ -232,5 +243,5 @@ async function getStockData(startDate, stocks)
 
 module.exports = 
 {
-     createDailyChallenge, getDailyChallengeProfile, getDailyChallenge, createPersonalChallengeList, createPersonalChallenge, getPersonalChallengeProfile, createDailyChallengeProfile
+     createDailyChallenge, getDailyChallengeProfile, getDailyChallenge, createPersonalChallengeList, createPersonalChallenge, getPersonalChallengeProfile, createDailyChallengeProfile, deleteUser
 }
