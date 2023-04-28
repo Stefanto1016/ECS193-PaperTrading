@@ -98,7 +98,7 @@ app.get('/hasAccount', async (req, res) =>
     {
         await sleep(100);
     }
-    const ret = database.getUser(userKey);
+    var ret = database.getUser(userKey);
     if(ret == null)
     {
         ret = false;
