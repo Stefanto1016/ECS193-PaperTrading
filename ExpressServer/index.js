@@ -692,6 +692,7 @@ async function createAccount(userKey)
     await database.addUser(userKey, 10000, [], 10000);
     userQueues.set(userKey, queue.createQueue());
     userChallengeQueues.set(userKey, queue.createQueue());
+    userChallengeQueues.get(userKey).run();
     challenge.createDailyChallengeProfile(userKey);
 }
 
