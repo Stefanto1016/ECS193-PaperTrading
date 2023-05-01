@@ -149,12 +149,16 @@ function Home() {
 
     
 
-    useEffect ( () => {fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
-          userKey: "grkoziol@ucdavis.edu"
-    })).then(res => {return res.json()})
-    .then(data => {setAccBalance(data.balance[Object.keys(data.balance)[0]]);
-                setBuyPower(Math.ceil(data.buyingPower * 100)/100);
-                getChartData(data)});
+    useEffect ( () => {
+        if(profile){
+            const prof = JSON.parse(localStorage.getItem("profile"));
+            fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+                userKey: prof["email"]
+        })).then(res => {return res.json()})
+        .then(data => {setAccBalance(data.balance[Object.keys(data.balance)[0]]);
+                    setBuyPower(Math.ceil(data.buyingPower * 100)/100);
+                    getChartData(data)});
+        }
   }, []);
 
     async function retryFetch(url) {

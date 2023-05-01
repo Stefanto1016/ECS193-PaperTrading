@@ -8,6 +8,9 @@ import stock from "../images/stock_background.jpeg"
 import { width } from '@mui/system';
 import { Typography } from '@mui/material';
 
+
+
+
 function Login() {
     //Google User Data
   const navigate = useNavigate();
@@ -49,16 +52,31 @@ function Login() {
     setProfile(null);
     localStorage.setItem("profile", "");
   }
-
+  
   useEffect(
-    () => {
+    ()  => {
       if (profile) {
-        console.log(profile);
-        localStorage.setItem("profile", JSON.stringify(profile));
-        navigate("/App");
+        fetch("http://localhost:8000/hasAccount?" + new URLSearchParams({
+            userKey: profile["email"]
+        })).then((res) => { return res.json()}).then((data) => {
+          if(!(data)){
+            fetch("http://localhost:8000/createAccount?" + new URLSearchParams({
+            userKey: profile["email"]
+            })).then((res) => {
+              if(res.ok){
+                localStorage.setItem("profile", JSON.stringify(profile));
+                navigate("/App");
+              }
+            })
+          } else {
+            localStorage.setItem("profile", JSON.stringify(profile));
+            navigate("/App");
+          }
+        });
       }
     }
-  )
+  );
+
 
   const pageStyle = {
     backgroundColor: "#e5e8eb",
