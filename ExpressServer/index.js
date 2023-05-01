@@ -84,7 +84,7 @@ app.get('/createAccount', async (req, res) =>
     {
         await sleep(100);
     }
-    const ret = createAccount(userKey);
+    const ret = await createAccount(userKey);
     alert.unalert();
     res.send(ret);
 })
@@ -98,15 +98,7 @@ app.get('/hasAccount', async (req, res) =>
     {
         await sleep(100);
     }
-    var ret = database.getUser(userKey);
-    if(ret == null)
-    {
-        ret = false;
-    }
-    else
-    {
-        ret = true;
-    }
+    const ret = await getUser(userKey);
     alert.unalert();
     res.send(ret);
 })
@@ -689,7 +681,7 @@ async function update()
 
 async function createAccount(userKey)
 {
-    await database.addUser(userKey, 10000, [], 10000);
+    await database.addUser(userKey, 10000, [], {yesterday : 10000});
     userQueues.set(userKey, queue.createQueue());
     userQueues.get(userKey).run();
     userChallengeQueues.set(userKey, queue.createQueue());
@@ -766,6 +758,16 @@ async function getPortfolioData(userKey)
 {
     let portfolioData = await database.getUser(userKey);
     return(portfolioData);
+}
+
+async function getUser(userKey)
+{
+    let portfolioData = await database.getUser(userKey);
+    if(portfolioData === null || portfolioData == "null"){
+        return false;
+    }else{
+        return true;
+    }
 }
 
 
