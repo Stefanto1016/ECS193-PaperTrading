@@ -66,15 +66,21 @@ process.on('exit', function()
     console.log("closing");
 });
 
-setInterval(update, 1000);
 
 setInterval(limitOrder.checkLimitOrders, MSinMin*5)
 
+app.get('/update', async (req, res) => 
+{
+    res.send(await update());
+})
+
+/*returns 1 if the server is currently updating and 0 if not*/
 app.get('/isUpdating', async (req, res) => 
 {
     res.send({isUpdating: updating});
 })
 
+/*creates an account with the userKey provided and stores to the database*/
 app.get('/createAccount', async (req, res) => 
 {
     const userKey = req.query.userKey;
@@ -89,6 +95,7 @@ app.get('/createAccount', async (req, res) =>
     res.send(ret);
 })
 
+/*returns true if an account exists*/
 app.get('/hasAccount', async (req, res) => 
 {
     const userKey = req.query.userKey;
@@ -103,6 +110,7 @@ app.get('/hasAccount', async (req, res) =>
     res.send(ret);
 })
 
+/*deletes an account*/
 app.get('/removeAccount', async (req, res) => 
 {
     const userKey = req.query.userKey;
@@ -117,7 +125,7 @@ app.get('/removeAccount', async (req, res) =>
     res.send(ret);
 })
 
-
+/*buys a certain amount of stock for the given user*/
 app.get('/buyStock', async (req, res) => 
 {
     const userKey = req.query.userKey;
@@ -144,6 +152,10 @@ app.get('/buyStock', async (req, res) =>
 
 //http://localhost:8000/limitOrder?userKey=thomasguelk@gmail.com&stock=GOOG&amount=10&price=100&sell=0&whenLessThan=0
 
+/*creates a limit order for the given user. Sell is a boolean for whether the action that should take place when the conditions
+are met is a buy(0) or a sell(1). when less than is a boolean detailing whether the trigger should be when the current price drops below
+the trigger price(1) or rises above the trigger price(0). price is the trigger price, stock and amount are the stock to be transacted and
+the amount to be transacted*/
 app.get('/limitOrder', async (req, res) =>
 {
     const userKey = req.query.userKey;
@@ -163,7 +175,7 @@ app.get('/limitOrder', async (req, res) =>
     res.send(ret);
 })
 
-
+/*sells a certain amount of stock for the given user*/
 app.get('/sellStock', async (req, res) => 
 { 
     const userKey = req.query.userKey;
@@ -188,8 +200,76 @@ app.get('/sellStock', async (req, res) =>
     res.send(ret);
 })
 
+/*adds given stock to users watchlist*/
+app.get('/addWatchList', async (req, res) => 
+{ 
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
+    {
+        await sleep(100);
+    }
+    const stock = req.query.stock;
+    const ret = await database.addWatchList(userKey, stock);
+    alert.unalert();
+    res.send(ret);
+})
+
+/*removes given stock from users watchlist*/
+app.get('/removeWatchList', async (req, res) => 
+{ 
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
+    {
+        await sleep(100);
+    }
+    const stock = req.query.stock;
+    const ret = await database.removeWatchList(userKey, stock);
+    alert.unalert();
+    res.send(ret);
+})
+
+/*returns given users watchlist*/
+app.get('/getWatchList', async (req, res) => 
+{ 
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        userQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
+    {
+        await sleep(100);
+    }
+    const ret = await database.getWatchList(userKey);
+    alert.unalert();
+    res.send(ret);
+})
 
 
+/*returns the portfolio information of the given user for the given user*/
 app.get('/getPortfolioData', async (req, res) => 
 {
     const userKey = req.query.userKey;
@@ -211,6 +291,7 @@ app.get('/getPortfolioData', async (req, res) =>
     res.send(ret);
 })
 
+/*returns the amount of stock owned by the given user for the given user*/
 app.get('/getSpecificStock', async (req, res) => 
 {
     const userKey = req.query.userKey;
@@ -235,7 +316,7 @@ app.get('/getSpecificStock', async (req, res) =>
 })
 
 
-
+/*returns the historical data for a stock*/
 app.get('/getHistoricalData', async (req, res) => 
 {
     var alert = queue.createAlert();
@@ -250,6 +331,7 @@ app.get('/getHistoricalData', async (req, res) =>
     res.send(ret);
 })
 
+/*returns a list of stock names or symbols that start with the heading*/
 app.get('/getStocks', async(req, res) =>
 {
     var alert = queue.createAlert();
@@ -265,6 +347,7 @@ app.get('/getStocks', async(req, res) =>
 }
 )
 
+/*creates a personal challenge for the given user*/
 app.get('/challengeCreatePersonalChallenge', async(req, res) =>
 {
     const userKey = req.query.userKey;
@@ -288,6 +371,7 @@ app.get('/challengeCreatePersonalChallenge', async(req, res) =>
 }
 )
 
+/*gets the top 8 scorers on the leaderboard*/
 app.get('/challengeGetLeaderboard', async(req, res) =>
 {
     var alert = queue.createAlert();
@@ -303,6 +387,8 @@ app.get('/challengeGetLeaderboard', async(req, res) =>
 }
 )
 
+/*gets the given users leaderboard position as well as the 4 people above and below. yesterday is 1
+for yesterdays leaderboard and 0 for todays*/
 app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
 {
     const userKey = req.query.userKey;
@@ -319,7 +405,8 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
     {
         await sleep(100);
     }
-    let leaderboard = await database.getLeaderboard();
+    const yesterday = req.query.yesterday;
+    let leaderboard = await database.getLeaderboard(yesterday);
     let position = null;
     for(let i = 0; i < leaderboard.size; i++)
     {
@@ -335,6 +422,8 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
 }
 )
 
+/*returns the stock data corresponding to the users challenge. daily is
+1 for the daily challenge and 0 for a personal challenge*/
 app.get('/challengeGetStockData', async(req, res) =>
 {
     const daily = req.query.daily;
@@ -372,6 +461,8 @@ app.get('/challengeGetStockData', async(req, res) =>
 }
 )
 
+/*returns the buying power corresponding to the users challenge. daily is
+1 for the daily challenge and 0 for a personal challenge*/
 app.get('/challengeGetBuyingPower', async(req, res) =>
 {
     const userKey = req.query.userKey;
@@ -403,6 +494,8 @@ app.get('/challengeGetBuyingPower', async(req, res) =>
 }
 )
 
+/*returns the balance corresponding to the users challenge. daily is
+1 for the daily challenge and 0 for a personal challenge*/
 app.get('/challengeGetBalance', async(req, res) =>
 {
     const userKey = req.query.userKey;
@@ -469,6 +562,8 @@ app.get('/challengeGetStocks', async(req, res) =>
 
 //http://localhost:8000/challengeBuyStock?daily=1&userKey=thomasguelk@gmail.com&stock=0&amount=2
 
+/*buys an amount of the given stock within the users challenge. daily is
+1 for the daily challenge and 0 for a personal challenge*/
 app.get('/challengeBuyStock', async(req, res) =>
 {
     const userKey = req.query.userKey;
@@ -502,6 +597,8 @@ app.get('/challengeBuyStock', async(req, res) =>
 }
 )
 
+/*sells an amount of the given stock within the users challenge. daily is
+1 for the daily challenge and 0 for a personal challenge*/
 app.get('/challengeSellStock', async(req, res) =>
 {
     const userKey = req.query.userKey;
@@ -535,7 +632,8 @@ app.get('/challengeSellStock', async(req, res) =>
 }
 )
 
-
+/*Passes one day within a users challenge. daily is
+1 for the daily challenge and 0 for a personal challenge*/
 app.get('/challengeNextDay', async(req, res) =>
 {
     const userKey = req.query.userKey;
@@ -572,6 +670,8 @@ app.get('/challengeNextDay', async(req, res) =>
 }
 )
 
+/*Passes one week within a users challenge. daily is
+1 for the daily challenge and 0 for a personal challenge*/
 app.get('/challengeNextWeek', async(req, res) =>
 {
     const userKey = req.query.userKey;
@@ -614,6 +714,8 @@ app.get('/challengeNextWeek', async(req, res) =>
 }
 )
 
+/*Passes 20 days(approx one month) within a users challenge. daily is
+1 for the daily challenge and 0 for a personal challenge*/
 app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im lazy, might change later
 {
     const userKey = req.query.userKey;
@@ -661,8 +763,7 @@ app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im
 
 async function update()
 {
-    var newDate = new Date();
-    if(newDate.getDate() != currentDate.getDate())
+    if(updating != 1)
     {
         updating = 1;
         var promises = [];
@@ -675,13 +776,15 @@ async function update()
         promises.push(database.clearLeaderboard());
         await Promise.all(promises);
         updating = 0;
+        return(1);
     }
+    return(0);
 }
 
 
 async function createAccount(userKey)
 {
-    await database.addUser(userKey, 10000, [], {yesterday : 10000});
+    await database.addUser(userKey, 10000, [], {yesterday : 10000}, []);
     userQueues.set(userKey, queue.createQueue());
     userQueues.get(userKey).run();
     userChallengeQueues.set(userKey, queue.createQueue());
