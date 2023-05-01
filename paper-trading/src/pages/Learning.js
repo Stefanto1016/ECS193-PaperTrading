@@ -28,6 +28,10 @@ function newsClick(news){
 function Learning() {
     const profile = localStorage.getItem("profile");
 
+    useEffect(() => {
+      document.body.style.overflow = "scroll";
+  })
+
     return (
         <div>
             {profile ? (
