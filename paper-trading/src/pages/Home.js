@@ -23,8 +23,10 @@ import { NumericFormat } from 'react-number-format'
 
 import { Navigate, useNavigate } from 'react-router';
 
+import NavBar from '../components/NavBar';
+
 const pageStyle = {
-    maxHeight: "90vh",
+    maxHeight: "80vh",
     height: "90vh",
     width: "100vw"
 }
@@ -57,7 +59,8 @@ const tableStyle = {
 }
 
 const tableStocksStyle = {
-    height: "75%"
+    maxHeight: "85%",
+    overflow: "auto"
 }
 
 const tableTitle = {
@@ -67,7 +70,7 @@ const tableTitle = {
 const newsStyle = {
     float: "right",
     width: "30%",
-    height: "101%",
+    height: "115%",
     textAlign: "center",
     overflow: "auto"
 }
@@ -203,7 +206,7 @@ function Home() {
     }, [])
 
     useEffect(() => {
-        document.body.style.overflow = "hidden";
+        document.body.style.overflow = "auto";
     })
 
     function newsClick(snews){
@@ -248,6 +251,7 @@ function Home() {
         <div>
             {profile ? (
         <div style={pageStyle}>
+            <NavBar/>
             <div style={leftStyle}>
                 <div style={accountStyle}>
                     <div style={accountSummaryStyle}>

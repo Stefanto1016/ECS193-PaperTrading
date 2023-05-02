@@ -72,6 +72,22 @@ function Stocks() {
     ]
   }
 
+  const addWatchlist = {
+    height: 50, 
+    mt:3.3, 
+    mt:1.3, 
+    ml: 3,
+    backgroundColor: "green"
+  }
+  const removeWatchlist = {
+    height: 50, 
+    mt:3.3, 
+    mt:1.3, 
+    ml: 3,
+    backgroundColor: "red"
+  }
+
+
   // Accessing stock info from other pages
   const [externalStock, setExternalStock] = useState(useLocation().state)
 
@@ -277,6 +293,8 @@ function Stocks() {
   const [actionError, setActionError] = useState(false)
   const [quantityError, setQuantityError] = useState(false)
   const [validTransaction, setValidTransaction] = useState(false)
+  const [buttonText, setButtonText] = useState("Add to Watchlist")
+  const [watchListStyle, setWatchListStyle] = useState()
 
 
   useEffect ( () => {
@@ -290,6 +308,7 @@ function Stocks() {
   }, []);
 
 
+
   // Change between option of buying/selling stock
   function changeOption(event) {
     setOption(event.target.value)
@@ -301,6 +320,31 @@ function Stocks() {
     // Textfield for quantity only accepts integers
     if (event.target.value === "" || regex.test(event.target.value)) {
       setQuantity(event.target.value)
+    }
+  }
+
+  function handleWatchlist() {
+    if(buttonText === "Add to Watchlist" && profile){
+      console.log("it was add!")
+      const prof = JSON.parse(localStorage.getItem("profile"));
+      setButtonText("Remove from Watchlist");
+      setWatchListStyle(removeWatchlist);
+      fetch("http://localhost:8000/addWatchList?" + new URLSearchParams({
+            userKey: prof["email"],
+            stock: stockInfo.symbol.toUpperCase(),
+            }));
+      
+    } else if (buttonText === "Remove from Watchlist" && profile) {
+      console.log("it was remove!")
+      const prof = JSON.parse(localStorage.getItem("profile"));
+      setButtonText("Add to Watchlist");
+      setWatchListStyle(addWatchlist);
+      fetch("http://localhost:8000/removeWatchList?" + new URLSearchParams({
+            userKey: prof["email"],
+            stock: stockInfo.symbol.toUpperCase(),
+            }));
+    } else {
+      console.log("tf?")
     }
   }
 
@@ -416,6 +460,10 @@ const handleClose = (event, reason) => {
 
         <Button variant='contained' onClick={handleTransaction} sx={{height: 50, mt:3.3, mt:1.3, ml: 3}}>
           Confirm
+        </Button>
+
+        <Button variant='contained' onClick={handleWatchlist} sx={watchListStyle}>
+          {buttonText}
         </Button>
 
 
@@ -557,6 +605,18 @@ const handleClose = (event, reason) => {
             stock: stock.toString().toUpperCase()
         })).then(res => {return res.json()})
         .then(data => setOwnedStocks(data.quantity));
+      fetch("http://localhost:8000/getWatchList?" + new URLSearchParams({
+          userKey: prof["email"],
+        })).then(res => {return res.json()})
+        .then(data => {
+          if(data.includes(stock.toString().toUpperCase())){
+            setButtonText("Remove from Watchlist");
+            setWatchListStyle(removeWatchlist);
+          } else {
+            setButtonText("Add to Watchlist");
+            setWatchListStyle(addWatchlist);
+          }
+      });
     }
   }
 
