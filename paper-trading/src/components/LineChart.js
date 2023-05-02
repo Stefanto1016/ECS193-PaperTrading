@@ -18,7 +18,7 @@ export function PerformanceChart({ chartData }) {
                     },
                     scales: {
                         x: {
-                            display: false,
+                            //display: false,
                             ticks: {
                                 // For a category axis, the val is the index so the lookup via getLabelForValue is needed
                                 callback: function(val, index) {
