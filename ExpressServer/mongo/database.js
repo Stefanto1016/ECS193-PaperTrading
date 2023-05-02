@@ -44,7 +44,7 @@ async function disconnect()
 /*  addUser(email, buyingPower, stocks, balance) 
 This function adds a new user(document) to the "userInfo" collection on MongoDB
 Error Catching implemented */
-async function addUser(email, buyingPower, stocks, balance)
+async function addUser(email, buyingPower, stocks, balance, watchlist)
 {
     try {
         const emailCheck = await userSchema.findOne({email : email});
@@ -58,7 +58,8 @@ async function addUser(email, buyingPower, stocks, balance)
                 email: email,
                 buyingPower: buyingPower,
                 stocks: stocks,
-                balance: balance
+                balance: balance,
+                watchlist: watchlist
             }
             await new userSchema(user).save()
             
@@ -83,6 +84,19 @@ async function getUser(email)
     } catch(error) {
         console.log(error);
         
+    }
+}
+
+
+async function deleteUser(userKey)
+{
+    try 
+    {    
+        const user = await userSchema.deleteOne({ email: userKey});
+    } 
+    catch(error) 
+    {
+        console.log(error); 
     }
 }
 
@@ -223,9 +237,7 @@ async function getBuyingPower(email)
 {
     try{
         const user = await userSchema.findOne({email : email});
-        if (user == undefined) {
-            console.log("ERROR: Unable to get stock list: email does not exist in database");
-            
+        if (user == undefined) {  
             return;
         }
         
@@ -245,7 +257,6 @@ async function updateBuyingPower(email, buyingPower)
     try{
         const user = await userSchema.findOne({email : email});
         if (user == undefined) {
-            console.log("ERROR: Unable to get stock list: email does not exist in database");
             
             return;
         }
@@ -267,7 +278,6 @@ async function addBalance(email, balance)
     try {
         const user = await userSchema.findOne({email : email});
         if (user == undefined) {
-            console.log("ERROR: Unable to Update Balance: email does not exist in database");
             
             return;
         }
@@ -295,7 +305,6 @@ async function updateDate(email, date, newBalance)
     try {
         const user = await userSchema.findOne({email : email});
         if (user == undefined) {
-            console.log("ERROR: Unable to get stock list: email does not exist in database");
             
             return;
         }
@@ -303,6 +312,64 @@ async function updateDate(email, date, newBalance)
         user.balance[date] = newBalance;
         const update = {balance: user.balance};
         await userSchema.findOneAndUpdate({email : email}, update);
+
+    } catch (error) {
+        console.log(error);
+        
+    }
+}
+
+
+async function addWatchList(userKey, stock)
+{
+    try {
+        const user = await userSchema.findOne({email : userKey});
+        if (user == undefined) {
+            return;
+        }
+        const mergeList = user.watchList;
+        mergeList.push(stock);
+        const update = {watchList: mergeList};
+        await userSchema.findOneAndUpdate({email : userKey}, update);
+
+    } catch (error) {
+        console.log(error);
+        
+    }
+}
+
+
+async function removeWatchList(userKey, stock)
+{
+    try {
+        const user = await userSchema.findOne({email : userKey});
+        if (user == undefined) {
+            return;
+        }
+        var newList = [];
+        for(let i = 0; i < user.watchList.length; i++)
+        {
+            if(user.watchList[i] != stock)
+            {
+                newList.push(user.watchList[i]);
+            }
+        }
+        const update = {watchList: newList};
+        await userSchema.findOneAndUpdate({email : userKey}, update);
+    } catch (error) {
+        console.log(error);
+        
+    }
+}
+
+async function getWatchList(userKey)
+{
+    try {
+        const user = await userSchema.findOne({email : userKey});
+        if (user == undefined) {
+            return;
+        }
+        return(user.watchList);
 
     } catch (error) {
         console.log(error);
@@ -320,8 +387,6 @@ async function updateBalance(email, newBalance)
     try{
         const user = await userSchema.findOne({email : email});
         if (user == undefined) {
-            console.log("ERROR: Unable to get stock list: email does not exist in database");
-            
             return;
         }
         const update = {balance: newBalance};
@@ -333,10 +398,13 @@ async function updateBalance(email, newBalance)
     }
 }
 
-async function getLeaderboard()
+async function getLeaderboard(today)
 {
     let date = new Date();
-    let dateString = String(date.getFullYear())+String(date.getMonth())+String(date.getDate());
+    if(today == 1)
+    {
+        var dateString = String(date.getFullYear())+String(date.getMonth())+String(date.getDate()-yesterday);
+    }
     return(await leaderboard.find({date: dateString}).sort({score: -1}));
 }
 
@@ -364,7 +432,8 @@ async function clearLeaderboard()
 
 module.exports = 
 {
-     addUser, getUser, getAccountList, addStock, updateStock, deleteStock, stockQuantity, getUserStockList, getBuyingPower, updateBuyingPower, addBalance, updateBalance, updateDate, getLeaderboard, clearLeaderboard, addScore, connect, disconnect
+     addUser, getUser, deleteUser, getAccountList, addStock, updateStock, deleteStock, stockQuantity, getUserStockList, getBuyingPower, updateBuyingPower, addBalance, updateBalance, updateDate, getLeaderboard, 
+     clearLeaderboard, addScore, addWatchList, removeWatchList, getWatchList, connect, disconnect
 }
 
 

@@ -11,7 +11,9 @@ const userSchema = mongoose.Schema({
 
     stocks: Object,
 
-    balance: Object
+    balance: Object,
+
+    watchList: Array
 })
 
 module.exports = mongoose.model('user', userSchema, 'userInfo');
