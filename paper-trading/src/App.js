@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import { Navigate } from 'react-router';
 
@@ -10,8 +9,7 @@ function App() {
   return (
     <div>
       {profile ? (
-    <div className="App">
-      <NavBar/> 
+    <div className="App"> 
       <Home/>
     </div>
       ) : (
