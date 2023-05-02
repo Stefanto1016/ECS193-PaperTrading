@@ -1,6 +1,7 @@
 import React, {useEffect} from 'react'
 import { useState } from 'react';
 import Box from '@mui/material/Box'
+import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField'
 import { StockChart } from '../components/LineChart';
 import NavBar from '../components/NavBar';
@@ -75,7 +76,8 @@ function Stocks() {
   const [externalStock, setExternalStock] = useState(useLocation().state)
 
 
-  const [chartData, setChartData] = useState(emptyChart);
+  const [chartData, setChartData] = useState(emptyChart)
+  const [fromOtherPage, setFromOtherPage] = useState(false)
   const [dataVisibility, setDataVisibility] = useState(false)
 
   async function retryFetch(url) {
@@ -578,12 +580,23 @@ const handleClose = (event, reason) => {
                                           })
   const [isValidStock, setIsValidStock] = useState(true)
   
-  // Button used to search for stock
-  const SearchButton = () => (
-    <IconButton onClick={() => handleClick(searchStock)}>
+  // Main used to search for stock
+  const MainSearchButton = () => (
+    <IconButton 
+      sx={{color: "white", 
+      backgroundColor: "#2196f3",
+      ml: 1.5,
+      "&:hover": { color: "#2196f3" }}}
+      onClick={() => handleClick(searchStock)}>
       <SearchIcon />
     </IconButton>
     )
+
+    const SearchButton = () => (
+      <IconButton onClick={() => handleClick(searchStock)}>
+        <SearchIcon />
+      </IconButton>
+      )
 
   // Set stock to be searched
   function changeStock(event) {
@@ -686,6 +699,7 @@ const handleClose = (event, reason) => {
 
   // To display stock information redirected from prev page
   function displayStock(symbol) {
+    setFromOtherPage(true)
     handleClick(symbol)
     setExternalStock(null)
   }
@@ -701,7 +715,50 @@ const handleClose = (event, reason) => {
       ) : null
       }
 
-      <Box
+    {!dataVisibility && !fromOtherPage &&
+
+    <Box
+      sx={{
+        display: 'flex',
+        width: 600,
+        height: 175,
+        maxWidth: '100%',
+        mx: 'auto',
+        mt: 25,
+        textAlign: 'center',
+        border : 0
+      }}
+    >
+      <Paper elevation={0} sx={{width: 600, height: 175}}>
+
+        <Typography fontWeight='bold' variant='h4' textAlign='center' mt={3}>
+          Search for Stock Symbol
+        </Typography>
+
+        <TextField id="standard-basic" 
+                  sx={{minWidth: 500, mt: 3}}
+                  onChange={changeStock}
+                  onKeyPress= {(e) => {
+                    if (e.key === 'Enter') {
+                      handleClick(searchStock)
+                    }
+                  }}
+                  InputProps={{endAdornment: <MainSearchButton />,
+                               style: {
+                                borderRadius: "25px",
+                               }}}
+                  error={!isValidStock}
+                  helperText={
+                    !isValidStock ? 'Invalid Symbol' : null
+                  }
+        />
+      </Paper>
+
+    </Box> 
+    }
+
+    {dataVisibility && 
+    <Box
       sx={{
         width: 1000,
         maxWidth: '100%',
@@ -725,6 +782,7 @@ const handleClose = (event, reason) => {
       />
 
     </Box>
+    }
 
     {dataVisibility && <PrimaryData/>}
     {dataVisibility && <SecondaryData/>}
