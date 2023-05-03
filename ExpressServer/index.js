@@ -415,8 +415,9 @@ app.get('/challengeCreatePersonalChallenge', async(req, res) =>
     }
     await challenge.createPersonalChallenge(userKey);
     var stockData = (await challenge.getPersonalChallengeProfile(userKey)).challenge.stockData;
+    var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
     alert.unalert();
-    res.send(stockData);
+    res.send({stockData : stockData, currentDay : currentDay});
 }
 )
 
@@ -481,6 +482,7 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
 app.get('/challengeGetStockData', async(req, res) =>
 {
     const daily = req.query.daily;
+    const userKey = req.query.userKey;
     var stockData = 0;
     if(daily == 1)
     {
@@ -491,10 +493,10 @@ app.get('/challengeGetStockData', async(req, res) =>
             await sleep(100);
         }
         stockData = (await challenge.getDailyChallenge()).stockData;
+        var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
     }
     else
     {
-        const userKey = req.query.userKey;
         var alert = queue.createAlert();
         if(started == 0)
         {
@@ -514,9 +516,10 @@ app.get('/challengeGetStockData', async(req, res) =>
             return;
         }
         stockData = challenge.getPersonalChallengeProfile(userKey).challenge.stockData;
+        var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
     }
     alert.unalert();
-    res.send(stockData);
+    res.send({stockData : stockData, currentDay : currentDay});
 }
 )
 
