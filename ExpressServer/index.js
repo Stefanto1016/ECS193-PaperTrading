@@ -11,7 +11,6 @@ const app = express();
 const port = 8000;
 const MSinMin = 1000*60;
 var started = 0;
-var currentDate = new Date();
 var globalQueue = queue.getGlobalQueue();
 var userQueues = queue.getUserQueue();
 var userChallengeQueues = queue.getUserChallengeQueue();
@@ -120,6 +119,11 @@ app.get('/removeAccount', async (req, res) =>
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     const ret = removeAccount(userKey);
     alert.unalert();
     res.send(ret);
@@ -141,6 +145,11 @@ app.get('/buyStock', async (req, res) =>
     while(alert.alerted == 0)
     {
         await sleep(100);
+    }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
     }
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
@@ -164,6 +173,11 @@ app.get('/limitOrder', async (req, res) =>
     while(alert.alerted == 0)
     {
         await sleep(100);
+    }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
     }
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
@@ -192,6 +206,11 @@ app.get('/sellStock', async (req, res) =>
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     const stock = req.query.stock;
     const amount = parseFloat(req.query.amount);
     const st = await sellStock(userKey, stock, amount);
@@ -217,6 +236,11 @@ app.get('/addWatchList', async (req, res) =>
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     const stock = req.query.stock;
     const ret = await database.addWatchList(userKey, stock);
     alert.unalert();
@@ -239,6 +263,11 @@ app.get('/removeWatchList', async (req, res) =>
     while(alert.alerted == 0)
     {
         await sleep(100);
+    }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
     }
     const stock = req.query.stock;
     const ret = await database.removeWatchList(userKey, stock);
@@ -263,6 +292,11 @@ app.get('/getWatchList', async (req, res) =>
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     const ret = await database.getWatchList(userKey);
     alert.unalert();
     res.send(ret);
@@ -286,6 +320,11 @@ app.get('/getPortfolioData', async (req, res) =>
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     const ret = await getPortfolioData(userKey);
     alert.unalert();
     res.send(ret);
@@ -307,6 +346,11 @@ app.get('/getSpecificStock', async (req, res) =>
     while(alert.alerted == 0)
     {
         await sleep(100);
+    }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
     }
     const stock = req.query.stock;
     const st = await stockQuantity(userKey, stock);
@@ -364,6 +408,11 @@ app.get('/challengeCreatePersonalChallenge', async(req, res) =>
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     await challenge.createPersonalChallenge(userKey);
     var stockData = (await challenge.getPersonalChallengeProfile(userKey)).challenge.stockData;
     alert.unalert();
@@ -404,6 +453,11 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
     while(alert.alerted == 0)
     {
         await sleep(100);
+    }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
     }
     const yesterday = req.query.yesterday;
     let leaderboard = await database.getLeaderboard(yesterday);
@@ -454,6 +508,11 @@ app.get('/challengeGetStockData', async(req, res) =>
         {
             await sleep(100);
         }
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            return;
+        }
         stockData = challenge.getPersonalChallengeProfile(userKey).challenge.stockData;
     }
     alert.unalert();
@@ -478,6 +537,11 @@ app.get('/challengeGetBuyingPower', async(req, res) =>
     while(alert.alerted == 0)
     {
         await sleep(100);
+    }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
     }
     const daily = req.query.daily;
     var buyingPower = 0;
@@ -512,6 +576,11 @@ app.get('/challengeGetBalance', async(req, res) =>
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     const daily = req.query.daily;
     var balance = 0;
     if(daily == 1)
@@ -544,6 +613,11 @@ app.get('/challengeGetStocks', async(req, res) =>
     while(alert.alerted == 0)
     {
         await sleep(100);
+    }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
     }
     const daily = req.query.daily;
     var stocks = [];
@@ -580,6 +654,11 @@ app.get('/challengeBuyStock', async(req, res) =>
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     const daily = req.query.daily;
     const stock = req.query.stock;
     const amount = parseInt(req.query.amount);
@@ -614,6 +693,11 @@ app.get('/challengeSellStock', async(req, res) =>
     while(alert.alerted == 0)
     {
         await sleep(100);
+    }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
     }
     const daily = req.query.daily;
     const stock = req.query.stock;
@@ -650,12 +734,18 @@ app.get('/challengeNextDay', async(req, res) =>
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     const daily = req.query.daily;
     var isFinished = 0;
     if(daily == 1)
     {
         var wasFinished = (await challenge.getDailyChallengeProfile(userKey)).finished;
         isFinished = (await challenge.getDailyChallengeProfile(userKey)).nextDay();
+        var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
         if(wasFinished != isFinished)
         {
             database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
@@ -664,9 +754,10 @@ app.get('/challengeNextDay', async(req, res) =>
     else
     {
         isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
+        var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
     }
     alert.unalert();
-    res.send({isFinished : isFinished});
+    res.send({isFinished : isFinished, currentDay : currentDay});
 }
 )
 
@@ -688,6 +779,11 @@ app.get('/challengeNextWeek', async(req, res) =>
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     const daily = req.query.daily;
     var isFinished = 0;
     if(daily == 1)
@@ -696,6 +792,7 @@ app.get('/challengeNextWeek', async(req, res) =>
         {
             var wasFinished = (await challenge.getDailyChallengeProfile(userKey)).finished;
             isFinished = (await challenge.getDailyChallengeProfile(userKey)).nextDay();
+            var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
             if(wasFinished != isFinished)
             {
                 database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
@@ -707,10 +804,11 @@ app.get('/challengeNextWeek', async(req, res) =>
         for(let i = 0; i < 5; i++)
         {
             isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
+            var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
         }
     }
     alert.unalert();
-    res.send({isFinished : isFinished});
+    res.send({isFinished : isFinished, currentDay : currentDay});
 }
 )
 
@@ -732,6 +830,11 @@ app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im
     {
         await sleep(100);
     }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        return;
+    }
     const daily = req.query.daily;
     var isFinished = 0;
     if(daily == 1)
@@ -740,6 +843,7 @@ app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im
         {
             var wasFinished = (await challenge.getDailyChallengeProfile(userKey)).finished;
             isFinished = (await challenge.getDailyChallengeProfile(userKey)).nextDay();
+            var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
             if(wasFinished != isFinished)
             {
                 database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
@@ -751,10 +855,11 @@ app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im
         for(let i = 0; i < 20; i++)
         {
             isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
+            var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
         }
     }
     alert.unalert();
-    res.send({isFinished : isFinished});
+    res.send({isFinished : isFinished, currentDay : currentDay});
 }
 )
 
