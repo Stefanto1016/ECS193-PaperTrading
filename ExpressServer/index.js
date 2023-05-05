@@ -416,8 +416,9 @@ app.get('/challengeCreatePersonalChallenge', async(req, res) =>
     await challenge.createPersonalChallenge(userKey);
     var stockData = (await challenge.getPersonalChallengeProfile(userKey)).challenge.stockData;
     var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
+    var stocks = challenge.getPersonalChallengeProfile(userKey).challenge.stocks;
     alert.unalert();
-    res.send({stockData : stockData, currentDay : currentDay});
+    res.send({stockData : stockData, currentDay : currentDay, stocks : stocks});
 }
 )
 

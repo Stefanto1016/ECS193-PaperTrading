@@ -13,7 +13,7 @@ async function getStocks(heading)
     {
         if(traversalRoot.children[heading.charCodeAt(i)-65] == null)
         {
-            return(array);
+            return([]);
         }
         traversalRoot = traversalRoot.children[heading.charCodeAt(i)-65]
     }
@@ -23,7 +23,7 @@ async function getStocks(heading)
     {
         if(traversalRoot.children[heading.charCodeAt(i)-65] == null)
         {
-            return(array);
+            return([]);
         }
         traversalRoot = traversalRoot.children[heading.charCodeAt(i)-65]
     }

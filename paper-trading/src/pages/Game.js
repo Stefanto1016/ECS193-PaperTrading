@@ -224,6 +224,7 @@ const emptyChart = {
 
 function Game() {
     const profile = localStorage.getItem("profile");
+
     const [displayStart, setDisplayStart] = useState(true);
     const [displayLeaderboard, setDisplayLeaderboard] = useState(false);
     const [displayLoading, setDisplayLoading] = useState(false);
@@ -233,6 +234,7 @@ function Game() {
     const [chartData, setChartData] = useState(emptyChart)
 
     const [curStock, setCurStock] = useState('');
+    const [curStockIndex, setCurStockIndex] = useState('');
     const [stockSymbol, setStockSymbol] = useState('');
     const [stockDesc, setStockDesc] = useState('');
     const [stockMark, setStockMark] = useState('');
@@ -249,7 +251,7 @@ function Game() {
 
     const [option, setOption] = useState('')
     const [quantity, setQuantity] = useState([])
-    const [balance, setBalance] = useState(100000)
+    const [balance, setBalance] = useState(10000)
     const [ownedStocks, setOwnedStocks] = useState({})
     const [buyError, setBuyError] = useState(false)
     const [sellError, setSellError] = useState(false)
@@ -261,11 +263,12 @@ function Game() {
     //const [disableMonthForward, setDisableMonthForward] = useState(false)
 
     // While loading, set up game
-    useEffect(() => {
-        if (displayLoading) {
-            goPlay()
-        }
-    }, [displayLoading])
+    // useEffect(() => {
+    //     if (displayLoading) {
+    //         console.log("in here")
+    //         goPlay()
+    //     }
+    // }, [displayLoading])
 
     // Disable buttons when certain amount of dates remain
     // useEffect(() => {
@@ -279,6 +282,65 @@ function Game() {
     //     }
     // }, [cutoff])
 
+    async function getStockQuotes(stockData, firstStockName) {
+        var stocksInfo = []
+        for (const stock of stockData) {
+            stocksInfo.push(await getCurrentData([stock]))
+        }
+        setQuoteData(stocksInfo)
+        console.log(stocksInfo[0][firstStockName].symbol)
+        console.log(stocksInfo[0][firstStockName].description)
+        setStockSymbol(stocksInfo[0][firstStockName].symbol)
+        setStockDesc(stocksInfo[0][firstStockName].description)
+        setDisplayStart(false)
+        setDisplayEnd(false)
+        setDisplayLoading(false)
+        setDisplayGame(true)
+    }
+
+    function getStockButtons(stockNames) {
+        var stockButtons = []
+        for (const stock of stockNames) {
+            stockButtons.push(<ToggleButton value={stock} key={stock}> {stock} </ToggleButton>)
+        }
+        setStockToggles(stockButtons)
+    }
+
+    function getChartData(firstStockData, cutoff) {
+        let times = []
+        let prices = []
+
+        for (const data of firstStockData) {
+            //console.log(data.close)
+            var date = new Date(data[1])
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            times.push(date.toLocaleString('en', options))
+            prices.push(data[0])
+        }
+
+        //console.log(times)
+        setCurStockTimes(times)
+        //console.log(prices)
+        setCurStockPrices(prices)
+
+        const chartData = {
+            // x-axis labels
+              labels: times.slice(0, cutoff),
+              datasets: [
+              {
+                label: "Stock Price ($)",
+                // corresponding y values
+                data: prices.slice(0, cutoff),
+                fill: true,
+                borderColor: "blue",
+                tension: 0.1
+              }
+              ]
+        }
+
+        setChartData(chartData)
+    }
+
     // To change the stocks displayed on the game page
     function changeStock(event) {
         let times = []
@@ -289,6 +351,7 @@ function Game() {
         case stocksList[0]:
             var stock = stocksList[0]
             setCurStock(stock)
+            setCurStockIndex(0)
             setStockSymbol(quoteData[0][stock].symbol)
             setStockDesc(quoteData[0][stock].description)
             setStockMark(histData[0][cutoff-1][0].toFixed(2))
@@ -301,6 +364,7 @@ function Game() {
         case stocksList[1]:
             var stock = stocksList[1]
             setCurStock(stock)
+            setCurStockIndex(1)
             setStockSymbol(quoteData[1][stock].symbol)
             setStockDesc(quoteData[1][stock].description)
             setStockMark(histData[1][cutoff-1][0].toFixed(2))
@@ -313,6 +377,7 @@ function Game() {
         case stocksList[2]:
             var stock = stocksList[2]
             setCurStock(stock)
+            setCurStockIndex(2)
             setStockSymbol(quoteData[2][stock].symbol)
             setStockDesc(quoteData[2][stock].description)
             setStockMark(histData[2][cutoff-1][0].toFixed(2))
@@ -325,6 +390,7 @@ function Game() {
         case stocksList[3]:
             var stock = stocksList[3]
             setCurStock(stock)
+            setCurStockIndex(3)
             setStockSymbol(quoteData[3][stock].symbol)
             setStockDesc(quoteData[3][stock].description)
             setStockMark(histData[3][cutoff-1][0].toFixed(2))
@@ -337,6 +403,7 @@ function Game() {
         case stocksList[4]:
             var stock = stocksList[4]
             setCurStock(stock)
+            setCurStockIndex(4)
             setStockSymbol(quoteData[4][stock].symbol)
             setStockDesc(quoteData[4][stock].description)
             setStockMark(histData[4][cutoff-1][0].toFixed(2))
@@ -349,6 +416,7 @@ function Game() {
         case stocksList[5]:
             var stock = stocksList[5]
             setCurStock(stock)
+            setCurStockIndex(5)
             setStockSymbol(quoteData[5][stock].symbol)
             setStockDesc(quoteData[5][stock].description)
             setStockMark(histData[5][cutoff-1][0].toFixed(2))
@@ -361,6 +429,7 @@ function Game() {
         case stocksList[6]:
             var stock = stocksList[6]
             setCurStock(stock)
+            setCurStockIndex(6)
             setStockSymbol(quoteData[6][stock].symbol)
             setStockDesc(quoteData[6][stock].description)
             setStockMark(histData[6][cutoff-1][0].toFixed(2))
@@ -373,6 +442,7 @@ function Game() {
         case stocksList[7]:
             var stock = stocksList[7]
             setCurStock(stock)
+            setCurStockIndex(7)
             setStockSymbol(quoteData[7][stock].symbol)
             setStockDesc(quoteData[7][stock].description)
             setStockMark(histData[7][cutoff-1][0].toFixed(2))
@@ -385,6 +455,7 @@ function Game() {
         case stocksList[8]:
             var stock = stocksList[8]
             setCurStock(stock)
+            setCurStockIndex(8)
             setStockSymbol(quoteData[8][stock].symbol)
             setStockDesc(quoteData[8][stock].description)
             setStockMark(histData[8][cutoff-1][0].toFixed(2))
@@ -397,6 +468,7 @@ function Game() {
         case stocksList[9]:
             var stock = stocksList[9]
             setCurStock(stock)
+            setCurStockIndex(9)
             setStockSymbol(quoteData[9][stock].symbol)
             setStockDesc(quoteData[9][stock].description)
             setStockMark(histData[9][cutoff-1][0].toFixed(2))
@@ -441,8 +513,16 @@ function Game() {
     }
 
     function goEnd() {
-        setDisplayGame(false)
-        setDisplayEnd(true)
+        //setDisplayGame(false)
+
+        const prof = JSON.parse(localStorage.getItem("profile"))
+        fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
+                userKey: prof["email"],
+                daily: 0
+            })).then(res => {return res.json()})
+            .then(data => {setBalance(data.balance.toFixed(2))
+                           setDisplayGame(false)
+                           setDisplayEnd(true)}); 
     }
 
     function goLoad() {
@@ -452,102 +532,137 @@ function Game() {
     }
 
     async function goPlay() {
+        setDisplayLoading(true)
+        setDisplayGame(false)
         //var challenge = new Challenge()
         //await challenge.initialize()
         // Generate random stocks
-        var randomDate = getRandomDate()
-        console.log(randomDate)
-        var randomStocks = await getRandomStocks(randomDate)
-        console.log(randomStocks)
-        setStocksList(randomStocks)
+        
+        
+        // var randomDate = getRandomDate()
+        // console.log(randomDate)
+        // var randomStocks = await getRandomStocks(randomDate)
+        // console.log(randomStocks)
+        // setStocksList(randomStocks)
+        const prof = JSON.parse(localStorage.getItem("profile"))
+        fetch("http://localhost:8000/challengeCreatePersonalChallenge?" + new URLSearchParams({
+                userKey: prof["email"]
+            })).then(res => {return res.json()})
+            .then(data => {
+                           console.log(data.stockData)
+                           setHistData(data.stockData)
+                           setCutoff(data.currentDay + 1)
+                           console.log(data.stockData.length)
+                           setHistDataLen(data.stockData[0].length)
+                           setStockMark(data.stockData[0][data.currentDay][0].toFixed(2))
+                           setCurStock(data.stocks[0])
+                           setStocksList(data.stocks)
+                           setCurStockIndex(0)
+                           getStockButtons(data.stocks)
+                           getChartData(data.stockData[0], data.currentDay + 1)
+                           getStockQuotes(data.stocks, data.stocks[0])
+                        });
 
         // Get the available toggle buttons for the stocks
-        var stockButtons = []
-        for (const stock of randomStocks) {
-            stockButtons.push(<ToggleButton value={stock} key={stock}> {stock} </ToggleButton>)
-        }
-        setStockToggles(stockButtons)
+        // var stockButtons = []
+        // for (const stock of randomStocks) {
+        //     stockButtons.push(<ToggleButton value={stock} key={stock}> {stock} </ToggleButton>)
+        // }
+        // setStockToggles(stockButtons)
 
         // Genereate random stocks historical data
-        var randomStocksData = await getStockData(randomDate, randomStocks)
-        console.log(randomStocksData)
-        setHistData(randomStocksData)
+        // var randomStocksData = await getStockData(randomDate, randomStocks)
+        // console.log(randomStocksData)
+        // setHistData(randomStocksData)
 
         // Get random stocks quote data
-        var stocksInfo = []
-        for (const stock of randomStocks) {
-            stocksInfo.push(await getCurrentData([stock]))
-        }
-        setQuoteData(stocksInfo)
-        console.log(stocksInfo)
+        // var stocksInfo = []
+        // for (const stock of randomStocks) {
+        //     stocksInfo.push(await getCurrentData([stock]))
+        // }
+        // setQuoteData(stocksInfo)
+        // console.log(stocksInfo)
        
         setOption('')
         setQuantity(0)
-        setBalance(100000)
 
-        var object = {}
-        for (const stock of randomStocks) {
-            object[stock] = 0
-        }
-        console.log(object)
-        setOwnedStocks(object)
+        fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
+                userKey: prof["email"],
+                daily: 0
+            })).then(res => {return res.json()})
+            .then(data => {setBalance(data.buyingPower.toFixed(2))});
+
+        // setBalance(100000)
+
+        fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
+                userKey: prof["email"],
+                daily: 0
+            })).then(res => {return res.json()})
+            .then(data => {setOwnedStocks(data)});
+
+        // var object = {}
+        // for (const stock of randomStocks) {
+        //     object[stock] = 0
+        // }
+        // console.log(object)
+        // setOwnedStocks(object)
 
         // Set symbol and description for first stock
-        var firstStockName = randomStocks[0]
-        setCurStock(firstStockName)
-        setStockSymbol(stocksInfo[0][firstStockName].symbol)
-        setStockDesc(stocksInfo[0][firstStockName].description)
+        // var firstStockName = randomStocks[0]
+        // setCurStock(firstStockName)
+        // setStockSymbol(stocksInfo[0][firstStockName].symbol)
+        // setStockDesc(stocksInfo[0][firstStockName].description)
 
         // Get length of data points
-        setHistDataLen(randomStocksData[0].length)
+        // setHistDataLen(randomStocksData[0].length)
         // Find midway point of data
-        var middle = Math.floor(randomStocksData[0].length / 2)
-        setCutoff(middle)
+        // var middle = Math.floor(randomStocksData[0].length / 2)
+        // setCutoff(middle)
 
-        console.log(randomStocksData[0][middle-1][0])
-        // Get close cost of middle element of first random stock
-        setStockMark(randomStocksData[0][middle-1][0].toFixed(2))
+        // console.log(randomStocksData[0][middle-1][0])
+        // // Get close cost of middle element of first random stock
+        // setStockMark(randomStocksData[0][middle-1][0].toFixed(2))
 
-        let times = []
-        let prices = []
+        // let times = []
+        // let prices = []
 
-        for (const data of randomStocksData[0]) {
-            //console.log(data.close)
-            var date = new Date(data[1])
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            times.push(date.toLocaleString('en', options))
-            prices.push(data[0])
-        }
+        // for (const data of randomStocksData[0]) {
+        //     //console.log(data.close)
+        //     var date = new Date(data[1])
+        //     const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        //     times.push(date.toLocaleString('en', options))
+        //     prices.push(data[0])
+        // }
 
-        //console.log(times)
-        setCurStockTimes(times)
-        //console.log(prices)
-        setCurStockPrices(prices)
+        // //console.log(times)
+        // setCurStockTimes(times)
+        // //console.log(prices)
+        // setCurStockPrices(prices)
 
-        const chartData = {
-            // x-axis labels
-              labels: times.slice(0, middle),
-              datasets: [
-              {
-                label: "Stock Price ($)",
-                // corresponding y values
-                data: prices.slice(0, middle),
-                fill: true,
-                borderColor: "blue",
-                tension: 0.1
-              }
-              ]
-        }
+        // const chartData = {
+        //     // x-axis labels
+        //       labels: times.slice(0, middle),
+        //       datasets: [
+        //       {
+        //         label: "Stock Price ($)",
+        //         // corresponding y values
+        //         data: prices.slice(0, middle),
+        //         fill: true,
+        //         borderColor: "blue",
+        //         tension: 0.1
+        //       }
+        //       ]
+        // }
 
-        setChartData(chartData)
+        // setChartData(chartData)
 
         // setDisableWeekForward(false)
         // setDisableMonthForward(false)
         
         setDisplayStart(false)
         setDisplayEnd(false)
-        setDisplayLoading(false)
-        setDisplayGame(true)
+        //setDisplayLoading(false)
+        //setDisplayGame(true)
     }
 
     function StartInfo() {
@@ -581,7 +696,7 @@ function Game() {
                         </Typography>
 
                         <Stack direction="row" spacing={6} justifyContent='center' ml={3} mr={3} mt={3} border={0}>
-                            <Button variant='contained' onClick={goLoad}>
+                            <Button variant='contained' onClick={goPlay}>
                                 Play Now!
                             </Button>
 
@@ -591,7 +706,7 @@ function Game() {
                         </Stack>
 
                         <Typography variant='body2' mx='auto' textAlign='center' mt={3} border={0}>
-                            or <span onClick={goLoad} style={{textDecoration: 'underline', cursor: 'pointer', color: 'blue'}}> play against yourself! </span>
+                            or <span onClick={goPlay} style={{textDecoration: 'underline', cursor: 'pointer', color: 'blue'}}> play against yourself! </span>
                         </Typography>
                     </Paper>
             </Box>
@@ -612,14 +727,14 @@ function Game() {
         )
     }
 
-    var leaderboardData = [{rank: 1, name: 'Jane Doe', balance: 120500},
-                           {rank: 2, name: 'John Smith', balance: 120000},
-                           {rank: 3, name: 'Bobby Brown', balance: 110000},
-                           {rank: 4, name: 'Adam Miller', balance: 105000},
-                           {rank: 5, name: 'Bill Lee', balance: 100000},
-                           {rank: 6, name: 'Will Johnson', balance: 98000},
-                           {rank: 7, name: 'Scott Williams', balance: 97000},
-                           {rank: 8, name: 'Calvin Young', balance: 96500},
+    var leaderboardData = [{name: 'Jane Doe', balance: 120500},
+                           {name: 'John Smith', balance: 120000},
+                           {name: 'Bobby Brown', balance: 110000},
+                           {name: 'Adam Miller', balance: 105000},
+                           {name: 'Bill Lee', balance: 100000},
+                           {name: 'Will Johnson', balance: 98000},
+                           {name: 'Scott Williams', balance: 97000},
+                           {name: 'Calvin Young', balance: 96500},
                           ]
 
     function LeaderboardInfo() {
@@ -653,12 +768,12 @@ function Game() {
                                 </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                {leaderboardData.map((data) => (
+                                {leaderboardData.map((data, index) => (
                                     <TableRow
                                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                     >
                                     <TableCell component="th" scope="row">
-                                        {data.rank}
+                                        {index + 1}
                                     </TableCell>
                                     <TableCell>{data.name}</TableCell>
                                     <TableCell align='right'>{data.balance}</TableCell>
@@ -699,49 +814,109 @@ function Game() {
         const numericQuantity = parseInt(quantity)
     
         if (option == 'buy') {
-          if (numericQuantity * parseFloat(stockMark) > balance) {
-            setBuyError(true)
-            setSellError(false)
-            setValidTransaction(false)
-            setActionError(false)
-            setQuantityError(false)
-          } else {
-            setBalance(parseFloat((balance - numericQuantity * parseFloat(stockMark)).toFixed(2)))
-            var object = ownedStocks
-            object[curStock] = object[curStock] + numericQuantity
-            setOwnedStocks(object)
+            const prof = JSON.parse(localStorage.getItem("profile"))
+            fetch("http://localhost:8000/challengeBuyStock?" + new URLSearchParams({
+                userKey: prof["email"],
+                stock: curStockIndex,
+                amount: numericQuantity,
+                daily: 0
+            })).then(res => {return res.json()})
+            .then(data => {
+                if (data.buyingPower === false) {
+                    setBuyError(true)
+                    setSellError(false)
+                    setValidTransaction(false)
+                    setActionError(false)
+                    setQuantityError(false) 
+                } else {
+                    setBalance(data.buyingPower.toFixed(2))
+                    fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
+                        userKey: prof["email"],
+                        daily: 0
+                    })).then(res => {return res.json()})
+                    .then(data => {setOwnedStocks(data)});
+                    
+                    setBuyError(false)
+                    setSellError(false)
+                    setValidTransaction(true)
+                    setActionError(false)
+                    setQuantityError(false) 
+                }
+            });
+
+        //   if (numericQuantity * parseFloat(stockMark) > balance) {
+        //     setBuyError(true)
+        //     setSellError(false)
+        //     setValidTransaction(false)
+        //     setActionError(false)
+        //     setQuantityError(false)
+        //   } else {
+        //     setBalance(parseFloat((balance - numericQuantity * parseFloat(stockMark)).toFixed(2)))
+        //     var object = ownedStocks
+        //     object[curStock] = object[curStock] + numericQuantity
+        //     setOwnedStocks(object)
             
-            setBuyError(false)
-            setSellError(false)
-            setValidTransaction(true)
-            setActionError(false)
-            setQuantityError(false)
-          }
+        //     setBuyError(false)
+        //     setSellError(false)
+        //     setValidTransaction(true)
+        //     setActionError(false)
+        //     setQuantityError(false)
+        //   }
         } else if (option == 'sell') {
-          if (ownedStocks[curStock] < numericQuantity) {
-            setBuyError(false)
-            setSellError(true)
-            setValidTransaction(false)
-            setActionError(false)
-            setQuantityError(false)
-          } else {
-            setBalance(parseFloat((balance + numericQuantity * parseFloat(stockMark)).toFixed(2)))
-            var object = ownedStocks
-            object[curStock] = object[curStock] - numericQuantity
-            setOwnedStocks(object)
+            const prof = JSON.parse(localStorage.getItem("profile"))
+            fetch("http://localhost:8000/challengeSellStock?" + new URLSearchParams({
+                userKey: prof["email"],
+                stock: curStockIndex,
+                amount: numericQuantity,
+                daily: 0
+            })).then(res => {return res.json()})
+            .then(data => {
+                if (data.buyingPower === false) {
+                    setBuyError(false)
+                    setSellError(true)
+                    setValidTransaction(false)
+                    setActionError(false)
+                    setQuantityError(false) 
+                } else {
+                    setBalance(data.buyingPower.toFixed(2))
+                    fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
+                        userKey: prof["email"],
+                        daily: 0
+                    })).then(res => {return res.json()})
+                    .then(data => {setOwnedStocks(data)});
+                    
+                    setBuyError(false)
+                    setSellError(false)
+                    setValidTransaction(true)
+                    setActionError(false)
+                    setQuantityError(false) 
+                }
+            });
+
+        //   if (ownedStocks[curStock] < numericQuantity) {
+        //     setBuyError(false)
+        //     setSellError(true)
+        //     setValidTransaction(false)
+        //     setActionError(false)
+        //     setQuantityError(false)
+        //   } else {
+        //     setBalance(parseFloat((balance + numericQuantity * parseFloat(stockMark)).toFixed(2)))
+        //     var object = ownedStocks
+        //     object[curStock] = object[curStock] - numericQuantity
+        //     setOwnedStocks(object)
             
-            setBuyError(false)
-            setSellError(false)
-            setValidTransaction(true)
-            setActionError(false)
-            setQuantityError(false)
-          }
+        //     setBuyError(false)
+        //     setSellError(false)
+        //     setValidTransaction(true)
+        //     setActionError(false)
+        //     setQuantityError(false)
+        //   }
         } else {
             setBuyError(false)
-              setSellError(false)
-              setValidTransaction(false)
-              setActionError(true)
-              setQuantityError(false)
+            setSellError(false)
+            setValidTransaction(false)
+            setActionError(true)
+            setQuantityError(false)
         }
       }
 
@@ -841,7 +1016,7 @@ function Game() {
                     <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
                                     primary={'Account Buying Power ($): ' + balance}/>
                     <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
-                                    primary={'Shares Owned: ' + ownedStocks[curStock]}/>
+                                    primary={'Shares Owned: ' + ownedStocks[curStockIndex]}/>
                 </List>
             </Box>
 
@@ -850,92 +1025,182 @@ function Game() {
     }
 
     function forwardDay() {
-        if (cutoff + 1 == histDataLen) {
-            goEnd()
-        } else {
-            setCutoff(cutoff + 1)
-            console.log(curStockPrices)
-            setStockMark(curStockPrices[cutoff].toFixed(2))
-            const chartData = {
-                // x-axis labels
-                labels: curStockTimes.slice(0, cutoff+1),
-                datasets: [
-                {
-                  label: "Stock Price ($)",
-                  // corresponding y values
-                  data: curStockPrices.slice(0, cutoff+1),
-                  fill: true,
-                  borderColor: "blue",
-                  tension: 0.1
+        const prof = JSON.parse(localStorage.getItem("profile"))
+        fetch("http://localhost:8000/challengeNextDay?" + new URLSearchParams({
+                userKey: prof["email"],
+                daily: 0
+            })).then(res => {return res.json()})
+            .then(data => {
+                if (data.isFinished) {
+                    goEnd()
+                } else {
+                    setCutoff(data.currentDay + 1)
+                    console.log(curStockPrices)
+                    setStockMark(curStockPrices[data.currentDay].toFixed(2))
+                    const chartData = {
+                        // x-axis labels
+                        labels: curStockTimes.slice(0, data.currentDay+1),
+                        datasets: [
+                        {
+                        label: "Stock Price ($)",
+                        // corresponding y values
+                        data: curStockPrices.slice(0, data.currentDay+1),
+                        fill: true,
+                        borderColor: "blue",
+                        tension: 0.1
+                        }
+                        ]
+                    }
+                    setChartData(chartData)
                 }
-                ]
-            }
-            setChartData(chartData)
-        }
+            });
+
+
+        // if (cutoff + 1 == histDataLen) {
+        //     goEnd()
+        // } else {
+        //     setCutoff(cutoff + 1)
+        //     console.log(curStockPrices)
+        //     setStockMark(curStockPrices[cutoff].toFixed(2))
+        //     const chartData = {
+        //         // x-axis labels
+        //         labels: curStockTimes.slice(0, cutoff+1),
+        //         datasets: [
+        //         {
+        //           label: "Stock Price ($)",
+        //           // corresponding y values
+        //           data: curStockPrices.slice(0, cutoff+1),
+        //           fill: true,
+        //           borderColor: "blue",
+        //           tension: 0.1
+        //         }
+        //         ]
+        //     }
+        //     setChartData(chartData)
+        // }
     }
 
     // Forwards 5 dates
     function forwardWeek() {
-        if (cutoff + 5 == histDataLen) {
-            goEnd()
-        } else {
-            setCutoff(cutoff + 5)
-            console.log(curStockPrices)
-            setStockMark(curStockPrices[cutoff+4].toFixed(2))
-            const chartData = {
-                // x-axis labels
-                labels: curStockTimes.slice(0, cutoff+5),
-                datasets: [
-                {
-                  label: "Stock Price ($)",
-                  // corresponding y values
-                  data: curStockPrices.slice(0, cutoff+5),
-                  fill: true,
-                  borderColor: "blue",
-                  tension: 0.1
+        const prof = JSON.parse(localStorage.getItem("profile"))
+        fetch("http://localhost:8000/challengeNextWeek?" + new URLSearchParams({
+                userKey: prof["email"],
+                daily: 0
+            })).then(res => {return res.json()})
+            .then(data => {
+                if (data.isFinished) {
+                    goEnd()
+                } else {
+                    setCutoff(data.currentDay + 1)
+                    console.log(curStockPrices)
+                    setStockMark(curStockPrices[data.currentDay].toFixed(2))
+                    const chartData = {
+                        // x-axis labels
+                        labels: curStockTimes.slice(0, data.currentDay+1),
+                        datasets: [
+                        {
+                        label: "Stock Price ($)",
+                        // corresponding y values
+                        data: curStockPrices.slice(0, data.currentDay+1),
+                        fill: true,
+                        borderColor: "blue",
+                        tension: 0.1
+                        }
+                        ]
+                    }
+                    setChartData(chartData)
                 }
-                ]
-            }
-            setChartData(chartData)
-        }
+            });
+
+        // if (cutoff + 5 == histDataLen) {
+        //     goEnd()
+        // } else {
+        //     setCutoff(cutoff + 5)
+        //     console.log(curStockPrices)
+        //     setStockMark(curStockPrices[cutoff+4].toFixed(2))
+        //     const chartData = {
+        //         // x-axis labels
+        //         labels: curStockTimes.slice(0, cutoff+5),
+        //         datasets: [
+        //         {
+        //           label: "Stock Price ($)",
+        //           // corresponding y values
+        //           data: curStockPrices.slice(0, cutoff+5),
+        //           fill: true,
+        //           borderColor: "blue",
+        //           tension: 0.1
+        //         }
+        //         ]
+        //     }
+        //     setChartData(chartData)
+        // }
     }
 
     // Forward 20 dates
     function forwardMonth() {
-        if (cutoff + 20 == histDataLen) {
-            goEnd()
-        } else {
-            setCutoff(cutoff + 20)
-            console.log(curStockPrices)
-            setStockMark(curStockPrices[cutoff+19].toFixed(2))
-            const chartData = {
-                // x-axis labels
-                labels: curStockTimes.slice(0, cutoff+20),
-                datasets: [
-                {
-                  label: "Stock Price ($)",
-                  // corresponding y values
-                  data: curStockPrices.slice(0, cutoff+20),
-                  fill: true,
-                  borderColor: "blue",
-                  tension: 0.1
+        const prof = JSON.parse(localStorage.getItem("profile"))
+        fetch("http://localhost:8000/challengeNextMonth?" + new URLSearchParams({
+                userKey: prof["email"],
+                daily: 0
+            })).then(res => {return res.json()})
+            .then(data => {
+                if (data.isFinished) {
+                    goEnd()
+                } else {
+                    setCutoff(data.currentDay + 1)
+                    console.log(curStockPrices)
+                    setStockMark(curStockPrices[data.currentDay].toFixed(2))
+                    const chartData = {
+                        // x-axis labels
+                        labels: curStockTimes.slice(0, data.currentDay+1),
+                        datasets: [
+                        {
+                        label: "Stock Price ($)",
+                        // corresponding y values
+                        data: curStockPrices.slice(0, data.currentDay+1),
+                        fill: true,
+                        borderColor: "blue",
+                        tension: 0.1
+                        }
+                        ]
+                    }
+                    setChartData(chartData)
                 }
-                ]
-            }
-            setChartData(chartData)
-        }
+            });
+        // if (cutoff + 20 == histDataLen) {
+        //     goEnd()
+        // } else {
+        //     setCutoff(cutoff + 20)
+        //     console.log(curStockPrices)
+        //     setStockMark(curStockPrices[cutoff+19].toFixed(2))
+        //     const chartData = {
+        //         // x-axis labels
+        //         labels: curStockTimes.slice(0, cutoff+20),
+        //         datasets: [
+        //         {
+        //           label: "Stock Price ($)",
+        //           // corresponding y values
+        //           data: curStockPrices.slice(0, cutoff+20),
+        //           fill: true,
+        //           borderColor: "blue",
+        //           tension: 0.1
+        //         }
+        //         ]
+        //     }
+        //     setChartData(chartData)
+        // }
     }
     
 
     function GameForwarding() {
         return (
-            <Box sx={{ml: 4, mt: 3, border:0, maxWidth: 680, justifyContent: 'center'}}>
+            <Box sx={{ml: 4, mt: 3, border:0, maxWidth: 680}}>
                 <Typography variant='h5' fontWeight='bold' textAlign='center'>
                     {'Dates Remaining: ' + (histDataLen-cutoff)}
                 </Typography>
 
                 <Box sx={{mt: 2, border:0, display: 'flex', justifyContent: 'space-between'}}>
-                    <Button size='medium' variant='contained' onClick={forwardDay}>
+                    <Button size='medium' variant='contained' disabled={histDataLen - cutoff == 0} onClick={forwardDay}>
                         Forward 1 Day
                     </Button>
 
@@ -945,6 +1210,12 @@ function Game() {
 
                     <Button size='medium' variant='contained' disabled={histDataLen - cutoff < 20} onClick={forwardMonth}>
                         Forward 1 Month (20 Dates)
+                    </Button>
+                </Box>
+
+                <Box sx={{mt: 3, display: 'flex', justifyContent: 'center'}}>
+                    <Button size='large' variant='contained' disabled={histDataLen - cutoff != 0} onClick={forwardDay}>
+                        Finish
                     </Button>
                 </Box>
 
@@ -969,7 +1240,7 @@ function Game() {
                     </Typography>
 
                     <Box sx={{display:'flex', justifyContent:'center', mt: 5}}>
-                        <Button variant='contained' onClick={goLoad}>
+                        <Button variant='contained' onClick={goPlay}>
                             Play Again?
                         </Button>
                     </Box>

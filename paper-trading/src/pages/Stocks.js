@@ -21,6 +21,7 @@ import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
+import Autocomplete from '@mui/material/Autocomplete';
 
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -594,7 +595,7 @@ const handleClose = (event, reason) => {
 
             setDataVisibility(true)
 
-
+            setSearchList([])
         }
       }
     )
@@ -645,21 +646,36 @@ const handleClose = (event, reason) => {
     <IconButton 
       sx={{color: "white", 
       backgroundColor: "#2196f3",
-      ml: 1.5,
+      //ml: 1.5,
       "&:hover": { color: "#2196f3" }}}
-      onClick={() => handleClick(searchStock)}>
+      onClick={() => handleClick(searchStock.trim())}>
       <SearchIcon />
     </IconButton>
     )
 
     const SearchButton = () => (
-      <IconButton onClick={() => handleClick(searchStock)}>
+      <IconButton onClick={() => handleClick(searchStock.trim())}>
         <SearchIcon />
       </IconButton>
       )
 
+  const [searchList, setSearchList] = useState([])
+
   // Set stock to be searched
   function changeStock(event) {
+    console.log(event.target.value)
+    fetch("http://localhost:8000/getStocks?" + new URLSearchParams({
+                heading: event.target.value
+            })).then(res => {return res.json()})
+            .then(data => {
+              //console.log(data[0]);
+
+              var list = []
+              for (const symbol of data[0]) {
+                list.push({"symbol": symbol})
+              }
+              //console.log(list)
+              setSearchList(list)});
     setStock(event.target.value)
   }
 
@@ -779,9 +795,8 @@ const handleClose = (event, reason) => {
 
     <Box
       sx={{
-        display: 'flex',
         width: 600,
-        height: 175,
+        height: 500,
         maxWidth: '100%',
         mx: 'auto',
         mt: 25,
@@ -789,30 +804,39 @@ const handleClose = (event, reason) => {
         border : 0
       }}
     >
-      <Paper elevation={0} sx={{width: 600, height: 175}}>
-
         <Typography fontWeight='bold' variant='h4' textAlign='center' mt={3}>
           Search for Stock Symbol
         </Typography>
 
-        <TextField id="standard-basic" 
-                  sx={{minWidth: 500, mt: 3}}
-                  onChange={changeStock}
-                  onKeyPress= {(e) => {
-                    if (e.key === 'Enter') {
-                      handleClick(searchStock)
-                    }
-                  }}
-                  InputProps={{endAdornment: <MainSearchButton />,
-                               style: {
-                                borderRadius: "25px",
-                               }}}
-                  error={!isValidStock}
-                  helperText={
-                    !isValidStock ? 'Invalid Symbol' : null
-                  }
+        <Autocomplete
+          freeSolo
+          disableClearable
+          filterOptions={(x) => x}
+          options={searchList.map((option) => option.symbol)}
+          onChange={(event, value) => setStock(value)}
+          renderInput={(params) => (
+            <TextField
+                      {...params}
+                      sx={{minWidth: 500, mt: 3}}
+                      onChange={changeStock}
+                      onKeyPress= {(e) => {
+                        if (e.key === 'Enter') {
+                          handleClick(searchStock.trim())
+                        }
+                      }}
+                      InputProps={{
+                                  ...params.InputProps,
+                                  endAdornment: <MainSearchButton />,
+                                  style: {
+                                    borderRadius: "25px",
+                                  }}}
+                      error={!isValidStock}
+                      helperText={
+                        !isValidStock ? 'Invalid Symbol' : null
+                      }
+            />)
+          }
         />
-      </Paper>
 
     </Box> 
     }
@@ -820,27 +844,36 @@ const handleClose = (event, reason) => {
     {dataVisibility && 
     <Box
       sx={{
-        width: 1000,
+        width: 200,
         maxWidth: '100%',
-        m: 2
+        m: 3
       }}
     >
-      <TextField id="standard-basic" 
-                 label="Search for Symbol" 
-                 variant="standard"
-                 onChange={changeStock}
-                 onKeyPress= {(e) => {
-                  if (e.key === 'Enter') {
-                    handleClick(searchStock)
-                  }
-                 }}
-                 InputProps={{endAdornment: <SearchButton />}}
-                 error={!isValidStock}
-                 helperText={
-                  !isValidStock ? 'Invalid Symbol' : null
-                 }
+      <Autocomplete
+        freeSolo
+        disableClearable
+        filterOptions={(x) => x}
+        options={searchList.map((option) => option.symbol)}
+        onChange={(event, value) => setStock(value)}
+        renderInput={(params) =>
+          <TextField 
+                    {...params}
+                    label="Search for Symbol" 
+                    variant="standard"
+                    onChange={changeStock}
+                    onKeyPress= {(e) => {
+                      if (e.key === 'Enter') {
+                        handleClick(searchStock.trim())
+                      }
+                    }}
+                    InputProps={{...params.InputProps, endAdornment: <SearchButton />}}
+                    error={!isValidStock}
+                    helperText={
+                      !isValidStock ? 'Invalid Symbol' : null
+                    }
+          />
+        }
       />
-
     </Box>
     }
 
