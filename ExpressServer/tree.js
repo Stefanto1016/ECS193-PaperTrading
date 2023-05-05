@@ -9,25 +9,41 @@ async function getStocks(heading)
     let nameArray = [];
     let returnArr = [symbolArray, nameArray];
     let traversalRoot = symbolRoot;
+    let traverse = 1;
     for(let i = 0; i < heading.length; i++)
     {
         if(traversalRoot.children[heading.charCodeAt(i)-65] == null)
         {
-            return([]);
+            i = heading.length;
+            traverse = 0;
         }
-        traversalRoot = traversalRoot.children[heading.charCodeAt(i)-65]
+        else
+        {
+            traversalRoot = traversalRoot.children[heading.charCodeAt(i)-65];
+        }
     }
-    traversalRoot.traverse(symbolArray, heading);
+    if(traverse == 1)
+    {
+        traversalRoot.traverse(symbolArray, heading);
+    }
     traversalRoot = nameRoot;
+    traverse = 1;
     for(let i = 0; i < heading.length; i++)
     {
         if(traversalRoot.children[heading.charCodeAt(i)-65] == null)
         {
-            return([]);
+            i = heading.length;
+            traverse = 0;
         }
-        traversalRoot = traversalRoot.children[heading.charCodeAt(i)-65]
+        else
+        {
+            traversalRoot = traversalRoot.children[heading.charCodeAt(i)-65];
+        }
     }
-    traversalRoot.traverse(nameArray, heading);
+    if(traverse == 1)
+    {
+        traversalRoot.traverse(nameArray, heading);
+    }
     for(let i = 0; i < nameArray.length; i++)
     {
         nameArray[i] = lookupTable.get(nameArray[i]);
