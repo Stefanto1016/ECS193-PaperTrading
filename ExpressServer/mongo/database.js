@@ -160,8 +160,17 @@ async function updateStock(email, symbol, newQuantity)
             deleteStock(email, symbol);
         } else {
             const user = await userSchema.findOne({email : email});
-            user.stocks[symbol] = newQuantity;
-            await userSchema(user).save()
+            if(user.stocks[symbol] == undefined)
+            {
+                var stocks = {};
+                stocks[symbol] = newQuantity;
+                await addStock(email, stocks);
+            }
+            else
+            {
+                user.stocks[symbol] = newQuantity;
+                await userSchema(user).save()
+            }
             
         }
 
