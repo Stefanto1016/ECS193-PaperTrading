@@ -330,20 +330,24 @@ function Stocks() {
       const prof = JSON.parse(localStorage.getItem("profile"));
       setButtonText("Remove from Watchlist");
       setWatchListStyle(removeWatchlist);
-      fetch("http://localhost:8000/addWatchList?" + new URLSearchParams({
-            userKey: prof["email"],
-            stock: stockInfo.symbol.toUpperCase(),
-            }));
+      const options = {
+        method: 'POST',
+        body: JSON.stringify({userKey: prof["email"], stock: stockInfo.symbol.toUpperCase()}),
+        headers: {'Content-Type': 'application/json'}
+      }
+      fetch("http://localhost:8000/addWatchList", options);
       
     } else if (buttonText === "Remove from Watchlist" && profile) {
       console.log("it was remove!")
       const prof = JSON.parse(localStorage.getItem("profile"));
       setButtonText("Add to Watchlist");
       setWatchListStyle(addWatchlist);
-      fetch("http://localhost:8000/removeWatchList?" + new URLSearchParams({
-            userKey: prof["email"],
-            stock: stockInfo.symbol.toUpperCase(),
-            }));
+      const options = {
+        method: 'POST',
+        body: JSON.stringify({userKey: prof["email"], stock: stockInfo.symbol.toUpperCase()}),
+        headers: {'Content-Type': 'application/json'}
+      }
+      fetch("http://localhost:8000/removeWatchList", options);
     } else {
       console.log("tf?")
     }
@@ -373,11 +377,12 @@ function Stocks() {
         setOwnedStocks(ownedStocks + numericQuantity)
         if(profile){
           const prof = JSON.parse(localStorage.getItem("profile"));
-          fetch("http://localhost:8000/buyStock?" + new URLSearchParams({
-            userKey: prof["email"],
-            stock: stockInfo.symbol.toUpperCase(),
-            amount: numericQuantity
-            }));
+          const options = {
+            method: 'POST',
+            body: JSON.stringify({userKey: prof["email"], stock: stockInfo.symbol.toUpperCase(), amount: numericQuantity}),
+            headers: {'Content-Type': 'application/json'}
+          }
+          fetch("http://localhost:8000/buyStock", options);
         }
         
         setBuyError(false)
@@ -398,11 +403,12 @@ function Stocks() {
         setOwnedStocks(ownedStocks - numericQuantity)
         if (profile){
           const prof = JSON.parse(localStorage.getItem("profile"));
-          fetch("http://localhost:8000/sellStock?" + new URLSearchParams({
-            userKey: prof["email"],
-            stock: stockInfo.symbol.toUpperCase(),
-            amount: numericQuantity
-            }));
+          const options = {
+            method: 'POST',
+            body: JSON.stringify({userKey: prof["email"], stock: stockInfo.symbol.toUpperCase(), amount: numericQuantity}),
+            headers: {'Content-Type': 'application/json'}
+          } 
+          fetch("http://localhost:8000/sellStock", options);
         }
         
           setBuyError(false)

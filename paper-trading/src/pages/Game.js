@@ -231,6 +231,8 @@ function Game() {
     const [displayGame, setDisplayGame] = useState(false);
     const [displayEnd, setDisplayEnd] = useState(false);
 
+    const [leaderboard, setLeaderboad] = useState([]);
+
     const [chartData, setChartData] = useState(emptyChart)
 
     const [curStock, setCurStock] = useState('');
@@ -252,6 +254,7 @@ function Game() {
     const [option, setOption] = useState('')
     const [quantity, setQuantity] = useState([])
     const [balance, setBalance] = useState(10000)
+    const [buyingPower, setBuyingPower] = useState(10000)
     const [ownedStocks, setOwnedStocks] = useState({})
     const [buyError, setBuyError] = useState(false)
     const [sellError, setSellError] = useState(false)
@@ -269,6 +272,14 @@ function Game() {
     //         goPlay()
     //     }
     // }, [displayLoading])
+
+    useEffect(() => {
+        fetch("http://localhost:8000/challengeGetLeaderboard?" + new URLSearchParams({
+            })).then(res => {return res.json()})
+            .then(data => {setLeaderboad(data)});
+    }, [])
+
+    //useEffect(())
 
     // Disable buttons when certain amount of dates remain
     // useEffect(() => {
@@ -513,16 +524,17 @@ function Game() {
     }
 
     function goEnd() {
-        //setDisplayGame(false)
+        setDisplayGame(false)
+        setDisplayEnd(true)
 
-        const prof = JSON.parse(localStorage.getItem("profile"))
-        fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-                userKey: prof["email"],
-                daily: 0
-            })).then(res => {return res.json()})
-            .then(data => {setBalance(data.balance.toFixed(2))
-                           setDisplayGame(false)
-                           setDisplayEnd(true)}); 
+        // const prof = JSON.parse(localStorage.getItem("profile"))
+        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
+        //         userKey: prof["email"],
+        //         daily: 0
+        //     })).then(res => {return res.json()})
+        //     .then(data => {setBalance(data.balance.toFixed(2))
+        //                    setDisplayGame(false)
+        //                    setDisplayEnd(true)}); 
     }
 
     function goLoad() {
@@ -534,21 +546,17 @@ function Game() {
     async function goPlay() {
         setDisplayLoading(true)
         setDisplayGame(false)
-        //var challenge = new Challenge()
-        //await challenge.initialize()
-        // Generate random stocks
-        
-        
-        // var randomDate = getRandomDate()
-        // console.log(randomDate)
-        // var randomStocks = await getRandomStocks(randomDate)
-        // console.log(randomStocks)
-        // setStocksList(randomStocks)
+
         const prof = JSON.parse(localStorage.getItem("profile"))
-        fetch("http://localhost:8000/challengeCreatePersonalChallenge?" + new URLSearchParams({
-                userKey: prof["email"]
-            })).then(res => {return res.json()})
+        const options = {
+            method: 'PUT',
+            body: JSON.stringify({userKey: prof["email"]}),
+            headers: {'Content-Type': 'application/json'}
+        }
+        fetch("http://localhost:8000/challengeCreatePersonalChallenge", options)
+            .then(res => {return res.json()})
             .then(data => {
+                           console.log(data)
                            console.log(data.stockData)
                            setHistData(data.stockData)
                            setCutoff(data.currentDay + 1)
@@ -561,108 +569,52 @@ function Game() {
                            getStockButtons(data.stocks)
                            getChartData(data.stockData[0], data.currentDay + 1)
                            getStockQuotes(data.stocks, data.stocks[0])
-                        });
 
-        // Get the available toggle buttons for the stocks
-        // var stockButtons = []
-        // for (const stock of randomStocks) {
-        //     stockButtons.push(<ToggleButton value={stock} key={stock}> {stock} </ToggleButton>)
-        // }
-        // setStockToggles(stockButtons)
+                           fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
+                                userKey: prof["email"],
+                                daily: 0
+                            })).then(res => {return res.json()})
+                            .then(data => {setBalance(data.balance.toFixed(2))});
 
-        // Genereate random stocks historical data
-        // var randomStocksData = await getStockData(randomDate, randomStocks)
-        // console.log(randomStocksData)
-        // setHistData(randomStocksData)
 
-        // Get random stocks quote data
-        // var stocksInfo = []
-        // for (const stock of randomStocks) {
-        //     stocksInfo.push(await getCurrentData([stock]))
-        // }
-        // setQuoteData(stocksInfo)
-        // console.log(stocksInfo)
+                            fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
+                                userKey: prof["email"],
+                                daily: 0
+                            })).then(res => {return res.json()})
+                            .then(data => {setBuyingPower(data.buyingPower.toFixed(2))});
+
+                            fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
+                                userKey: prof["email"],
+                                daily: 0
+                            })).then(res => {return res.json()})
+                            .then(data => {setOwnedStocks(data)});
+                            });
        
         setOption('')
         setQuantity(0)
 
-        fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
-                userKey: prof["email"],
-                daily: 0
-            })).then(res => {return res.json()})
-            .then(data => {setBalance(data.buyingPower.toFixed(2))});
+        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
+        //         userKey: prof["email"],
+        //         daily: 0
+        //     })).then(res => {return res.json()})
+        //     .then(data => {setBalance(data.balance.toFixed(2))});
 
-        // setBalance(100000)
 
-        fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
-                userKey: prof["email"],
-                daily: 0
-            })).then(res => {return res.json()})
-            .then(data => {setOwnedStocks(data)});
+        // fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
+        //         userKey: prof["email"],
+        //         daily: 0
+        //     })).then(res => {return res.json()})
+        //     .then(data => {setBuyingPower(data.buyingPower.toFixed(2))});
 
-        // var object = {}
-        // for (const stock of randomStocks) {
-        //     object[stock] = 0
-        // }
-        // console.log(object)
-        // setOwnedStocks(object)
 
-        // Set symbol and description for first stock
-        // var firstStockName = randomStocks[0]
-        // setCurStock(firstStockName)
-        // setStockSymbol(stocksInfo[0][firstStockName].symbol)
-        // setStockDesc(stocksInfo[0][firstStockName].description)
-
-        // Get length of data points
-        // setHistDataLen(randomStocksData[0].length)
-        // Find midway point of data
-        // var middle = Math.floor(randomStocksData[0].length / 2)
-        // setCutoff(middle)
-
-        // console.log(randomStocksData[0][middle-1][0])
-        // // Get close cost of middle element of first random stock
-        // setStockMark(randomStocksData[0][middle-1][0].toFixed(2))
-
-        // let times = []
-        // let prices = []
-
-        // for (const data of randomStocksData[0]) {
-        //     //console.log(data.close)
-        //     var date = new Date(data[1])
-        //     const options = { year: 'numeric', month: 'short', day: 'numeric' };
-        //     times.push(date.toLocaleString('en', options))
-        //     prices.push(data[0])
-        // }
-
-        // //console.log(times)
-        // setCurStockTimes(times)
-        // //console.log(prices)
-        // setCurStockPrices(prices)
-
-        // const chartData = {
-        //     // x-axis labels
-        //       labels: times.slice(0, middle),
-        //       datasets: [
-        //       {
-        //         label: "Stock Price ($)",
-        //         // corresponding y values
-        //         data: prices.slice(0, middle),
-        //         fill: true,
-        //         borderColor: "blue",
-        //         tension: 0.1
-        //       }
-        //       ]
-        // }
-
-        // setChartData(chartData)
-
-        // setDisableWeekForward(false)
-        // setDisableMonthForward(false)
+        // fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
+        //         userKey: prof["email"],
+        //         daily: 0
+        //     })).then(res => {return res.json()})
+        //     .then(data => {setOwnedStocks(data)});
         
         setDisplayStart(false)
         setDisplayEnd(false)
-        //setDisplayLoading(false)
-        //setDisplayGame(true)
     }
 
     function StartInfo() {
@@ -768,7 +720,7 @@ function Game() {
                                 </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                {leaderboardData.map((data, index) => (
+                                {leaderboard.map((data, index) => (
                                     <TableRow
                                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                     >
@@ -815,12 +767,13 @@ function Game() {
     
         if (option == 'buy') {
             const prof = JSON.parse(localStorage.getItem("profile"))
-            fetch("http://localhost:8000/challengeBuyStock?" + new URLSearchParams({
-                userKey: prof["email"],
-                stock: curStockIndex,
-                amount: numericQuantity,
-                daily: 0
-            })).then(res => {return res.json()})
+            const options = {
+                method: 'POST',
+                body: JSON.stringify({userKey: prof["email"], stock: curStockIndex, amount: numericQuantity, daily: 0}),
+                headers: {'Content-Type': 'application/json'}
+            }
+            fetch("http://localhost:8000/challengeBuyStock", options)
+            .then(res => {return res.json()})
             .then(data => {
                 if (data.buyingPower === false) {
                     setBuyError(true)
@@ -829,7 +782,7 @@ function Game() {
                     setActionError(false)
                     setQuantityError(false) 
                 } else {
-                    setBalance(data.buyingPower.toFixed(2))
+                    setBuyingPower(data.buyingPower.toFixed(2))
                     fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
                         userKey: prof["email"],
                         daily: 0
@@ -864,12 +817,13 @@ function Game() {
         //   }
         } else if (option == 'sell') {
             const prof = JSON.parse(localStorage.getItem("profile"))
-            fetch("http://localhost:8000/challengeSellStock?" + new URLSearchParams({
-                userKey: prof["email"],
-                stock: curStockIndex,
-                amount: numericQuantity,
-                daily: 0
-            })).then(res => {return res.json()})
+            const options = {
+                method: 'POST',
+                body: JSON.stringify({userKey: prof["email"], stock: curStockIndex, amount: numericQuantity, daily: 0}),
+                headers: {'Content-Type': 'application/json'}
+            }
+            fetch("http://localhost:8000/challengeSellStock", options)
+            .then(res => {return res.json()})
             .then(data => {
                 if (data.buyingPower === false) {
                     setBuyError(false)
@@ -878,7 +832,7 @@ function Game() {
                     setActionError(false)
                     setQuantityError(false) 
                 } else {
-                    setBalance(data.buyingPower.toFixed(2))
+                    setBuyingPower(data.buyingPower.toFixed(2))
                     fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
                         userKey: prof["email"],
                         daily: 0
@@ -1013,9 +967,11 @@ function Game() {
                 </Typography>
 
                 <List component={Stack} direction='row' sx={{maxWidth: 700, ml:3}}>
-                    <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
-                                    primary={'Account Buying Power ($): ' + balance}/>
-                    <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
+                    <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 18}}
+                                    primary={'Balance ($): ' + balance}/>
+                    <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 18}}
+                                    primary={'Buying Power ($): ' + buyingPower}/>
+                    <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 18}}
                                     primary={'Shares Owned: ' + ownedStocks[curStockIndex]}/>
                 </List>
             </Box>
@@ -1026,10 +982,13 @@ function Game() {
 
     function forwardDay() {
         const prof = JSON.parse(localStorage.getItem("profile"))
-        fetch("http://localhost:8000/challengeNextDay?" + new URLSearchParams({
-                userKey: prof["email"],
-                daily: 0
-            })).then(res => {return res.json()})
+        const options = {
+            method: 'POST',
+            body: JSON.stringify({userKey: prof["email"], daily: 0}),
+            headers: {'Content-Type': 'application/json'}
+        }
+        fetch("http://localhost:8000/challengeNextDay", options)
+            .then(res => {return res.json()})
             .then(data => {
                 if (data.isFinished) {
                     goEnd()
@@ -1052,8 +1011,15 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
+                    setBalance(data.balance.toFixed(2))
                 }
             });
+
+        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
+        //         userKey: prof["email"],
+        //         daily: 0
+        //     })).then(res => {return res.json()})
+        //     .then(data => {setBalance(data.balance.toFixed(2))}); 
 
 
         // if (cutoff + 1 == histDataLen) {
@@ -1083,10 +1049,13 @@ function Game() {
     // Forwards 5 dates
     function forwardWeek() {
         const prof = JSON.parse(localStorage.getItem("profile"))
-        fetch("http://localhost:8000/challengeNextWeek?" + new URLSearchParams({
-                userKey: prof["email"],
-                daily: 0
-            })).then(res => {return res.json()})
+        const options = {
+            method: 'POST',
+            body: JSON.stringify({userKey: prof["email"], daily: 0}),
+            headers: {'Content-Type': 'application/json'}
+        }
+        fetch("http://localhost:8000/challengeNextWeek", options)
+            .then(res => {return res.json()})
             .then(data => {
                 if (data.isFinished) {
                     goEnd()
@@ -1109,9 +1078,15 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
+                    setBalance(data.balance.toFixed(2))
                 }
             });
 
+        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
+        //     userKey: prof["email"],
+        //     daily: 0
+        // })).then(res => {return res.json()})
+        // .then(data => {setBalance(data.balance.toFixed(2))}); 
         // if (cutoff + 5 == histDataLen) {
         //     goEnd()
         // } else {
@@ -1139,10 +1114,13 @@ function Game() {
     // Forward 20 dates
     function forwardMonth() {
         const prof = JSON.parse(localStorage.getItem("profile"))
-        fetch("http://localhost:8000/challengeNextMonth?" + new URLSearchParams({
-                userKey: prof["email"],
-                daily: 0
-            })).then(res => {return res.json()})
+        const options = {
+            method: 'POST',
+            body: JSON.stringify({userKey: prof["email"], daily: 0}),
+            headers: {'Content-Type': 'application/json'}
+        }
+        fetch("http://localhost:8000/challengeNextMonth", options)
+            .then(res => {return res.json()})
             .then(data => {
                 if (data.isFinished) {
                     goEnd()
@@ -1165,8 +1143,15 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
+                    setBalance(data.balance.toFixed(2))
                 }
             });
+
+        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
+        //     userKey: prof["email"],
+        //     daily: 0
+        // })).then(res => {return res.json()})
+        // .then(data => {setBalance(data.balance.toFixed(2))}); 
         // if (cutoff + 20 == histDataLen) {
         //     goEnd()
         // } else {

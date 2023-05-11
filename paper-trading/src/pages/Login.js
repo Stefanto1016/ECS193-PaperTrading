@@ -60,9 +60,12 @@ function Login() {
             userKey: profile["email"]
         })).then((res) => { return res.json()}).then((data) => {
           if(!(data)){
-            fetch("http://localhost:8000/createAccount?" + new URLSearchParams({
-            userKey: profile["email"]
-            })).then((res) => {
+            const options = {
+              method: 'PUT',
+              body: JSON.stringify({userKey: profile["email"]}),
+              headers: {'Content-Type': 'application/json'}
+            }
+            fetch("http://localhost:8000/createAccount", options).then((res) => {
               if(res.ok){
                 localStorage.setItem("profile", JSON.stringify(profile));
                 navigate("/App");
