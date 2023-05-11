@@ -7,10 +7,12 @@ const queue = require('./queue');
 const challenge = require('./challenge');
 const limitOrder = require('./limitOrder');
 const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
 const port = 8000;
 const MSinMin = 1000*60;
 var started = 0;
+var started2 = 0; //for testing purposes
 var globalQueue = queue.getGlobalQueue();
 var userQueues = queue.getUserQueue();
 var userChallengeQueues = queue.getUserChallengeQueue();
@@ -30,6 +32,8 @@ app.use((req, res, next) => {
     res.append('Access-Control-Allow-Headers', 'Content-Type');
     next();
 })
+
+app.use(bodyParser.json());
 
 app.listen(port, async () => 
 {
@@ -53,9 +57,13 @@ app.listen(port, async () =>
     console.log("started");
     for(var i = 0; i < userList.length; i++)
     {
-        userQueues.get(userList[i]).run();
-        userChallengeQueues.get(userList[i]).run();
+        if(userQueues.get(userList[i]) != null)
+        {
+            userQueues.get(userList[i]).run();
+            userChallengeQueues.get(userList[i]).run();
+        }
     }
+    started2 = 1; //for testing purposes
 
 })
 
@@ -67,6 +75,17 @@ process.on('exit', function()
 
 
 setInterval(limitOrder.checkLimitOrders, MSinMin*5)
+
+app.get('/close', async (req, res) => 
+{
+    while(updating == 1 || started2 == 0)
+    {
+        //console.log(started2);
+        await sleep(100);
+    }
+    console.log("closing");
+    res.send(true);
+})
 
 app.get('/update', async (req, res) => 
 {
@@ -80,9 +99,9 @@ app.get('/isUpdating', async (req, res) =>
 })
 
 /*creates an account with the userKey provided and stores to the database*/
-app.get('/createAccount', async (req, res) => 
+app.put('/createAccount', async (req, res) => 
 {
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     globalQueue.enqueue(alert);
     while(alert.alerted == 0)
@@ -110,9 +129,9 @@ app.get('/hasAccount', async (req, res) =>
 })
 
 /*deletes an account*/
-app.get('/removeAccount', async (req, res) => 
+app.put('/removeAccount', async (req, res) => 
 {
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     globalQueue.enqueue(alert);
     while(alert.alerted == 0)
@@ -122,17 +141,18 @@ app.get('/removeAccount', async (req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const ret = removeAccount(userKey);
+    const ret = await removeAccount(userKey);
     alert.unalert();
     res.send(ret);
 })
 
 /*buys a certain amount of stock for the given user*/
-app.get('/buyStock', async (req, res) => 
+app.post('/buyStock', async (req, res) => 
 {
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -140,6 +160,12 @@ app.get('/buyStock', async (req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -149,10 +175,11 @@ app.get('/buyStock', async (req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const stock = req.query.stock;
-    const amount = parseFloat(req.query.amount);
+    const stock = req.body.stock;
+    const amount = parseFloat(req.body.amount);
     const st = await buyStock(userKey, stock, amount);
     const ret = {buyingPower: st};
     alert.unalert();
@@ -165,9 +192,9 @@ app.get('/buyStock', async (req, res) =>
 are met is a buy(0) or a sell(1). when less than is a boolean detailing whether the trigger should be when the current price drops below
 the trigger price(1) or rises above the trigger price(0). price is the trigger price, stock and amount are the stock to be transacted and
 the amount to be transacted*/
-app.get('/limitOrder', async (req, res) =>
+app.post('/limitOrder', async (req, res) =>
 {
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     globalQueue.enqueue(alert);
     while(alert.alerted == 0)
@@ -177,22 +204,23 @@ app.get('/limitOrder', async (req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const stock = req.query.stock;
-    const amount = parseFloat(req.query.amount);
-    const price = req.query.price;
-    const sell = req.query.sell;
-    const whenLessThan = req.query.whenLessThan;
+    const stock = req.body.stock;
+    const amount = parseFloat(req.body.amount);
+    const price = req.body.price;
+    const sell = req.body.sell;
+    const whenLessThan = req.body.whenLessThan;
     let ret = limitOrder.addLimitOrder(userKey, stock, amount, price, sell, whenLessThan)
     alert.unalert();
     res.send(ret);
 })
 
 /*sells a certain amount of stock for the given user*/
-app.get('/sellStock', async (req, res) => 
+app.post('/sellStock', async (req, res) => 
 { 
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -200,6 +228,12 @@ app.get('/sellStock', async (req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -209,10 +243,11 @@ app.get('/sellStock', async (req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const stock = req.query.stock;
-    const amount = parseFloat(req.query.amount);
+    const stock = req.body.stock;
+    const amount = parseFloat(req.body.amount);
     const st = await sellStock(userKey, stock, amount);
     const ret = {buyingPower: st};
     alert.unalert();
@@ -220,9 +255,9 @@ app.get('/sellStock', async (req, res) =>
 })
 
 /*adds given stock to users watchlist*/
-app.get('/addWatchList', async (req, res) => 
+app.post('/addWatchList', async (req, res) => 
 { 
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -230,6 +265,12 @@ app.get('/addWatchList', async (req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -239,18 +280,19 @@ app.get('/addWatchList', async (req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const stock = req.query.stock;
+    const stock = req.body.stock;
     const ret = await database.addWatchList(userKey, stock);
     alert.unalert();
     res.send(ret);
 })
 
 /*removes given stock from users watchlist*/
-app.get('/removeWatchList', async (req, res) => 
+app.post('/removeWatchList', async (req, res) => 
 { 
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -258,6 +300,12 @@ app.get('/removeWatchList', async (req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -267,9 +315,10 @@ app.get('/removeWatchList', async (req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const stock = req.query.stock;
+    const stock = req.body.stock;
     const ret = await database.removeWatchList(userKey, stock);
     alert.unalert();
     res.send(ret);
@@ -286,6 +335,12 @@ app.get('/getWatchList', async (req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -295,6 +350,7 @@ app.get('/getWatchList', async (req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
     const ret = await database.getWatchList(userKey);
@@ -314,6 +370,12 @@ app.get('/getPortfolioData', async (req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -323,6 +385,7 @@ app.get('/getPortfolioData', async (req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
     const ret = await getPortfolioData(userKey);
@@ -341,6 +404,12 @@ app.get('/getSpecificStock', async (req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -350,6 +419,7 @@ app.get('/getSpecificStock', async (req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
     const stock = req.query.stock;
@@ -392,9 +462,9 @@ app.get('/getStocks', async(req, res) =>
 )
 
 /*creates a personal challenge for the given user*/
-app.get('/challengeCreatePersonalChallenge', async(req, res) =>
+app.put('/challengeCreatePersonalChallenge', async(req, res) =>
 {
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -402,6 +472,12 @@ app.get('/challengeCreatePersonalChallenge', async(req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userChallengeQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -411,6 +487,7 @@ app.get('/challengeCreatePersonalChallenge', async(req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
     await challenge.createPersonalChallenge(userKey);
@@ -450,6 +527,12 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userChallengeQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -459,6 +542,7 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
     const yesterday = req.query.yesterday;
@@ -505,6 +589,12 @@ app.get('/challengeGetStockData', async(req, res) =>
         }
         else
         {
+            if(userQueues.get(userKey) == null)
+            {
+                res.send(false);
+                alert.unalert();
+                return;
+            }
             userChallengeQueues.get(userKey).enqueue(alert);
         }
         while(alert.alerted == 0)
@@ -514,6 +604,7 @@ app.get('/challengeGetStockData', async(req, res) =>
         if(userQueues.get(userKey) == null)
         {
             res.send(false);
+            alert.unalert();
             return;
         }
         stockData = challenge.getPersonalChallengeProfile(userKey).challenge.stockData;
@@ -536,6 +627,12 @@ app.get('/challengeGetBuyingPower', async(req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userChallengeQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -545,6 +642,7 @@ app.get('/challengeGetBuyingPower', async(req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
     const daily = req.query.daily;
@@ -574,6 +672,12 @@ app.get('/challengeGetBalance', async(req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userChallengeQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -583,6 +687,7 @@ app.get('/challengeGetBalance', async(req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
     const daily = req.query.daily;
@@ -612,6 +717,12 @@ app.get('/challengeGetStocks', async(req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userChallengeQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -621,6 +732,7 @@ app.get('/challengeGetStocks', async(req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
     const daily = req.query.daily;
@@ -642,9 +754,9 @@ app.get('/challengeGetStocks', async(req, res) =>
 
 /*buys an amount of the given stock within the users challenge. daily is
 1 for the daily challenge and 0 for a personal challenge*/
-app.get('/challengeBuyStock', async(req, res) =>
+app.post('/challengeBuyStock', async(req, res) =>
 {
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -652,6 +764,12 @@ app.get('/challengeBuyStock', async(req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userChallengeQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -661,11 +779,12 @@ app.get('/challengeBuyStock', async(req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const daily = req.query.daily;
-    const stock = req.query.stock;
-    const amount = parseInt(req.query.amount);
+    const daily = req.body.daily;
+    const stock = req.body.stock;
+    const amount = parseInt(req.body.amount);
     var buyingPower = 0;
     if(daily == 1)
     {
@@ -682,9 +801,9 @@ app.get('/challengeBuyStock', async(req, res) =>
 
 /*sells an amount of the given stock within the users challenge. daily is
 1 for the daily challenge and 0 for a personal challenge*/
-app.get('/challengeSellStock', async(req, res) =>
+app.post('/challengeSellStock', async(req, res) =>
 {
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -692,6 +811,12 @@ app.get('/challengeSellStock', async(req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userChallengeQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -701,11 +826,12 @@ app.get('/challengeSellStock', async(req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const daily = req.query.daily;
-    const stock = req.query.stock;
-    const amount = parseInt(req.query.amount);
+    const daily = req.body.daily;
+    const stock = req.body.stock;
+    const amount = parseInt(req.body.amount);
     var buyingPower = 0;
     if(daily == 1)
     {
@@ -722,9 +848,9 @@ app.get('/challengeSellStock', async(req, res) =>
 
 /*Passes one day within a users challenge. daily is
 1 for the daily challenge and 0 for a personal challenge*/
-app.get('/challengeNextDay', async(req, res) =>
+app.post('/challengeNextDay', async(req, res) =>
 {
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -732,6 +858,12 @@ app.get('/challengeNextDay', async(req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userChallengeQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -741,9 +873,10 @@ app.get('/challengeNextDay', async(req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const daily = req.query.daily;
+    const daily = req.body.daily;
     var isFinished = 0;
     if(daily == 1)
     {
@@ -767,9 +900,9 @@ app.get('/challengeNextDay', async(req, res) =>
 
 /*Passes one week within a users challenge. daily is
 1 for the daily challenge and 0 for a personal challenge*/
-app.get('/challengeNextWeek', async(req, res) =>
+app.post('/challengeNextWeek', async(req, res) =>
 {
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -777,6 +910,12 @@ app.get('/challengeNextWeek', async(req, res) =>
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userChallengeQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -786,9 +925,10 @@ app.get('/challengeNextWeek', async(req, res) =>
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const daily = req.query.daily;
+    const daily = req.body.daily;
     var isFinished = 0;
     if(daily == 1)
     {
@@ -818,9 +958,9 @@ app.get('/challengeNextWeek', async(req, res) =>
 
 /*Passes 20 days(approx one month) within a users challenge. daily is
 1 for the daily challenge and 0 for a personal challenge*/
-app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im lazy, might change later
+app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im lazy, might change later
 {
-    const userKey = req.query.userKey;
+    const userKey = req.body.userKey;
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -828,6 +968,12 @@ app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im
     }
     else
     {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
         userChallengeQueues.get(userKey).enqueue(alert);
     }
     while(alert.alerted == 0)
@@ -837,9 +983,10 @@ app.get('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im
     if(userQueues.get(userKey) == null)
     {
         res.send(false);
+        alert.unalert();
         return;
     }
-    const daily = req.query.daily;
+    const daily = req.body.daily;
     var isFinished = 0;
     if(daily == 1)
     {
@@ -894,11 +1041,11 @@ async function update()
 async function createAccount(userKey)
 {
     await database.addUser(userKey, 10000, [], {yesterday : 10000}, []);
+    await challenge.createDailyChallengeProfile(userKey);
     userQueues.set(userKey, queue.createQueue());
     userQueues.get(userKey).run();
     userChallengeQueues.set(userKey, queue.createQueue());
     userChallengeQueues.get(userKey).run();
-    challenge.createDailyChallengeProfile(userKey);
 }
 
 async function removeAccount(userKey)
@@ -906,7 +1053,7 @@ async function removeAccount(userKey)
     userQueues.delete(userKey);
     userChallengeQueues.delete(userKey);
     challenge.deleteUser(userKey);
-    database.deleteUser(userKey);
+    await database.deleteUser(userKey);
 }
 
 
@@ -1071,3 +1218,7 @@ async function flushCache()
         await cache.updateCacheStock(stockList[i], stockData);
     }
 }
+
+
+
+module.exports = app;

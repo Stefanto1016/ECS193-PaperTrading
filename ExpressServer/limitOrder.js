@@ -49,7 +49,7 @@ class limitOrder
 
     async executeOrder()
     {
-        console.log("executing order")
+        //console.log("executing order")
         var alert = queue.createAlert();
         if(userQueues.get(this.userKey))
         {
@@ -99,7 +99,7 @@ class limitOrder
 
 function addLimitOrder(userKey, stock, amount, price, sell, low)
 {
-    console.log("adding limit order");
+    //console.log("adding limit order");
     var newOrder = new limitOrder(userKey, stock, amount, price, sell, low);
     newOrder.next = limitOrderLL;
     limitOrderLL = newOrder;
@@ -108,7 +108,7 @@ function addLimitOrder(userKey, stock, amount, price, sell, low)
 
 async function checkLimitOrders()
 {
-    console.log("updating limit orders")
+    //console.log("updating limit orders")
     var currentOrder = limitOrderLL;
     while(currentOrder != null)
     {
