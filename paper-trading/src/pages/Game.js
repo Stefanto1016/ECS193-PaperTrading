@@ -1260,11 +1260,11 @@ function Game() {
     function EndInfo() {
         return (
             <Box display="flex" 
-                 width={500} height={595} 
+                 width={500} height={625} 
                  mx='auto'
-                 mt={5}
+                 mt={3}
                  border={0}>
-                <Paper elevation={3} sx={{width: 500, height: 595}}>
+                <Paper elevation={3} sx={{width: 500, height: 625}}>
                     <Typography fontWeight='bold' variant='h3' textAlign='center' mt={3}>
                         Game Over!
                     </Typography>
@@ -1318,7 +1318,7 @@ function Game() {
                     </Typography>  
 
 
-                    <Stack direction="row" spacing={6} justifyContent='center' ml={3} mr={3} mt={4} border={0}>
+                    <Stack direction="row" spacing={6} justifyContent='center' ml={3} mr={3} mt={6} border={0}>
                             <Button variant='contained' onClick={goPlay}>
                                 Play Again
                             </Button>
