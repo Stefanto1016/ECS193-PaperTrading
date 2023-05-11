@@ -262,6 +262,17 @@ function Game() {
     const [quantityError, setQuantityError] = useState(false)
     const [validTransaction, setValidTransaction] = useState(false)
 
+    const [totalStocksBought, setTotalStocksBought] = useState(0)
+    const [moneySpent, setMoneySpent] = useState(0)
+    const [stocksListBought, setStocksListBought] = useState(Array(10).fill(0))
+    const [mostPurchasedStock, setMostPurchasedStock] = useState('N/A')
+    const [mostPurchasedStockAmount, setMostPurchasedStockAmount] = useState(0)
+    const [highestAmountBought, setHighestAmountBought] = useState(0)
+    const [highestAmountStock, setHighestAmountStock] = useState('N/A')
+    const [highestSingleSpending, setHighestSingleSpending] = useState(0)
+    const [highestSingleSpendingStock, setHighestSingleSpendingStock] = useState('N/A')
+
+
     //const [disableWeekForward, setDisableWeekForward] = useState(false)
     //const [disableMonthForward, setDisableMonthForward] = useState(false)
 
@@ -519,11 +530,21 @@ function Game() {
         setDisplayLeaderboard(true)
     }
     function goStart() {
+        setDisplayEnd(false)
         setDisplayLeaderboard(false)
         setDisplayStart(true)
     }
 
     function goEnd() {
+        const isAllZero = stocksListBought.every(item => item === 0);
+        console.log(isAllZero)
+
+        if (!isAllZero) {
+            var maxIndex = stocksListBought.indexOf(Math.max(...stocksListBought));
+            setMostPurchasedStock(stocksList[maxIndex])
+            setMostPurchasedStockAmount(stocksListBought[maxIndex])
+        }
+
         setDisplayGame(false)
         setDisplayEnd(true)
 
@@ -592,6 +613,16 @@ function Game() {
        
         setOption('')
         setQuantity(0)
+
+        setTotalStocksBought(0)
+        setMoneySpent(0)
+        setStocksListBought(Array(10).fill(0))
+        setMostPurchasedStock('N/A')
+        setMostPurchasedStockAmount(0)
+        setHighestAmountBought(0)
+        setHighestAmountStock('N/A')
+        setHighestSingleSpending(0)
+        setHighestSingleSpendingStock('N/A')
 
         // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
         //         userKey: prof["email"],
@@ -789,6 +820,24 @@ function Game() {
                     })).then(res => {return res.json()})
                     .then(data => {setOwnedStocks(data)});
                     
+
+                    setTotalStocksBought(totalStocksBought + numericQuantity)
+                    setMoneySpent(moneySpent + parseFloat(stockMark) * numericQuantity)
+
+                    var list = stocksListBought
+                    list[curStockIndex] += numericQuantity
+                    setStocksListBought(list)
+
+                    if (parseFloat(stockMark) * numericQuantity > highestSingleSpending) {
+                        setHighestSingleSpending(parseFloat(stockMark) * numericQuantity)
+                        setHighestSingleSpendingStock(stockSymbol)
+                    }
+
+                    if (numericQuantity > highestAmountBought) {
+                        setHighestAmountBought(numericQuantity)
+                        setHighestAmountStock(stockSymbol)
+                    }
+
                     setBuyError(false)
                     setSellError(false)
                     setValidTransaction(true)
@@ -1211,11 +1260,11 @@ function Game() {
     function EndInfo() {
         return (
             <Box display="flex" 
-                 width={500} height={275} 
+                 width={500} height={595} 
                  mx='auto'
-                 mt={20}
+                 mt={5}
                  border={0}>
-                <Paper elevation={3} sx={{width: 500, height: 275}}>
+                <Paper elevation={3} sx={{width: 500, height: 595}}>
                     <Typography fontWeight='bold' variant='h3' textAlign='center' mt={3}>
                         Game Over!
                     </Typography>
@@ -1224,11 +1273,66 @@ function Game() {
                         {'Final Balance: $' + balance}
                     </Typography>
 
-                    <Box sx={{display:'flex', justifyContent:'center', mt: 5}}>
+                    <Typography variant='h5' display='block' textAlign='center' mt={6} mx={4}
+                                sx={{textDecoration: 'underline', color: "#757575"}}
+                    >
+                        Additional Stats
+                    </Typography>
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Total Shares Purchased: " + totalStocksBought}
+                    </Typography>
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Total Money Spent: $" + moneySpent.toFixed(2)}
+                    </Typography>
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Total Money Earned: $" + (parseFloat(balance) - (10000 - moneySpent)).toFixed(2)}
+                    </Typography>  
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Most Purchased Stock: " + mostPurchasedStock + " (" + mostPurchasedStockAmount + ")"}
+                    </Typography> 
+
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Highest Spending in One Transaction: $" + highestSingleSpending.toFixed(2) + " (" + highestSingleSpendingStock + ")"}
+                    </Typography> 
+
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Most Shares Bought in One Transaction: " + highestAmountBought + " (" + highestAmountStock + ")"}
+                    </Typography>  
+
+
+                    <Stack direction="row" spacing={6} justifyContent='center' ml={3} mr={3} mt={4} border={0}>
+                            <Button variant='contained' onClick={goPlay}>
+                                Play Again
+                            </Button>
+
+                            <Button variant='contained' onClick={goStart}>
+                                Game Menu
+                            </Button>
+                    </Stack>
+
+                    {/* <Box sx={{display:'flex', justifyContent:'center', mt: 5}}>
                         <Button variant='contained' onClick={goPlay}>
                             Play Again?
                         </Button>
-                    </Box>
+                    </Box> */}
                 </Paper>
             </Box>
         )
