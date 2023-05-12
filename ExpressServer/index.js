@@ -894,7 +894,7 @@ app.post('/challengeNextDay', async(req, res) =>
         var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
     }
     alert.unalert();
-    res.send({isFinished : isFinished, currentDay : currentDay});
+    res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
 }
 )
 
@@ -952,7 +952,7 @@ app.post('/challengeNextWeek', async(req, res) =>
         }
     }
     alert.unalert();
-    res.send({isFinished : isFinished, currentDay : currentDay});
+    res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
 }
 )
 
@@ -1010,7 +1010,7 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
         }
     }
     alert.unalert();
-    res.send({isFinished : isFinished, currentDay : currentDay});
+    res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
 }
 )
 
