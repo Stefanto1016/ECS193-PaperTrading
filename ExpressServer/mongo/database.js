@@ -409,11 +409,16 @@ async function updateBalance(email, newBalance)
 
 async function getLeaderboard(today)
 {
-    let date = new Date();
-    if(today == 1)
+    let date;
+    if(today == 0)
     {
-        var dateString = String(date.getFullYear())+String(date.getMonth())+String(date.getDate()-yesterday);
+        date = new Date(-1);
     }
+    else
+    {
+        date = new Date();
+    }
+    var dateString = String(date.getFullYear())+String(date.getMonth())+String(date.getDate());
     return(await leaderboard.find({date: dateString}).sort({score: -1}));
 }
 
@@ -421,11 +426,12 @@ async function addScore(userKey, score)
 {
     let date = new Date();
     let dateString = String(date.getFullYear())+String(date.getMonth())+String(date.getDate());
-    await new leaderboard({
+    const newEntry = {
         userKey: userKey,
         score: score,
         date: dateString
-    }).save();
+    };
+    await new leaderboard(newEntry).save();
 }
 
 async function clearLeaderboard()
