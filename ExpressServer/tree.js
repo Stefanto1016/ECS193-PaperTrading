@@ -47,11 +47,17 @@ async function getStocks(heading)
     }
     for(let i = 0; i < nameArray.length; i++)
     {
-        nameArray[i] = symbolLookupTable.get(nameArray[i]);
+        if(symbolLookupTable.get(nameArray[i]) != null)
+        {
+            nameArray[i] = symbolLookupTable.get(nameArray[i]);
+        }
     }
     for(let i = 0; i < symbolArray.length; i++)
     {
-        symbolArray[i] = descLookupTable.get(symbolArray[i]);
+        if(descLookupTable.get(symbolArray[i]) != null)
+        {
+            symbolArray[i] = descLookupTable.get(symbolArray[i]);
+        }
     }
     return(returnArr);
 }

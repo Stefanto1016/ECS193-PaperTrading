@@ -548,7 +548,8 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
     const yesterday = req.query.yesterday;
     let leaderboard = await database.getLeaderboard(yesterday);
     let position = null;
-    for(let i = 0; i < leaderboard.size; i++)
+    var i;
+    for(i = 0; i < leaderboard.size; i++)
     {
         if(leaderboard[i]["userKey"] == userKey)
         {
@@ -556,7 +557,7 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
             i = leaderboard.size;
         }
     }
-    leaderboard.slice(max(0, position-4), min(i-1, position+4));
+    leaderboard.slice(Math.max(0, position-4), Math.min(i-1, position+4));
     alert.unalert();
     res.send({position: position, leaderboard: leaderboard});
 }
@@ -887,11 +888,13 @@ app.post('/challengeNextDay', async(req, res) =>
         {
             database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
         }
+        var balance = await challenge.getDailyChallengeProfile(userKey).balance
     }
     else
     {
         isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
         var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
+        var balance = await challenge.getPersonalChallengeProfile(userKey).balance
     }
     alert.unalert();
     res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
@@ -942,6 +945,7 @@ app.post('/challengeNextWeek', async(req, res) =>
                 database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
             }
         }
+        var balance = await challenge.getDailyChallengeProfile(userKey).balance
     }
     else
     {
@@ -950,6 +954,7 @@ app.post('/challengeNextWeek', async(req, res) =>
             isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
             var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
         }
+        var balance = await challenge.getPersonalChallengeProfile(userKey).balance
     }
     alert.unalert();
     res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
@@ -1000,6 +1005,7 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
                 database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
             }
         }
+        var balance = await challenge.getDailyChallengeProfile(userKey).balance
     }
     else
     {
@@ -1008,6 +1014,7 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
             isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
             var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
         }
+        var balance = await challenge.getPersonalChallengeProfile(userKey).balance
     }
     alert.unalert();
     res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
