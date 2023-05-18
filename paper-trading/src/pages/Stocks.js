@@ -654,13 +654,13 @@ const handleClose = (event, reason) => {
       backgroundColor: "#2196f3",
       //ml: 1.5,
       "&:hover": { color: "#2196f3" }}}
-      onClick={() => handleClick(searchStock.trim())}>
+      onClick={() => handleClick(searchStock.split('—')[0].trim())}>
       <SearchIcon />
     </IconButton>
     )
 
     const SearchButton = () => (
-      <IconButton onClick={() => handleClick(searchStock.trim())}>
+      <IconButton onClick={() => handleClick(searchStock.split('—')[0].trim())}>
         <SearchIcon />
       </IconButton>
       )
@@ -674,11 +674,15 @@ const handleClose = (event, reason) => {
                 heading: event.target.value
             })).then(res => {return res.json()})
             .then(data => {
-              //console.log(data[0]);
+              console.log(data)
+              console.log(data[0][0]);
 
               var list = []
               for (const symbol of data[0]) {
-                list.push({"symbol": symbol})
+                //console.log(symbol)
+                if (symbol != null) {
+                  list.push({"symbol": symbol[0] + ' — ' + symbol[1]})
+                }
               }
               //console.log(list)
               setSearchList(list)});
@@ -827,7 +831,7 @@ const handleClose = (event, reason) => {
                       onChange={changeStock}
                       onKeyPress= {(e) => {
                         if (e.key === 'Enter') {
-                          handleClick(searchStock.trim())
+                          handleClick(searchStock.split('—')[0].trim())
                         }
                       }}
                       InputProps={{
@@ -869,7 +873,7 @@ const handleClose = (event, reason) => {
                     onChange={changeStock}
                     onKeyPress= {(e) => {
                       if (e.key === 'Enter') {
-                        handleClick(searchStock.trim())
+                        handleClick(searchStock.split('—')[0].trim())
                       }
                     }}
                     InputProps={{...params.InputProps, endAdornment: <SearchButton />}}
