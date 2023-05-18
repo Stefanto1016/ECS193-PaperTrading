@@ -543,6 +543,9 @@ const handleClose = (event, reason) => {
   // Get information related to a given stock
   function handleClick(stock) {
     const array = [stock]
+
+    setQuantity(0);
+    setOption("");
   
     getCurrentData(array).then(async response =>
       {
@@ -692,6 +695,7 @@ const handleClose = (event, reason) => {
     setStock(event.target.value)
   }
 
+
   // To change the time intervals displayed by stock graph
   const [interval, setInterval] = useState('1M')
   function changeInterval(event) {
@@ -793,6 +797,7 @@ const handleClose = (event, reason) => {
     setExternalStock(null)
   }
 
+
   return (
     <div>
       {profile ? (
@@ -826,7 +831,7 @@ const handleClose = (event, reason) => {
           disableClearable
           filterOptions={(x) => x}
           options={searchList.map((option) => option.symbol)}
-          onChange={(event, value) => setStock(value)}
+          onChange={(event, value) => {setStock(value); handleClick(value.split('—')[0].trim());}}
           renderInput={(params) => (
             <TextField
                       {...params}
@@ -867,7 +872,7 @@ const handleClose = (event, reason) => {
         disableClearable
         filterOptions={(x) => x}
         options={searchList.map((option) => option.symbol)}
-        onChange={(event, value) => setStock(value)}
+        onChange={(event, value) => {setStock(value); handleClick(value.split('—')[0].trim());}}
         renderInput={(params) =>
           <TextField 
                     {...params}
