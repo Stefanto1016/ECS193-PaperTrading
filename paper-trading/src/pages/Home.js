@@ -310,9 +310,9 @@ function Home() {
                                                 {gainer.symbol} 
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="right">{gainer.change}</TableCell>
-                                        <TableCell align="right">{gainer.price}</TableCell>
-                                        <TableCell align="right">{gainer.volume}</TableCell>
+                                        <TableCell align="right">{gainer.change.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                        <TableCell align="right">{gainer.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                        <TableCell align="right">{gainer.volume.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>

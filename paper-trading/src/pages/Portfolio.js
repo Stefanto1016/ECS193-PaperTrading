@@ -219,7 +219,7 @@ function Portfolio() {
         for(const entry of data)
         {
             let stData = await getCurrentData(entry);
-            st.push(createData(entry, (stData[entry]['markPercentChangeInDouble']), stData[entry]['closePrice'], stData[entry]['totalVolume']));
+            st.push(createData(entry, (stData[entry]['markPercentChangeInDouble']), stData[entry]['closePrice'], stData[entry]['totalVolume'].toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})));
         }
         setWatchList(st);
     }
@@ -283,9 +283,9 @@ function Portfolio() {
                                             <TableCell component="th" scope="row" onClick={() => navigate('/stocks', { state: gainer.symbol})} sx={{textDecoration: 'underline', cursor: 'pointer', maxWidth: '5px'}}>
                                                 {gainer.symbol}
                                             </TableCell>
-                                            <TableCell align="right">{gainer.change.toFixed(2)}</TableCell>
-                                            <TableCell align="right">{gainer.price.toFixed(2)}</TableCell>
-                                            <TableCell align="right">{gainer.quantity}</TableCell>
+                                            <TableCell align="right">{gainer.change.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                            <TableCell align="right">{gainer.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                            <TableCell align="right">{gainer.quantity.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -314,8 +314,8 @@ function Portfolio() {
                                             <TableCell component="th" scope="row" onClick={() => navigate('/stocks', { state: gainer.symbol})} sx={{textDecoration: 'underline', cursor: 'pointer', maxWidth: '5px'}}>
                                                 {gainer.symbol}
                                             </TableCell>
-                                            <TableCell align="right">{gainer.change.toFixed(2)}</TableCell>
-                                            <TableCell align="right">{gainer.price.toFixed(2)}</TableCell>
+                                            <TableCell align="right">{gainer.change.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                            <TableCell align="right">{gainer.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
                                             <TableCell align="right">{gainer.quantity}</TableCell>
                                         </TableRow>
                                     ))}

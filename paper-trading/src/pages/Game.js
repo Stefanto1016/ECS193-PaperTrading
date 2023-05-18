@@ -376,7 +376,7 @@ function Game() {
             setCurStockIndex(0)
             setStockSymbol(quoteData[0][stock].symbol)
             setStockDesc(quoteData[0][stock].description)
-            setStockMark(histData[0][cutoff-1][0].toFixed(2))
+            setStockMark(histData[0][cutoff-1][0])
             for (const data of histData[0]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -389,7 +389,7 @@ function Game() {
             setCurStockIndex(1)
             setStockSymbol(quoteData[1][stock].symbol)
             setStockDesc(quoteData[1][stock].description)
-            setStockMark(histData[1][cutoff-1][0].toFixed(2))
+            setStockMark(histData[1][cutoff-1][0])
             for (const data of histData[1]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -402,7 +402,7 @@ function Game() {
             setCurStockIndex(2)
             setStockSymbol(quoteData[2][stock].symbol)
             setStockDesc(quoteData[2][stock].description)
-            setStockMark(histData[2][cutoff-1][0].toFixed(2))
+            setStockMark(histData[2][cutoff-1][0])
             for (const data of histData[2]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -415,7 +415,7 @@ function Game() {
             setCurStockIndex(3)
             setStockSymbol(quoteData[3][stock].symbol)
             setStockDesc(quoteData[3][stock].description)
-            setStockMark(histData[3][cutoff-1][0].toFixed(2))
+            setStockMark(histData[3][cutoff-1][0])
             for (const data of histData[3]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -428,7 +428,7 @@ function Game() {
             setCurStockIndex(4)
             setStockSymbol(quoteData[4][stock].symbol)
             setStockDesc(quoteData[4][stock].description)
-            setStockMark(histData[4][cutoff-1][0].toFixed(2))
+            setStockMark(histData[4][cutoff-1][0])
             for (const data of histData[4]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -441,7 +441,7 @@ function Game() {
             setCurStockIndex(5)
             setStockSymbol(quoteData[5][stock].symbol)
             setStockDesc(quoteData[5][stock].description)
-            setStockMark(histData[5][cutoff-1][0].toFixed(2))
+            setStockMark(histData[5][cutoff-1][0])
             for (const data of histData[5]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -454,7 +454,7 @@ function Game() {
             setCurStockIndex(6)
             setStockSymbol(quoteData[6][stock].symbol)
             setStockDesc(quoteData[6][stock].description)
-            setStockMark(histData[6][cutoff-1][0].toFixed(2))
+            setStockMark(histData[6][cutoff-1][0])
             for (const data of histData[6]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -467,7 +467,7 @@ function Game() {
             setCurStockIndex(7)
             setStockSymbol(quoteData[7][stock].symbol)
             setStockDesc(quoteData[7][stock].description)
-            setStockMark(histData[7][cutoff-1][0].toFixed(2))
+            setStockMark(histData[7][cutoff-1][0])
             for (const data of histData[7]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -480,7 +480,7 @@ function Game() {
             setCurStockIndex(8)
             setStockSymbol(quoteData[8][stock].symbol)
             setStockDesc(quoteData[8][stock].description)
-            setStockMark(histData[8][cutoff-1][0].toFixed(2))
+            setStockMark(histData[8][cutoff-1][0])
             for (const data of histData[8]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -493,7 +493,7 @@ function Game() {
             setCurStockIndex(9)
             setStockSymbol(quoteData[9][stock].symbol)
             setStockDesc(quoteData[9][stock].description)
-            setStockMark(histData[9][cutoff-1][0].toFixed(2))
+            setStockMark(histData[9][cutoff-1][0])
             for (const data of histData[9]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -583,7 +583,7 @@ function Game() {
                            setCutoff(data.currentDay + 1)
                            console.log(data.stockData.length)
                            setHistDataLen(data.stockData[0].length)
-                           setStockMark(data.stockData[0][data.currentDay][0].toFixed(2))
+                           setStockMark(data.stockData[0][data.currentDay][0])
                            setCurStock(data.stocks[0])
                            setStocksList(data.stocks)
                            setCurStockIndex(0)
@@ -595,14 +595,14 @@ function Game() {
                                 userKey: prof["email"],
                                 daily: 0
                             })).then(res => {return res.json()})
-                            .then(data => {setBalance(data.balance.toFixed(2))});
+                            .then(data => {setBalance(data.balance)});
 
 
                             fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
                                 userKey: prof["email"],
                                 daily: 0
                             })).then(res => {return res.json()})
-                            .then(data => {setBuyingPower(data.buyingPower.toFixed(2))});
+                            .then(data => {setBuyingPower(data.buyingPower)});
 
                             fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
                                 userKey: prof["email"],
@@ -759,7 +759,7 @@ function Game() {
                                         {index + 1}
                                     </TableCell>
                                     <TableCell>{data.name}</TableCell>
-                                    <TableCell align='right'>{data.balance}</TableCell>
+                                    <TableCell align='right'>{data.balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
                                     </TableRow>
                                 ))}
                                 </TableBody>
@@ -813,7 +813,7 @@ function Game() {
                     setActionError(false)
                     setQuantityError(false) 
                 } else {
-                    setBuyingPower(data.buyingPower.toFixed(2))
+                    setBuyingPower(data.buyingPower)
                     fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
                         userKey: prof["email"],
                         daily: 0
@@ -881,7 +881,7 @@ function Game() {
                     setActionError(false)
                     setQuantityError(false) 
                 } else {
-                    setBuyingPower(data.buyingPower.toFixed(2))
+                    setBuyingPower(data.buyingPower)
                     fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
                         userKey: prof["email"],
                         daily: 0
@@ -1012,16 +1012,16 @@ function Game() {
                 </List>
 
                 <Typography fontWeight='bold' sx={{ml:3, fontSize: 30}}>
-                    {'Market Price ($): ' + stockMark}
+                    {'Market Price ($): ' + stockMark.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                 </Typography>
 
                 <List component={Stack} direction='row' sx={{maxWidth: 700, ml:3}}>
                     <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 18}}
-                                    primary={'Balance ($): ' + balance}/>
+                                    primary={'Balance ($): ' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
                     <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 18}}
-                                    primary={'Buying Power ($): ' + buyingPower}/>
+                                    primary={'Buying Power ($): ' + buyingPower.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
                     <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 18}}
-                                    primary={'Shares Owned: ' + ownedStocks[curStockIndex]}/>
+                                    primary={'Shares Owned: ' + ownedStocks[curStockIndex].toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}/>
                 </List>
             </Box>
 
@@ -1044,7 +1044,7 @@ function Game() {
                 } else {
                     setCutoff(data.currentDay + 1)
                     console.log(curStockPrices)
-                    setStockMark(curStockPrices[data.currentDay].toFixed(2))
+                    setStockMark(curStockPrices[data.currentDay])
                     const chartData = {
                         // x-axis labels
                         labels: curStockTimes.slice(0, data.currentDay+1),
@@ -1060,7 +1060,7 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
-                    setBalance(data.balance.toFixed(2))
+                    setBalance(data.balance)
                 }
             });
 
@@ -1111,7 +1111,7 @@ function Game() {
                 } else {
                     setCutoff(data.currentDay + 1)
                     console.log(curStockPrices)
-                    setStockMark(curStockPrices[data.currentDay].toFixed(2))
+                    setStockMark(curStockPrices[data.currentDay])
                     const chartData = {
                         // x-axis labels
                         labels: curStockTimes.slice(0, data.currentDay+1),
@@ -1127,7 +1127,7 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
-                    setBalance(data.balance.toFixed(2))
+                    setBalance(data.balance)
                 }
             });
 
@@ -1176,7 +1176,7 @@ function Game() {
                 } else {
                     setCutoff(data.currentDay + 1)
                     console.log(curStockPrices)
-                    setStockMark(curStockPrices[data.currentDay].toFixed(2))
+                    setStockMark(curStockPrices[data.currentDay])
                     const chartData = {
                         // x-axis labels
                         labels: curStockTimes.slice(0, data.currentDay+1),
@@ -1192,7 +1192,7 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
-                    setBalance(data.balance.toFixed(2))
+                    setBalance(data.balance)
                 }
             });
 
@@ -1270,7 +1270,7 @@ function Game() {
                     </Typography>
 
                     <Typography variant='h4' display='block' textAlign='center' mt={6} mx={4}>
-                        {'Final Balance: $' + balance}
+                        {'Final Balance: $' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </Typography>
 
                     <Typography variant='h5' display='block' textAlign='center' mt={6} mx={4}
@@ -1282,39 +1282,39 @@ function Game() {
                     <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
                                 sx={{color: "#757575"}}
                     >
-                        {"Total Shares Purchased: " + totalStocksBought}
+                        {"Total Shares Purchased: " + totalStocksBought.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
                     </Typography>
 
                     <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
                                 sx={{color: "#757575"}}
                     >
-                        {"Total Money Spent: $" + moneySpent.toFixed(2)}
+                        {"Total Money Spent: $" + moneySpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </Typography>
 
                     <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
                                 sx={{color: "#757575"}}
                     >
-                        {"Total Money Earned: $" + (parseFloat(balance) - (10000 - moneySpent)).toFixed(2)}
+                        {"Total Money Earned: $" + (parseFloat(balance) - (10000 - moneySpent)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </Typography>  
 
                     <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
                                 sx={{color: "#757575"}}
                     >
-                        {"Most Purchased Stock: " + mostPurchasedStock + " (" + mostPurchasedStockAmount + ")"}
+                        {"Most Purchased Stock: " + mostPurchasedStock + " (" + mostPurchasedStockAmount.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ")"}
                     </Typography> 
 
 
                     <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
                                 sx={{color: "#757575"}}
                     >
-                        {"Highest Spending in One Transaction: $" + highestSingleSpending.toFixed(2) + " (" + highestSingleSpendingStock + ")"}
+                        {"Highest Spending in One Transaction: $" + highestSingleSpending.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " (" + highestSingleSpendingStock + ")"}
                     </Typography> 
 
 
                     <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
                                 sx={{color: "#757575"}}
                     >
-                        {"Most Shares Bought in One Transaction: " + highestAmountBought + " (" + highestAmountStock + ")"}
+                        {"Most Shares Bought in One Transaction: " + highestAmountBought.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}) + " (" + highestAmountStock + ")"}
                     </Typography>  
 
 

@@ -41,10 +41,13 @@ import { ListItemIcon } from '@mui/material';
 
 import { useLocation } from 'react-router';
 import { useNavigate, Navigate } from 'react-router-dom';
+import { NumericFormat } from 'react-number-format'
 
 
 function Stocks() {
   const navigate = useNavigate();
+  
+  const numberWithCommas = (n) => n?.toString.replace(/\B(?=(\d{3})+(?!\d))/g, ',') || '0';
 
   const profile = localStorage.getItem("profile");
 
@@ -175,7 +178,7 @@ function Stocks() {
           <List component={Stack} direction='row' sx={{maxWidth: 800, ml:3}}>
             <ListItemText 
               primaryTypographyProps={{fontWeight: 'bold', fontSize: 30}}
-              primary={stockInfo.mark.toFixed(2) + ' USD'}/>
+              primary={stockInfo.mark.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' USD'}/>
             <ListItemText 
               primaryTypographyProps={{fontSize: 25, 
                                        color: (stockInfo.markChange > 0 ? 'green' : 'red'), mt:0.3}}
@@ -214,7 +217,7 @@ function Stocks() {
         <Stack direction="row" spacing={2}>
           <List sx={{width: "100%", maxWidth: 360, ml:1.5}}>
             <ListItem>
-              <ListItemText primary={"Volume (current): " + stockInfo.volume} />
+              <ListItemText primary={"Volume (current): " + stockInfo.volume.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} />
               <Tooltip title="The number of shares of a stock traded today" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -223,7 +226,7 @@ function Stocks() {
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary={"Today's High ($): " + stockInfo.high.toFixed(2)}/>
+              <ListItemText primary={"Today's High ($): " + stockInfo.high.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
               <Tooltip title="The highest price of the share today" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -232,7 +235,7 @@ function Stocks() {
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary={"Today's Low ($): " + stockInfo.low.toFixed(2)}/>
+              <ListItemText primary={"Today's Low ($): " + stockInfo.low.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
               <Tooltip title="The lowest price of the share today" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -243,7 +246,7 @@ function Stocks() {
 
           <List sx={{width: "100%", maxWidth: 360, justifyContent: 'flex-start'}}>
             <ListItem>
-              <ListItemText primary={"52 Week High ($): " + stockInfo.week52High.toFixed(2)}/>
+              <ListItemText primary={"52 Week High ($): " + stockInfo.week52High.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
               <Tooltip title="The highest price of the share within a 52 week period" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -252,7 +255,7 @@ function Stocks() {
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary={"Bid/Ask Price ($): " + stockInfo.bidPrice.toFixed(2) + ' / ' + stockInfo.askPrice.toFixed(2)}/>
+              <ListItemText primary={"Bid/Ask Price ($): " + stockInfo.bidPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' / ' + stockInfo.askPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
               <Tooltip title="The max/min price willing to be paid for a share" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -261,7 +264,7 @@ function Stocks() {
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary={"52 Week Low ($): " + stockInfo.week52Low.toFixed(2)}/>
+              <ListItemText primary={"52 Week Low ($): " + stockInfo.week52Low.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
               <Tooltip title="The lowest price of the share within a 52 week period" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
