@@ -43,6 +43,12 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+
 import { Typography } from '@mui/material';  
 
 const chartStyle = {
@@ -231,7 +237,17 @@ function Game() {
     const [displayGame, setDisplayGame] = useState(false);
     const [displayEnd, setDisplayEnd] = useState(false);
 
+    // 0 for personal challenge, 1 for daily challenge
+    const [gameType, setGameType] = useState(null);
+
+    const [completedDaily, setCompletedDaily] = useState(null);
+
+    const [dialogOpen, setDialogOpen] = useState(false);
+
     const [leaderboard, setLeaderboad] = useState([]);
+    const [leaderboardPosition, setLeaderboadPosition] = useState(null);
+    const [leaderboardSuccess, setLeaderboadSuccess] = useState(false);
+    const [leaderboardFail, setLeaderboadFail] = useState(true);
 
     const [chartData, setChartData] = useState(emptyChart)
 
@@ -287,8 +303,31 @@ function Game() {
     useEffect(() => {
         fetch("http://localhost:8000/challengeGetLeaderboard?" + new URLSearchParams({
             })).then(res => {return res.json()})
-            .then(data => {setLeaderboad(data)});
+            .then(data => {setLeaderboad(data.slice(0, 8))});
     }, [])
+
+    useEffect(() => {
+        const prof = JSON.parse(localStorage.getItem("profile"))
+        fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
+            userKey: prof["email"],
+            yesterday: 0
+            })).then(res => {return res.json()})
+            .then(data => {console.log(data.position); setLeaderboadPosition(data.position)});
+    }, [])
+
+    useEffect(() => {
+        const prof = JSON.parse(localStorage.getItem("profile"))
+        fetch("http://localhost:8000/challengeHasCompletedDaily?" + new URLSearchParams({
+            userKey: prof["email"],
+            })).then(res => {return res.json()})
+            .then(data => {console.log(data); setCompletedDaily(data.isFinished)});
+    }, [])
+
+    useEffect(() => {
+        if (gameType != null) {
+            goPlay()
+        }
+    }, [gameType])
 
     //useEffect(())
 
@@ -524,6 +563,38 @@ function Game() {
           setChartData(chartData) 
     }
 
+    const handleDialogOpen = () => {
+        setDialogOpen(true);
+    };
+    
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+    };
+
+    function NoteDialog() {
+        return (
+        <Dialog
+            open={dialogOpen}
+            onClose={handleDialogClose}
+            PaperProps={{ sx: { width: "35%" } }}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+        >
+            <DialogTitle id="alert-dialog-title" style={{textDecoration:'underline'}} textAlign="center">
+                {"Note"}
+            </DialogTitle>
+            <DialogContent>
+            <DialogContentText id="alert-dialog-description" textAlign='center'>
+                You have already completed today's daily challenge!
+            </DialogContentText>
+            </DialogContent>
+            <DialogActions style={{ justifyContent: "center" }}>
+                <Button variant='contained' onClick={handleDialogClose}>OK</Button>
+            </DialogActions>
+        </Dialog>
+        )
+    }
+
     // Button handlers
     function goLeaderboard() {
         setDisplayStart(false)
@@ -533,6 +604,7 @@ function Game() {
         setDisplayEnd(false)
         setDisplayLeaderboard(false)
         setDisplayStart(true)
+        setGameType(null)
     }
 
     function goEnd() {
@@ -545,13 +617,30 @@ function Game() {
             setMostPurchasedStockAmount(stocksListBought[maxIndex])
         }
 
+        if (gameType == 1) {
+            var prevPosition = leaderboardPosition;
+            const prof = JSON.parse(localStorage.getItem("profile"))
+            fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
+                userKey: prof["email"],
+                yesterday: 0
+                })).then(res => {return res.json()})
+                .then(data => {
+                    console.log('prev pos' + prevPosition)
+                    console.log('cur pos' + data.position)
+                    if (prevPosition == null && data.position != null) {
+                        // You made it to the leaderboard
+                        setLeaderboadSuccess(true)
+                        setLeaderboadFail(false)
+                }});
+        }
+
         setDisplayGame(false)
         setDisplayEnd(true)
 
         // const prof = JSON.parse(localStorage.getItem("profile"))
         // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
         //         userKey: prof["email"],
-        //         daily: 0
+        //         daily: gameType
         //     })).then(res => {return res.json()})
         //     .then(data => {setBalance(data.balance.toFixed(2))
         //                    setDisplayGame(false)
@@ -565,8 +654,17 @@ function Game() {
     }
 
     async function goPlay() {
+        if (gameType == 1 && completedDaily == true) {
+            handleDialogOpen()
+            setGameType(null)
+            console.log('already completed daily')
+            return
+        }
+
         setDisplayLoading(true)
         setDisplayGame(false)
+        setLeaderboadSuccess(false)
+        setLeaderboadFail(true)
 
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
@@ -574,42 +672,94 @@ function Game() {
             body: JSON.stringify({userKey: prof["email"]}),
             headers: {'Content-Type': 'application/json'}
         }
-        fetch("http://localhost:8000/challengeCreatePersonalChallenge", options)
-            .then(res => {return res.json()})
-            .then(data => {
-                           console.log(data)
-                           console.log(data.stockData)
-                           setHistData(data.stockData)
-                           setCutoff(data.currentDay + 1)
-                           console.log(data.stockData.length)
-                           setHistDataLen(data.stockData[0].length)
-                           setStockMark(data.stockData[0][data.currentDay][0])
-                           setCurStock(data.stocks[0])
-                           setStocksList(data.stocks)
-                           setCurStockIndex(0)
-                           getStockButtons(data.stocks)
-                           getChartData(data.stockData[0], data.currentDay + 1)
-                           getStockQuotes(data.stocks, data.stocks[0])
 
-                           fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-                                userKey: prof["email"],
-                                daily: 0
-                            })).then(res => {return res.json()})
-                            .then(data => {setBalance(data.balance)});
+        // Create personal challenge
+        if (gameType == 0) {
+            fetch("http://localhost:8000/challengeCreatePersonalChallenge", options)
+                .then(res => {return res.json()})
+                .then(data => {
+                            console.log('Personal Challlenge Creating...')
+                            console.log(data)
+                            console.log(data.stockData)
+                            setHistData(data.stockData)
+                            setCutoff(data.currentDay + 1)
+                            console.log(data.stockData.length)
+                            setHistDataLen(data.stockData[0].length)
+                            setStockMark(data.stockData[0][data.currentDay][0])
+                            setCurStock(data.stocks[0])
+                            setStocksList(data.stocks)
+                            setCurStockIndex(0)
+                            getStockButtons(data.stocks)
+                            getChartData(data.stockData[0], data.currentDay + 1)
+                            getStockQuotes(data.stocks, data.stocks[0])
+
+                            fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
+                                    userKey: prof["email"],
+                                    daily: gameType
+                                })).then(res => {return res.json()})
+                                .then(data => {setBalance(data.balance)});
 
 
-                            fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
-                                userKey: prof["email"],
-                                daily: 0
-                            })).then(res => {return res.json()})
-                            .then(data => {setBuyingPower(data.buyingPower)});
+                                fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
+                                    userKey: prof["email"],
+                                    daily: gameType
+                                })).then(res => {return res.json()})
+                                .then(data => {setBuyingPower(data.buyingPower)});
 
-                            fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
-                                userKey: prof["email"],
-                                daily: 0
-                            })).then(res => {return res.json()})
-                            .then(data => {setOwnedStocks(data)});
-                            });
+                                fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
+                                    userKey: prof["email"],
+                                    daily: gameType
+                                })).then(res => {return res.json()})
+                                .then(data => {setOwnedStocks(data)});
+                                });
+        } else {
+            fetch("http://localhost:8000/challengeGetStockData?" + new URLSearchParams({
+                    userKey: prof["email"],
+                    daily: gameType
+                })).then(res => {return res.json()})
+                .then(data => {
+                                    if (data.currentDay == data.stockData[0].length) {
+                                        console.log('already completed daily challenge')
+                                        return;
+                                    } else {
+                                        console.log('Daily Challlenge Creating...')
+                                        console.log(data)
+                                        console.log(data.stockData)
+                                        setHistData(data.stockData)
+                                        setCutoff(data.currentDay + 1)
+                                        console.log(data.stockData.length)
+                                        setHistDataLen(data.stockData[0].length)
+                                        console.log('Current Day: ' + data.currentDay)
+                                        console.log(data.stockData[0])
+                                        setStockMark(data.stockData[0][data.currentDay][0])
+                                        setCurStock(data.stocks[0])
+                                        setStocksList(data.stocks)
+                                        setCurStockIndex(0)
+                                        getStockButtons(data.stocks)
+                                        getChartData(data.stockData[0], data.currentDay + 1)
+                                        getStockQuotes(data.stocks, data.stocks[0])
+
+                                        fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
+                                                userKey: prof["email"],
+                                                daily: gameType
+                                            })).then(res => {return res.json()})
+                                            .then(data => {setBalance(data.balance)});
+
+
+                                            fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
+                                                userKey: prof["email"],
+                                                daily: gameType
+                                            })).then(res => {return res.json()})
+                                            .then(data => {setBuyingPower(data.buyingPower)});
+
+                                            fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
+                                                userKey: prof["email"],
+                                                daily: gameType
+                                            })).then(res => {return res.json()})
+                                            .then(data => {setOwnedStocks(data)});
+                                    }
+                            })
+        }
        
         setOption('')
         setQuantity(0)
@@ -626,21 +776,21 @@ function Game() {
 
         // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
         //         userKey: prof["email"],
-        //         daily: 0
+        //         daily: gameType
         //     })).then(res => {return res.json()})
         //     .then(data => {setBalance(data.balance.toFixed(2))});
 
 
         // fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
         //         userKey: prof["email"],
-        //         daily: 0
+        //         daily: gameType
         //     })).then(res => {return res.json()})
         //     .then(data => {setBuyingPower(data.buyingPower.toFixed(2))});
 
 
         // fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
         //         userKey: prof["email"],
-        //         daily: 0
+        //         daily: gameType
         //     })).then(res => {return res.json()})
         //     .then(data => {setOwnedStocks(data)});
         
@@ -679,7 +829,7 @@ function Game() {
                         </Typography>
 
                         <Stack direction="row" spacing={6} justifyContent='center' ml={3} mr={3} mt={3} border={0}>
-                            <Button variant='contained' onClick={goPlay}>
+                            <Button variant='contained' onClick={() => {setGameType(1)}}>
                                 Play Now!
                             </Button>
 
@@ -689,7 +839,8 @@ function Game() {
                         </Stack>
 
                         <Typography variant='body2' mx='auto' textAlign='center' mt={3} border={0}>
-                            or <span onClick={goPlay} style={{textDecoration: 'underline', cursor: 'pointer', color: 'blue'}}> play against yourself! </span>
+                            or <span onClick={() => {setGameType(0)}} 
+                                style={{textDecoration: 'underline', cursor: 'pointer', color: 'blue'}}> play against yourself! </span>
                         </Typography>
                     </Paper>
             </Box>
@@ -700,7 +851,7 @@ function Game() {
         return (
             <Box sx={{flexDirection: 'column', textAlign: 'center', mt: 30}}>
                 <Typography variant='h5' textAlign='center'>
-                    Loading game...
+                    {'Loading ' + (gameType ? 'Daily Challenge...' : 'Personal Challenge...')}
                 </Typography>
 
                 <br/>
@@ -758,8 +909,8 @@ function Game() {
                                     <TableCell component="th" scope="row">
                                         {index + 1}
                                     </TableCell>
-                                    <TableCell>{data.name}</TableCell>
-                                    <TableCell align='right'>{data.balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                    <TableCell>{data.userKey}</TableCell>
+                                    <TableCell align='right'>{data.score.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
                                     </TableRow>
                                 ))}
                                 </TableBody>
@@ -800,7 +951,7 @@ function Game() {
             const prof = JSON.parse(localStorage.getItem("profile"))
             const options = {
                 method: 'POST',
-                body: JSON.stringify({userKey: prof["email"], stock: curStockIndex, amount: numericQuantity, daily: 0}),
+                body: JSON.stringify({userKey: prof["email"], stock: curStockIndex, amount: numericQuantity, daily: gameType}),
                 headers: {'Content-Type': 'application/json'}
             }
             fetch("http://localhost:8000/challengeBuyStock", options)
@@ -816,7 +967,7 @@ function Game() {
                     setBuyingPower(data.buyingPower)
                     fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
                         userKey: prof["email"],
-                        daily: 0
+                        daily: gameType
                     })).then(res => {return res.json()})
                     .then(data => {setOwnedStocks(data)});
                     
@@ -868,7 +1019,7 @@ function Game() {
             const prof = JSON.parse(localStorage.getItem("profile"))
             const options = {
                 method: 'POST',
-                body: JSON.stringify({userKey: prof["email"], stock: curStockIndex, amount: numericQuantity, daily: 0}),
+                body: JSON.stringify({userKey: prof["email"], stock: curStockIndex, amount: numericQuantity, daily: gameType}),
                 headers: {'Content-Type': 'application/json'}
             }
             fetch("http://localhost:8000/challengeSellStock", options)
@@ -884,7 +1035,7 @@ function Game() {
                     setBuyingPower(data.buyingPower)
                     fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
                         userKey: prof["email"],
-                        daily: 0
+                        daily: gameType
                     })).then(res => {return res.json()})
                     .then(data => {setOwnedStocks(data)});
                     
@@ -1033,13 +1184,16 @@ function Game() {
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
             method: 'POST',
-            body: JSON.stringify({userKey: prof["email"], daily: 0}),
+            body: JSON.stringify({userKey: prof["email"], daily: gameType}),
             headers: {'Content-Type': 'application/json'}
         }
         fetch("http://localhost:8000/challengeNextDay", options)
             .then(res => {return res.json()})
             .then(data => {
                 if (data.isFinished) {
+                    if (gameType == 1) {
+                        setCompletedDaily(true)
+                    }
                     goEnd()
                 } else {
                     setCutoff(data.currentDay + 1)
@@ -1060,13 +1214,14 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
+                    console.log(data)
                     setBalance(data.balance)
                 }
             });
 
         // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
         //         userKey: prof["email"],
-        //         daily: 0
+        //         daily: gameType
         //     })).then(res => {return res.json()})
         //     .then(data => {setBalance(data.balance.toFixed(2))}); 
 
@@ -1100,13 +1255,16 @@ function Game() {
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
             method: 'POST',
-            body: JSON.stringify({userKey: prof["email"], daily: 0}),
+            body: JSON.stringify({userKey: prof["email"], daily: gameType}),
             headers: {'Content-Type': 'application/json'}
         }
         fetch("http://localhost:8000/challengeNextWeek", options)
             .then(res => {return res.json()})
             .then(data => {
                 if (data.isFinished) {
+                    if (gameType == 1) {
+                        setCompletedDaily(true)
+                    }
                     goEnd()
                 } else {
                     setCutoff(data.currentDay + 1)
@@ -1133,7 +1291,7 @@ function Game() {
 
         // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
         //     userKey: prof["email"],
-        //     daily: 0
+        //     daily: gameType
         // })).then(res => {return res.json()})
         // .then(data => {setBalance(data.balance.toFixed(2))}); 
         // if (cutoff + 5 == histDataLen) {
@@ -1165,13 +1323,16 @@ function Game() {
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
             method: 'POST',
-            body: JSON.stringify({userKey: prof["email"], daily: 0}),
+            body: JSON.stringify({userKey: prof["email"], daily: gameType}),
             headers: {'Content-Type': 'application/json'}
         }
         fetch("http://localhost:8000/challengeNextMonth", options)
             .then(res => {return res.json()})
             .then(data => {
                 if (data.isFinished) {
+                    if (gameType == 1) {
+                        setCompletedDaily(true)
+                    }
                     goEnd()
                 } else {
                     setCutoff(data.currentDay + 1)
@@ -1198,7 +1359,7 @@ function Game() {
 
         // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
         //     userKey: prof["email"],
-        //     daily: 0
+        //     daily: gameType
         // })).then(res => {return res.json()})
         // .then(data => {setBalance(data.balance.toFixed(2))}); 
         // if (cutoff + 20 == histDataLen) {
@@ -1269,10 +1430,32 @@ function Game() {
                         Game Over!
                     </Typography>
 
-                    <Typography variant='h4' display='block' textAlign='center' mt={6} mx={4}>
-                        {'Final Balance: $' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                    </Typography>
+                    {
+                        leaderboardFail &&
 
+                        <Typography variant='h4' display='block' textAlign='center' mt={6} mx={4} style={{whiteSpace: 'pre-line'}}>
+                            {'Final Balance: $' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </Typography>
+
+                    }                    
+
+                    {   leaderboardSuccess &&
+
+                        <Box>
+                            <Typography variant='h6' display='block' textAlign='center' mt={1} mx={4} style={{whiteSpace: 'pre-line'}}
+                                        sx={{color: "#4caf50"}}>
+                                {'Congratulations!\n You made it onto the leaderboard!'}
+                            </Typography>
+
+                        
+
+                            <Typography variant='h4' display='block' textAlign='center' mt={1} mb={-4} mx={4} style={{whiteSpace: 'pre-line'}}>
+                                {'Final Balance: $' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </Typography>
+                        </Box>
+                         
+                    }
+                    
                     <Typography variant='h5' display='block' textAlign='center' mt={6} mx={4}
                                 sx={{textDecoration: 'underline', color: "#757575"}}
                     >
@@ -1319,7 +1502,7 @@ function Game() {
 
 
                     <Stack direction="row" spacing={6} justifyContent='center' ml={3} mr={3} mt={6} border={0}>
-                            <Button variant='contained' onClick={goPlay}>
+                            <Button variant='contained' onClick={gameType ? handleDialogOpen : goPlay}>
                                 Play Again
                             </Button>
 
@@ -1345,6 +1528,7 @@ function Game() {
             <NavBar/> 
 
             {displayStart && <StartInfo/>}
+            {displayStart && <NoteDialog/>}
             {displayLeaderboard && <LeaderboardInfo/>}
             {displayLoading && <Loading/>}
             {displayGame && <GameInfo/>}
@@ -1361,6 +1545,7 @@ function Game() {
                 </div>
             }
             {displayEnd && <EndInfo/>}
+            {displayEnd && <NoteDialog/>}
 
 
             
