@@ -491,7 +491,7 @@ app.put('/challengeCreatePersonalChallenge', async(req, res) =>
         return;
     }
     await challenge.createPersonalChallenge(userKey);
-    var stockData = (await challenge.getPersonalChallengeProfile(userKey)).challenge.stockData;
+    var stockData = challenge.getPersonalChallengeProfile(userKey).challenge.stockData;
     var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
     var stocks = challenge.getPersonalChallengeProfile(userKey).challenge.stocks;
     alert.unalert();
@@ -578,9 +578,9 @@ app.get('/challengeGetStockData', async(req, res) =>
         {
             await sleep(100);
         }
-        stockData = (await challenge.getDailyChallenge()).stockData;
-        var stocks = (await challenge.getDailyChallenge()).stocks;
-        var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
+        stockData = challenge.getDailyChallenge().stockData;
+        var stocks = challenge.getDailyChallenge().stocks;
+        var currentDay = challenge.getDailyChallengeProfile(userKey).day;
     }
     else
     {
@@ -652,7 +652,7 @@ app.get('/challengeGetBuyingPower', async(req, res) =>
     var buyingPower = 0;
     if(daily == 1)
     {
-        buyingPower = (await challenge.getDailyChallengeProfile(userKey)).buyingPower;
+        buyingPower = challenge.getDailyChallengeProfile(userKey).buyingPower;
     }
     else
     {
@@ -697,7 +697,7 @@ app.get('/challengeGetBalance', async(req, res) =>
     var balance = 0;
     if(daily == 1)
     {
-        balance = (await challenge.getDailyChallengeProfile(userKey)).balance;
+        balance = challenge.getDailyChallengeProfile(userKey).balance;
     }
     else
     {
@@ -742,7 +742,7 @@ app.get('/challengeGetStocks', async(req, res) =>
     var stocks = [];
     if(daily == 1)
     {
-        stocks = (await challenge.getDailyChallengeProfile(userKey)).stocks;
+        stocks = challenge.getDailyChallengeProfile(userKey).stocks;
     }
     else
     {
@@ -791,7 +791,7 @@ app.post('/challengeBuyStock', async(req, res) =>
     var buyingPower = 0;
     if(daily == 1)
     {
-        buyingPower = (await challenge.getDailyChallengeProfile(userKey)).buy(stock, amount);
+        buyingPower = challenge.getDailyChallengeProfile(userKey).buy(stock, amount);
     }
     else
     {
@@ -838,7 +838,7 @@ app.post('/challengeSellStock', async(req, res) =>
     var buyingPower = 0;
     if(daily == 1)
     {
-        buyingPower = (await challenge.getDailyChallengeProfile(userKey)).sell(stock, amount);
+        buyingPower = challenge.getDailyChallengeProfile(userKey).sell(stock, amount);
     }
     else
     {
@@ -883,20 +883,20 @@ app.post('/challengeNextDay', async(req, res) =>
     var isFinished = 0;
     if(daily == 1)
     {
-        var wasFinished = (await challenge.getDailyChallengeProfile(userKey)).finished;
-        isFinished = (await challenge.getDailyChallengeProfile(userKey)).nextDay();
-        var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
+        var wasFinished = challenge.getDailyChallengeProfile(userKey).finished;
+        isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
+        var currentDay = challenge.getDailyChallengeProfile(userKey).day;
         if(wasFinished != isFinished)
         {
-            database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
+            database.addScore(userKey, challenge.getDailyChallengeProfile(userKey).balance);
         }
-        var balance = await challenge.getDailyChallengeProfile(userKey).balance
+        var balance = challenge.getDailyChallengeProfile(userKey).balance
     }
     else
     {
         isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
         var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
-        var balance = await challenge.getPersonalChallengeProfile(userKey).balance
+        var balance = challenge.getPersonalChallengeProfile(userKey).balance
     }
     alert.unalert();
     res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
@@ -939,15 +939,15 @@ app.post('/challengeNextWeek', async(req, res) =>
     {
         for(let i = 0; i < 5; i++)
         {
-            var wasFinished = (await challenge.getDailyChallengeProfile(userKey)).finished;
-            isFinished = (await challenge.getDailyChallengeProfile(userKey)).nextDay();
-            var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
+            var wasFinished = challenge.getDailyChallengeProfile(userKey).finished;
+            isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
+            var currentDay = challenge.getDailyChallengeProfile(userKey).day;
             if(wasFinished != isFinished)
             {
-                database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
+                database.addScore(userKey, challenge.getDailyChallengeProfile(userKey)).balance;
             }
         }
-        var balance = await challenge.getDailyChallengeProfile(userKey).balance
+        var balance = challenge.getDailyChallengeProfile(userKey).balance
     }
     else
     {
@@ -956,7 +956,7 @@ app.post('/challengeNextWeek', async(req, res) =>
             isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
             var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
         }
-        var balance = await challenge.getPersonalChallengeProfile(userKey).balance
+        var balance = challenge.getPersonalChallengeProfile(userKey).balance
     }
     alert.unalert();
     res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
@@ -999,15 +999,15 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
     {
         for(let i = 0; i < 20; i++)
         {
-            var wasFinished = (await challenge.getDailyChallengeProfile(userKey)).finished;
-            isFinished = (await challenge.getDailyChallengeProfile(userKey)).nextDay();
-            var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
+            var wasFinished = challenge.getDailyChallengeProfile(userKey).finished;
+            isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
+            var currentDay = challenge.getDailyChallengeProfile(userKey).day;
             if(wasFinished != isFinished)
             {
-                database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
+                database.addScore(userKey, challenge.getDailyChallengeProfile(userKey)).balance;
             }
         }
-        var balance = await challenge.getDailyChallengeProfile(userKey).balance
+        var balance = challenge.getDailyChallengeProfile(userKey).balance
     }
     else
     {
@@ -1016,7 +1016,7 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
             isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
             var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
         }
-        var balance = await challenge.getPersonalChallengeProfile(userKey).balance
+        var balance = challenge.getPersonalChallengeProfile(userKey).balance
     }
     alert.unalert();
     res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
@@ -1050,7 +1050,7 @@ async function update()
 async function createAccount(userKey)
 {
     await database.addUser(userKey, 10000, [], {yesterday : 10000}, []);
-    await challenge.createDailyChallengeProfile(userKey);
+    await challenge.addUser(userKey);
     userQueues.set(userKey, queue.createQueue());
     userQueues.get(userKey).run();
     userChallengeQueues.set(userKey, queue.createQueue());
