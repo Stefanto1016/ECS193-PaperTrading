@@ -499,6 +499,40 @@ app.put('/challengeCreatePersonalChallenge', async(req, res) =>
 }
 )
 
+app.get('/challengeHasCompletedDaily', async(req, res) =>
+{
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
+    {
+        await sleep(100);
+    }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        alert.unalert();
+        return;
+    }
+    let finished = challenge.getDailyChallengeProfile(userKey).finished;
+    alert.unalert();
+    res.send({isFinished : finished});
+}
+)
+
 /*gets the top 8 scorers on the leaderboard*/
 app.get('/challengeGetLeaderboard', async(req, res) =>
 {
@@ -944,7 +978,7 @@ app.post('/challengeNextWeek', async(req, res) =>
             var currentDay = challenge.getDailyChallengeProfile(userKey).day;
             if(wasFinished != isFinished)
             {
-                database.addScore(userKey, challenge.getDailyChallengeProfile(userKey)).balance;
+                database.addScore(userKey, challenge.getDailyChallengeProfile(userKey).balance);
             }
         }
         var balance = challenge.getDailyChallengeProfile(userKey).balance
@@ -1004,7 +1038,7 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
             var currentDay = challenge.getDailyChallengeProfile(userKey).day;
             if(wasFinished != isFinished)
             {
-                database.addScore(userKey, challenge.getDailyChallengeProfile(userKey)).balance;
+                database.addScore(userKey, (challenge.getDailyChallengeProfile(userKey).balance));
             }
         }
         var balance = challenge.getDailyChallengeProfile(userKey).balance
