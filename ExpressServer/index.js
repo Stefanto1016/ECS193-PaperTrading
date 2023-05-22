@@ -583,7 +583,7 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
     let leaderboard = await database.getLeaderboard(yesterday);
     let position = null;
     var i;
-    for(i = 0; i < leaderboard.size; i++)
+    for(i = 0; i < leaderboard.length; i++)
     {
         if(leaderboard[i]["userKey"] == userKey)
         {
@@ -593,7 +593,7 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
     }
     leaderboard.slice(Math.max(0, position-4), Math.min(i-1, position+4));
     alert.unalert();
-    res.send({position: position, leaderboard: leaderboard});
+    res.send({position: position+1, leaderboard: leaderboard});
 }
 )
 
