@@ -655,7 +655,8 @@ const handleClose = (event, reason) => {
   
   // Main used to search for stock
   const MainSearchButton = () => (
-    <IconButton 
+    <IconButton
+      role='main-search-button' 
       sx={{color: "white", 
       backgroundColor: "#2196f3",
       //ml: 1.5,
@@ -835,6 +836,7 @@ const handleClose = (event, reason) => {
           renderInput={(params) => (
             <TextField
                       {...params}
+                      role='main-search-bar'
                       sx={{minWidth: 500, mt: 3}}
                       onChange={changeStock}
                       onKeyPress= {(e) => {

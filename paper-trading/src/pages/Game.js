@@ -85,134 +85,6 @@ async function getCurrentData(companyList)//pass as array of strings listing com
    return(data);
 }
 
-// Gather historical data of stock market for various intervals
-async function getHistData(company)
-{
-   var client_id = 'Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK' 
-   var retArr = [];
-   const url = `https://api.tdameritrade.com/v1/marketdata/${company}/pricehistory?`;
-   var params = new URLSearchParams({apikey: client_id, periodType: "month", period: 1, frequencyType: "daily", frequency: 1});
-   var data = await retryFetch(url + params);
-   retArr.push(data["candles"]);
-   return(retArr);
-}
-
-function getRandomDate()
-{
-    const daysIn20Years = 7305;
-    var date = new Date();
-    const randNum = Math.floor(Math.random()*(daysIn20Years-730)+365);
-    date.setDate(date.getDate()-randNum);
-    return(date);
-}
-
-/*
-This function will return a list the symbols of all elligible stocks. As of now, that is simply any stock listed
-on the NYSE or the NASDAQ
-*/
-
-async function getStockList()
-{
-     var url =  "https://api.tdameritrade.com/v1/instruments?apikey=Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK&symbol=[A-Z]*&projection=symbol-regex";
-     var data = await retryFetch(url);
-     var returnList = [];
-     for(var index in data)
-     {
-          if(data[index]["exchange"] == "NYSE" || data[index]["exchange"] == "NASDAQ")
-          {
-               returnList.push(data[index]);
-          }
-     }
-     return(returnList);
-}
-
-/*
-This function takes the symbol of a stock in all caps and returns the day the stock was listed
-or 20 years ago, whichever is most recent, in epoch time.
-*/
-
-async function getStockListDate(company)
-{
-    var client_id = 'Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK'  
-     const url = `https://api.tdameritrade.com/v1/marketdata/${company}/pricehistory?`;
-     const params = new URLSearchParams({apikey: client_id, periodType: "year", period: 20, frequencyType: "daily", frequency: 1});
-     const data = await retryFetch(url + params);
-     if(data["candles"].length == 0)
-     {
-          return(Number.MAX_SAFE_INTEGER);
-     }
-     return(data["candles"][0]["datetime"]);
-}
-
-/*This function will return an array containing all daily data points for a company withing the given time period inclusive. Pass to
-the function the company symbol in caps as well as the start and end date as instances of the date class. will return a 2d array where
-the first dimension in the data point and the second dimension determines whether you get the price at that data point or the epoch time of that data point*/
-
-
-async function getPreviousDataRange(company, startDate, endDate)
-{
-     var client_id = 'Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK'  
-     const url = `https://api.tdameritrade.com/v1/marketdata/${company}/pricehistory?`;
-     const params = new URLSearchParams({apikey: client_id, periodType: "year", period: 20, frequencyType: "daily", frequency: 1});
-     var data = await retryFetch(url + params);
-     var returnArr = [];
-     for(let i = 0; i < data["candles"].length; i++)
-     {
-          if(data["candles"][i]["datetime"] >= startDate.getTime() && data["candles"][i]["datetime"] <= endDate.getTime())
-          {
-               returnArr.push([data["candles"][i]["close"], data["candles"][i]["datetime"]]);
-          }
-     }
-     return(returnArr);
-}
-
-async function getRandomStocks(startDate)
-{
-    var stockList = await getStockList();
-    var retList = [];
-    var startDateMinusYear = new Date(startDate.getTime());
-    var startDatePlusYear = new Date(startDate.getTime());
-    startDateMinusYear.setFullYear(startDate.getFullYear()-1);
-    startDatePlusYear.setFullYear(startDate.getFullYear()+1);
-    const googleArrayLength = (await getPreviousDataRange("GOOG", new Date(startDateMinusYear), new Date(startDatePlusYear))).length;
-    //console.log(startDateMinusYear);
-    var numStocks = 10;
-    while (retList.length < numStocks)
-    {
-        var randNum = Math.floor(Math.random()*stockList.length);
-        if(stockList[randNum] != null)
-        {
-            //console.log(stockList[randNum]["symbol"]);
-            //console.log(retList.length);
-            if(await getStockListDate(stockList[randNum]["symbol"]) < startDateMinusYear.getTime() && ((await getPreviousDataRange(stockList[randNum]["symbol"], new Date(startDateMinusYear), new Date(startDatePlusYear))).length == googleArrayLength))
-            {
-                retList.push(stockList[randNum]["symbol"]);
-            }
-            stockList[randNum] = null;
-        }
-    }
-    return(retList);
-}
-
-async function getStockData(startDate, stocks)
-{
-    var startDateMinusYear = new Date(startDate.getTime());
-    var startDatePlusYear = new Date(startDate.getTime());
-    startDateMinusYear.setFullYear(startDate.getFullYear()-1);
-    startDatePlusYear.setFullYear(startDate.getFullYear()+1);
-    var returnArr = [];
-    var numStocks = 10;
-    for(let i = 0; i < numStocks; i++)
-    {
-        returnArr.push(await getPreviousDataRange(stocks[i], startDateMinusYear, startDatePlusYear));
-        if(returnArr[i].length == 0)
-        {
-            return(0);
-        }
-    }
-    return(returnArr);
-}
-
 const emptyChart = {
     // x-axis labels
     labels: [],
@@ -288,18 +160,6 @@ function Game() {
     const [highestSingleSpending, setHighestSingleSpending] = useState(0)
     const [highestSingleSpendingStock, setHighestSingleSpendingStock] = useState('N/A')
 
-
-    //const [disableWeekForward, setDisableWeekForward] = useState(false)
-    //const [disableMonthForward, setDisableMonthForward] = useState(false)
-
-    // While loading, set up game
-    // useEffect(() => {
-    //     if (displayLoading) {
-    //         console.log("in here")
-    //         goPlay()
-    //     }
-    // }, [displayLoading])
-
     useEffect(() => {
         fetch("http://localhost:8000/challengeGetLeaderboard?" + new URLSearchParams({
             })).then(res => {return res.json()})
@@ -328,20 +188,6 @@ function Game() {
             goPlay()
         }
     }, [gameType])
-
-    //useEffect(())
-
-    // Disable buttons when certain amount of dates remain
-    // useEffect(() => {
-    //     if (histDataLen - cutoff <= 5 && !disableWeekForward) {
-    //         console.log('disable week')
-    //         setDisableWeekForward(true)
-    //     }
-    //     if (histDataLen - cutoff <= 20 && !disableMonthForward) {
-    //         console.log('disable month')
-    //         setDisableMonthForward(true)
-    //     }
-    // }, [cutoff])
 
     async function getStockQuotes(stockData, firstStockName) {
         var stocksInfo = []
@@ -617,34 +463,9 @@ function Game() {
             setMostPurchasedStockAmount(stocksListBought[maxIndex])
         }
 
-        if (gameType == 1) {
-            var prevPosition = leaderboardPosition;
-            const prof = JSON.parse(localStorage.getItem("profile"))
-            fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
-                userKey: prof["email"],
-                yesterday: 0
-                })).then(res => {return res.json()})
-                .then(data => {
-                    console.log('prev pos' + prevPosition)
-                    console.log('cur pos' + data.position)
-                    if (prevPosition == null && data.position != null) {
-                        // You made it to the leaderboard
-                        setLeaderboadSuccess(true)
-                        setLeaderboadFail(false)
-                }});
-        }
-
         setDisplayGame(false)
         setDisplayEnd(true)
 
-        // const prof = JSON.parse(localStorage.getItem("profile"))
-        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-        //         userKey: prof["email"],
-        //         daily: gameType
-        //     })).then(res => {return res.json()})
-        //     .then(data => {setBalance(data.balance.toFixed(2))
-        //                    setDisplayGame(false)
-        //                    setDisplayEnd(true)}); 
     }
 
     function goLoad() {
@@ -773,26 +594,6 @@ function Game() {
         setHighestAmountStock('N/A')
         setHighestSingleSpending(0)
         setHighestSingleSpendingStock('N/A')
-
-        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-        //         userKey: prof["email"],
-        //         daily: gameType
-        //     })).then(res => {return res.json()})
-        //     .then(data => {setBalance(data.balance.toFixed(2))});
-
-
-        // fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
-        //         userKey: prof["email"],
-        //         daily: gameType
-        //     })).then(res => {return res.json()})
-        //     .then(data => {setBuyingPower(data.buyingPower.toFixed(2))});
-
-
-        // fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
-        //         userKey: prof["email"],
-        //         daily: gameType
-        //     })).then(res => {return res.json()})
-        //     .then(data => {setOwnedStocks(data)});
         
         setDisplayStart(false)
         setDisplayEnd(false)
@@ -996,25 +797,6 @@ function Game() {
                     setQuantityError(false) 
                 }
             });
-
-        //   if (numericQuantity * parseFloat(stockMark) > balance) {
-        //     setBuyError(true)
-        //     setSellError(false)
-        //     setValidTransaction(false)
-        //     setActionError(false)
-        //     setQuantityError(false)
-        //   } else {
-        //     setBalance(parseFloat((balance - numericQuantity * parseFloat(stockMark)).toFixed(2)))
-        //     var object = ownedStocks
-        //     object[curStock] = object[curStock] + numericQuantity
-        //     setOwnedStocks(object)
-            
-        //     setBuyError(false)
-        //     setSellError(false)
-        //     setValidTransaction(true)
-        //     setActionError(false)
-        //     setQuantityError(false)
-        //   }
         } else if (option == 'sell') {
             const prof = JSON.parse(localStorage.getItem("profile"))
             const options = {
@@ -1046,25 +828,6 @@ function Game() {
                     setQuantityError(false) 
                 }
             });
-
-        //   if (ownedStocks[curStock] < numericQuantity) {
-        //     setBuyError(false)
-        //     setSellError(true)
-        //     setValidTransaction(false)
-        //     setActionError(false)
-        //     setQuantityError(false)
-        //   } else {
-        //     setBalance(parseFloat((balance + numericQuantity * parseFloat(stockMark)).toFixed(2)))
-        //     var object = ownedStocks
-        //     object[curStock] = object[curStock] - numericQuantity
-        //     setOwnedStocks(object)
-            
-        //     setBuyError(false)
-        //     setSellError(false)
-        //     setValidTransaction(true)
-        //     setActionError(false)
-        //     setQuantityError(false)
-        //   }
         } else {
             setBuyError(false)
             setSellError(false)
@@ -1193,8 +956,24 @@ function Game() {
                 if (data.isFinished) {
                     if (gameType == 1) {
                         setCompletedDaily(true)
+                        fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
+                        userKey: prof["email"],
+                        yesterday: 0
+                        })).then(res => {return res.json()})
+                        .then(data => {
+                            console.log(leaderboardPosition)
+                            console.log(data.position)
+                            if (leaderboardPosition == null && data.position != null) {
+                                // You made it to the leaderboard
+                                console.log('YES')
+                                setLeaderboadSuccess(true)
+                                setLeaderboadFail(false)
+                            }
+                            goEnd()
+                        });
+                    } else {
+                        goEnd()
                     }
-                    goEnd()
                 } else {
                     setCutoff(data.currentDay + 1)
                     console.log(curStockPrices)
@@ -1218,36 +997,6 @@ function Game() {
                     setBalance(data.balance)
                 }
             });
-
-        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-        //         userKey: prof["email"],
-        //         daily: gameType
-        //     })).then(res => {return res.json()})
-        //     .then(data => {setBalance(data.balance.toFixed(2))}); 
-
-
-        // if (cutoff + 1 == histDataLen) {
-        //     goEnd()
-        // } else {
-        //     setCutoff(cutoff + 1)
-        //     console.log(curStockPrices)
-        //     setStockMark(curStockPrices[cutoff].toFixed(2))
-        //     const chartData = {
-        //         // x-axis labels
-        //         labels: curStockTimes.slice(0, cutoff+1),
-        //         datasets: [
-        //         {
-        //           label: "Stock Price ($)",
-        //           // corresponding y values
-        //           data: curStockPrices.slice(0, cutoff+1),
-        //           fill: true,
-        //           borderColor: "blue",
-        //           tension: 0.1
-        //         }
-        //         ]
-        //     }
-        //     setChartData(chartData)
-        // }
     }
 
     // Forwards 5 dates
@@ -1264,8 +1013,22 @@ function Game() {
                 if (data.isFinished) {
                     if (gameType == 1) {
                         setCompletedDaily(true)
+                        fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
+                        userKey: prof["email"],
+                        yesterday: 0
+                        })).then(res => {return res.json()})
+                        .then(data => {
+                            if (leaderboardPosition == null && data.position != null) {
+                                // You made it to the leaderboard
+                                console.log('YES')
+                                setLeaderboadSuccess(true)
+                                setLeaderboadFail(false)         
+                            }
+                            goEnd()
+                        });
+                    } else {
+                        goEnd()
                     }
-                    goEnd()
                 } else {
                     setCutoff(data.currentDay + 1)
                     console.log(curStockPrices)
@@ -1288,34 +1051,6 @@ function Game() {
                     setBalance(data.balance)
                 }
             });
-
-        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-        //     userKey: prof["email"],
-        //     daily: gameType
-        // })).then(res => {return res.json()})
-        // .then(data => {setBalance(data.balance.toFixed(2))}); 
-        // if (cutoff + 5 == histDataLen) {
-        //     goEnd()
-        // } else {
-        //     setCutoff(cutoff + 5)
-        //     console.log(curStockPrices)
-        //     setStockMark(curStockPrices[cutoff+4].toFixed(2))
-        //     const chartData = {
-        //         // x-axis labels
-        //         labels: curStockTimes.slice(0, cutoff+5),
-        //         datasets: [
-        //         {
-        //           label: "Stock Price ($)",
-        //           // corresponding y values
-        //           data: curStockPrices.slice(0, cutoff+5),
-        //           fill: true,
-        //           borderColor: "blue",
-        //           tension: 0.1
-        //         }
-        //         ]
-        //     }
-        //     setChartData(chartData)
-        // }
     }
 
     // Forward 20 dates
@@ -1332,8 +1067,21 @@ function Game() {
                 if (data.isFinished) {
                     if (gameType == 1) {
                         setCompletedDaily(true)
+                        fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
+                        userKey: prof["email"],
+                        yesterday: 0
+                        })).then(res => {return res.json()})
+                        .then(data => {
+                            if (leaderboardPosition == null && data.position != null) {
+                                // You made it to the leaderboard
+                                setLeaderboadSuccess(true)
+                                setLeaderboadFail(false)
+                            }
+                            goEnd()
+                        });
+                    } else {
+                        goEnd()
                     }
-                    goEnd()
                 } else {
                     setCutoff(data.currentDay + 1)
                     console.log(curStockPrices)
@@ -1356,34 +1104,6 @@ function Game() {
                     setBalance(data.balance)
                 }
             });
-
-        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-        //     userKey: prof["email"],
-        //     daily: gameType
-        // })).then(res => {return res.json()})
-        // .then(data => {setBalance(data.balance.toFixed(2))}); 
-        // if (cutoff + 20 == histDataLen) {
-        //     goEnd()
-        // } else {
-        //     setCutoff(cutoff + 20)
-        //     console.log(curStockPrices)
-        //     setStockMark(curStockPrices[cutoff+19].toFixed(2))
-        //     const chartData = {
-        //         // x-axis labels
-        //         labels: curStockTimes.slice(0, cutoff+20),
-        //         datasets: [
-        //         {
-        //           label: "Stock Price ($)",
-        //           // corresponding y values
-        //           data: curStockPrices.slice(0, cutoff+20),
-        //           fill: true,
-        //           borderColor: "blue",
-        //           tension: 0.1
-        //         }
-        //         ]
-        //     }
-        //     setChartData(chartData)
-        // }
     }
     
 
