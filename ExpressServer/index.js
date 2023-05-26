@@ -49,7 +49,7 @@ app.listen(port, async () =>
     await tree.createTree();
     await challenge.createDailyChallenge();
     await challenge.createPersonalChallengeList();
-    globalQueue.run();
+    globalQueue.run(50, 50);
     while(globalQueue.getSize() != 0)
     {
         await sleep(20);
@@ -59,8 +59,8 @@ app.listen(port, async () =>
     {
         if(userQueues.get(userList[i]) != null)
         {
-            userQueues.get(userList[i]).run();
-            userChallengeQueues.get(userList[i]).run();
+            userQueues.get(userList[i]).run(50, 50);
+            userChallengeQueues.get(userList[i]).run(50, 50);
         }
     }
     started2 = 1; //for testing purposes
@@ -579,8 +579,8 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
         alert.unalert();
         return;
     }
-    const yesterday = req.query.yesterday;
-    let leaderboard = await database.getLeaderboard(yesterday);
+    const today = req.query.today;
+    let leaderboard = await database.getLeaderboard(today);
     let position = null;
     var i;
     for(i = 0; i < leaderboard.length; i++)
@@ -593,7 +593,14 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
     }
     leaderboard.slice(Math.max(0, position-4), Math.min(i-1, position+4));
     alert.unalert();
-    res.send({position: position+1, leaderboard: leaderboard});
+    if(position == null)
+    {
+        res.send({position: false, leaderboard: false});
+    }
+    else
+    {
+        res.send({position: position+1, leaderboard: leaderboard});
+    }
 }
 )
 
