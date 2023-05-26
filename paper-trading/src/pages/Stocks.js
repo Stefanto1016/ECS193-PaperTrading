@@ -546,7 +546,7 @@ const handleClose = (event, reason) => {
   ];
 
   // Get information related to a given stock
-  function handleClick(stock) {
+  async function handleClick(stock) {
     const array = [stock]
 
     setQuantity(0);
@@ -579,8 +579,9 @@ const handleClose = (event, reason) => {
                 week52Low: response[stockAllCaps]['52WkLow'],
               }
             )
-
+            console.log("Before")
             const res = await getNumDataPoints(stockAllCaps)
+            console.log("After")
             setHistData(res)
                 
             let times = []
@@ -627,7 +628,7 @@ const handleClose = (event, reason) => {
           userKey: prof["email"],
         })).then(res => {return res.json()})
         .then(data => {
-          if(data.includes(stock.toString().toUpperCase())){
+          if(data && data.includes(stock.toString().toUpperCase())){
             setButtonText("Remove from Watchlist");
             setWatchListStyle(removeWatchlist);
           } else {
@@ -661,7 +662,7 @@ const handleClose = (event, reason) => {
   // Main used to search for stock
   const MainSearchButton = () => (
     <IconButton
-      role='main-search-button' 
+      aria-label='main-search-button' 
       sx={{color: "white", 
       backgroundColor: "#2196f3",
       //ml: 1.5,
@@ -672,7 +673,7 @@ const handleClose = (event, reason) => {
     )
 
     const SearchButton = () => (
-      <IconButton onClick={() => handleClick(searchStock.split('—')[0].trim())}>
+      <IconButton aria-label='search-button' onClick={() => handleClick(searchStock.split('—')[0].trim())}>
         <SearchIcon />
       </IconButton>
       )
@@ -883,6 +884,7 @@ const handleClose = (event, reason) => {
         renderInput={(params) =>
           <TextField 
                     {...params}
+                    role='search-bar'
                     label="Search for Symbol" 
                     variant="standard"
                     onChange={changeStock}

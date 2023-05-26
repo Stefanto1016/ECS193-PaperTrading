@@ -168,16 +168,16 @@ function Game() {
     useEffect(() => {
         fetch("http://localhost:8000/challengeGetLeaderboard?" + new URLSearchParams({
             })).then(res => {return res.json()})
-            .then(data => {setLeaderboad(data.slice(0, 8))});
+            .then(data => {console.log(data); setLeaderboad(data.slice(0, 8))});
     }, [])
 
     useEffect(() => {
         const prof = JSON.parse(localStorage.getItem("profile"))
         fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
             userKey: prof["email"],
-            yesterday: 0
+            today: 1
             })).then(res => {return res.json()})
-            .then(data => {console.log(data.position); setLeaderboadPosition(data.position)});
+            .then(data => {console.log(data); setLeaderboadPosition(data.position)});
     }, [])
 
     useEffect(() => {
@@ -963,12 +963,12 @@ function Game() {
                         setCompletedDaily(true)
                         fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
                         userKey: prof["email"],
-                        yesterday: 0
+                        today: 1
                         })).then(res => {return res.json()})
                         .then(data => {
                             console.log(leaderboardPosition)
                             console.log(data.position)
-                            if (leaderboardPosition == null && data.position != null) {
+                            if (leaderboardPosition == false && data.position != false) {
                                 // You made it to the leaderboard
                                 console.log('YES')
                                 setLeaderboadSuccess(true)
@@ -1020,10 +1020,10 @@ function Game() {
                         setCompletedDaily(true)
                         fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
                         userKey: prof["email"],
-                        yesterday: 0
+                        today: 1
                         })).then(res => {return res.json()})
                         .then(data => {
-                            if (leaderboardPosition == null && data.position != null) {
+                            if (leaderboardPosition == false && data.position != false) {
                                 // You made it to the leaderboard
                                 console.log('YES')
                                 setLeaderboadSuccess(true)
@@ -1074,10 +1074,10 @@ function Game() {
                         setCompletedDaily(true)
                         fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
                         userKey: prof["email"],
-                        yesterday: 0
+                        today: 1
                         })).then(res => {return res.json()})
                         .then(data => {
-                            if (leaderboardPosition == null && data.position != null) {
+                            if (leaderboardPosition == false && data.position != false) {
                                 // You made it to the leaderboard
                                 setLeaderboadSuccess(true)
                                 setLeaderboadFail(false)
