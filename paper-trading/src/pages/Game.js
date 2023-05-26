@@ -161,6 +161,11 @@ function Game() {
     const [highestSingleSpendingStock, setHighestSingleSpendingStock] = useState('N/A')
 
     useEffect(() => {
+        document.body.style.overflow = "hidden";
+        window.scrollTo(0,0);
+    })
+
+    useEffect(() => {
         fetch("http://localhost:8000/challengeGetLeaderboard?" + new URLSearchParams({
             })).then(res => {return res.json()})
             .then(data => {setLeaderboad(data.slice(0, 8))});

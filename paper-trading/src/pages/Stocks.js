@@ -279,7 +279,7 @@ function Stocks() {
         <Box sx={{ width: '100%', maxWidth: 1000}}>
           <List component={Stack} direction='row' sx={{maxWidth: 700, ml:3}}>
             <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
-                           primary={'Account Buying Power ($): ' + balance}/>
+                           primary={'Account Buying Power ($): ' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
             <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
                            primary={'Shares Owned: ' + ownedStocks}/>
           </List>
@@ -307,9 +307,14 @@ function Stocks() {
       fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
             userKey: prof["email"],
       })).then(res => {return res.json()})
-      .then(data => {setBalance(Math.ceil(data.buyingPower * 100)/100)});
+      .then(data => {setBalance(data.buyingPower)});
     }
   }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    window.scrollTo(0,0);
+  })
 
 
 
@@ -376,7 +381,7 @@ function Stocks() {
         setActionError(false)
         setQuantityError(false)
       } else {
-        setBalance(parseFloat((balance - numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
+        setBalance(parseFloat((balance - numericQuantity * parseFloat(stockInfo.askPrice))))
         setOwnedStocks(ownedStocks + numericQuantity)
         if(profile){
           const prof = JSON.parse(localStorage.getItem("profile"));
@@ -402,7 +407,7 @@ function Stocks() {
         setActionError(false)
         setQuantityError(false)
       } else {
-        setBalance(parseFloat((balance + numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
+        setBalance(parseFloat((balance + numericQuantity * parseFloat(stockInfo.bidPrice))))
         setOwnedStocks(ownedStocks - numericQuantity)
         if (profile){
           const prof = JSON.parse(localStorage.getItem("profile"));

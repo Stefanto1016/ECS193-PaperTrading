@@ -29,8 +29,8 @@ const leftStyle = {
 }
 
 const accountStyle = {
-    marginLeft: "1%",
-    width: "49%",
+    marginLeft: "5%",
+    width: "40%",
     justifyContent: "center",
     alignItems: "center"
 }
@@ -44,9 +44,9 @@ const cardStyle = {
 }
 
 const PerformanceStyle = {
-    marginLeft: "1%",
+    marginLeft: "8%",
     height: "100%",
-    width: "50%",
+    width: "45%",
     float: "right"
 }
 
@@ -55,9 +55,7 @@ const ChartStyle = {
     width: "70%",
     float: "right"
 }
-const PerformanceTitleStyle = {
-    textAlign: "center"
-}
+
 
 const emptyChart = {
     // x-axis labels
@@ -75,17 +73,18 @@ const emptyChart = {
   }
 
   const myStocksTable = {
-    marginLeft: "1%",
-    width: "48%",
+    marginLeft: "5%",
+    width: "40%",
     float: "left",
-    height: "50%"
+    height: "50vh"
   }
 
 
   const watchListTable = {
-    marginRight: "1%",
-    width: "48%",
-    float: "right"
+    marginRight: "5%",
+    width: "40%",
+    float: "right",
+    height: "50vh"
   }
 
   const tableStyle = {
@@ -95,8 +94,9 @@ const emptyChart = {
     textAlign: "center"
   }
 
-  const myStockTitle = {
-    textAlign: "center"
+  const titleStyles = {
+    textAlign: "center",
+    marginBottom: "15px"
   }
 
   /*const buttonCell = {
@@ -123,6 +123,7 @@ function Portfolio() {
 
     useEffect(() => {
         document.body.style.overflow = "auto";
+        window.scrollTo(0,0);
     })
 
     useEffect ( () => {
@@ -233,9 +234,9 @@ function Portfolio() {
             <div>
                 <div style={leftStyle}>
                     <div style={accountStyle}>
-                        <h1 style={PerformanceTitleStyle}>
+                        <Typography style={titleStyles} fontWeight='bold' variant='h4' textAlign='center' mt={3}>
                             Account Summary
-                        </h1>
+                        </Typography>
                         <Card>
                             <CardContent style={cardStyle}>
                                 <Typography variant='h5'>
@@ -253,9 +254,9 @@ function Portfolio() {
                     </div>
                     
                     <div style={PerformanceStyle}>
-                        <h1 style={PerformanceTitleStyle}>
+                        <Typography style={titleStyles} fontWeight='bold' variant='h4' textAlign='center' mt={3}>
                             Performance History
-                        </h1>
+                        </Typography>
 
                         <div >
                             <PerformanceChart chartData={chartData}/>
@@ -264,9 +265,9 @@ function Portfolio() {
                 </div>  
 
                 <div style={myStocksTable}>
-                    <h1 style={myStockTitle}>
-                        My Stocks
-                    </h1>
+                        <Typography style={titleStyles} fontWeight='bold' variant='h4' textAlign='center' mt={3}>
+                            My Stocks
+                        </Typography>
                         <TableContainer component={Paper} style={tableStyle}>
                             <Table>
                                 <TableHead>
@@ -294,9 +295,9 @@ function Portfolio() {
                     </div>
                     <div style={watchListTable}>
 
-                        <h1 style={myStockTitle}>
+                        <Typography style={titleStyles} fontWeight='bold' variant='h4' textAlign='center' mt={3}>
                             My Watchlist
-                        </h1>
+                        </Typography>
 
                         <TableContainer component={Paper} style={tableStyle}>
                             <Table>
