@@ -280,7 +280,7 @@ function Portfolio() {
                                 </TableHead>
                                 <TableBody>
                                     {stocks.map((gainer) => (
-                                        <TableRow sx={{height: 10}}>
+                                        <TableRow data-testid='my-stocks' sx={{height: 10}}>
                                             <TableCell component="th" scope="row" onClick={() => navigate('/stocks', { state: gainer.symbol})} sx={{textDecoration: 'underline', cursor: 'pointer', maxWidth: '5px'}}>
                                                 {gainer.symbol}
                                             </TableCell>
@@ -311,7 +311,7 @@ function Portfolio() {
                                 </TableHead>
                                 <TableBody>
                                     {watchList.map((gainer) => (
-                                        <TableRow sx={{height: 10}}>
+                                        <TableRow data-testid='my-watchlist' sx={{height: 10}}>
                                             <TableCell component="th" scope="row" onClick={() => navigate('/stocks', { state: gainer.symbol})} sx={{textDecoration: 'underline', cursor: 'pointer', maxWidth: '5px'}}>
                                                 {gainer.symbol}
                                             </TableCell>

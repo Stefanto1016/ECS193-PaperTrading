@@ -279,7 +279,7 @@ function Stocks() {
         <Box sx={{ width: '100%', maxWidth: 1000}}>
           <List component={Stack} direction='row' sx={{maxWidth: 700, ml:3}}>
             <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
-                           primary={'Account Buying Power ($): ' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
+                           primary={'Account Buying Power ($): ' + balance?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
             <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
                            primary={'Shares Owned: ' + ownedStocks}/>
           </List>
@@ -456,6 +456,7 @@ const handleClose = (event, reason) => {
         <FormControl>
           <InputLabel sx={{mt:1, ml:3}}>Action</InputLabel>
           <Select
+            role='selected-action'
             value={option}
             label='Action'
             onChange={changeOption}
@@ -466,7 +467,8 @@ const handleClose = (event, reason) => {
           </Select>
         </FormControl>
 
-        <TextField id="outlined-basic" 
+        <TextField id="outlined-basic"
+                   role="quantity-textfield"
                    label="Quantity"
                    variant="outlined" 
                    onChange={changeQuantity}

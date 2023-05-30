@@ -19,7 +19,7 @@ export default function NavBar() {
         <div className="NavBar">
             <AppBar position="fixed">
                 <Toolbar>
-                    <IconButton component={Link} to='/App' size='large' edge='start' color='inherit'>
+                    <IconButton aria-label='home' component={Link} to='/App' size='large' edge='start' color='inherit'>
                         <HomeIcon />
                     </IconButton>
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>

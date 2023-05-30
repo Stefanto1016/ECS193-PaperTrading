@@ -208,7 +208,7 @@ function Home() {
     }
 
     async function getNews() {
-        var url = 'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=AAPL&limit=10&apikey=AHIL20FGMVQ12R9U'
+        var url = 'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&limit=10&apikey=AHIL20FGMVQ12R9U'
         var data = await retryFetch(url);
         var news = []
         for(const entry of data.feed)
@@ -307,7 +307,7 @@ function Home() {
                 </div>
 
                 <div style={tableStyle}>
-                    <Typography style={tableTitle} fontWeight='bold' variant='h4' textAlign='center' mt={4} mb={2} fontSize='30px'>
+                    <Typography role="gainers-header" style={tableTitle} fontWeight='bold' variant='h4' textAlign='center' mt={4} mb={2} fontSize='30px'>
                         Top Stock Gainers
                     </Typography>
                     <TableContainer style={tableStocksStyle} component={Paper} >
@@ -322,7 +322,7 @@ function Home() {
                             </TableHead>
                             <TableBody>
                                 {topGainers.map((gainer) => (
-                                    <TableRow sx={{height: 10}}>
+                                    <TableRow data-testid="gainers" sx={{height: 10}}>
                                         <TableCell component="th" scope="row">
                                             <Typography variant='subtitle2' 
                                                         onClick={() => navigate('/stocks', { state: gainer.symbol})}
@@ -348,7 +348,7 @@ function Home() {
 
                 <List component={Paper} sx={newsArticles}>
                     {news.map((snews) => (
-                        <ListItem onClick={() => newsClick(snews)}>
+                        <ListItem data-testid="news" onClick={() => newsClick(snews)}>
                             <ListItemAvatar>
                             <Avatar 
                                 alt="Logo"
