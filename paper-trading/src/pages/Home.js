@@ -25,20 +25,22 @@ import { Navigate, useNavigate } from 'react-router';
 
 import NavBar from '../components/NavBar';
 
+
+
 const pageStyle = {
-    maxHeight: "80vh",
-    height: "90vh",
-    width: "100vw"
+    height: "100vh",
+    width: "100%"
 }
 
 const leftStyle = {
     height: "100%",
     width: "70%",
-    float: "left"
-
+    float: "left",
+    //overflow: "auto"
 }
 const accountStyle = {
-    height: "30%"
+    height: "100%",
+    maxHeight: "173px"
 }
 
 const tableHeadStyle = {
@@ -51,15 +53,29 @@ const tableHeadStyle = {
 const graphStyle = {
 }
 
-const tableStyle = {
-    height: "80%",
+/*const tableStyle = {
+    height: "70%",
     width: "100%",
     float: "left",
     textAlign: "center"
 }
 
 const tableStocksStyle = {
-    maxHeight: "85%",
+    height: "100%",
+    maxHeight: "607px",
+    overflow: "auto"
+}*/
+
+const tableStyle = {
+    height: "100%",
+    width: "100%",
+    float: "left",
+    textAlign: "center",
+}
+
+const tableStocksStyle = {
+    height: "48%",
+    maxHeight: "607px",
     overflow: "auto"
 }
 
@@ -70,7 +86,8 @@ const tableTitle = {
 const newsStyle = {
     float: "right",
     width: "30%",
-    height: "115%",
+    height: "calc(48% + 305px)",
+    maxHeight: "910px",
     textAlign: "center",
     overflow: "auto"
 }
@@ -87,13 +104,15 @@ const newsTitle = {
 const accountTitle = {
     position: "sticky",
     background: "white",
+    textAlign: "center",
     top: 0
 } 
 
 const accountSummaryStyle = {
     float: "left",
     width: "30%",
-    position: "center"
+    position: "center",
+    marginLeft: "2%"
 }
 
 
@@ -102,7 +121,7 @@ const cardStyle = {
     height: "85%",
     float: "left",
     textAlign: "center",
-    justifyContent: "center"
+    justifyContent: "center",
 }
 
 const chartStyle = {
@@ -141,6 +160,7 @@ function createNews(title, desc, img, url) {
 }
 
 function Home() {
+
     const profile = localStorage.getItem("profile");
     const navigate = useNavigate();
 
@@ -155,7 +175,7 @@ function Home() {
     useEffect ( () => {
         if(profile){
             const prof = JSON.parse(localStorage.getItem("profile"));
-            fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/getPortfolioData?" + new URLSearchParams({
                 userKey: prof["email"]
         })).then(res => {return res.json()})
         .then(data => {setAccBalance(data.balance[Object.keys(data.balance)[0]]);
@@ -188,7 +208,7 @@ function Home() {
     }
 
     async function getNews() {
-        var url = 'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=AAPL&limit=10&apikey=AHIL20FGMVQ12R9U'
+        var url = 'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&limit=10&apikey=AHIL20FGMVQ12R9U'
         var data = await retryFetch(url);
         var news = []
         for(const entry of data.feed)
@@ -206,7 +226,8 @@ function Home() {
     }, [])
 
     useEffect(() => {
-        document.body.style.overflow = "auto";
+        document.body.style.overflow = "hidden";
+        window.scrollTo(0,0);
     })
 
     function newsClick(snews){
@@ -248,16 +269,16 @@ function Home() {
     }
 
     return (
-        <div>
+        <div style={pageStyle}>
             {profile ? (
         <div style={pageStyle}>
             <NavBar/>
             <div style={leftStyle}>
                 <div style={accountStyle}>
                     <div style={accountSummaryStyle}>
-                        <h1 style={accountTitle}>
+                        <Typography style={accountTitle} fontWeight='bold' variant='h4' textAlign='center' mt={3} mb={2} fontSize='30px'>
                             Account Summary
-                        </h1>
+                        </Typography>
                         <Card sx={cardStyle}>
                             <CardContent>
                                 <Typography variant='h5'>
@@ -275,9 +296,9 @@ function Home() {
                     </div>
                     
                     <div style={chartStyle}>
-                        <h1 style={chartTitle}>
+                        <Typography style={chartTitle} fontWeight='bold' variant='h4' textAlign='center' mt={3} mb={2} fontSize='30px'>
                             Performance History
-                        </h1>
+                        </Typography>
 
                         <div style={graphStyle}>
                             <PerformanceChart chartData={chartData}/>
@@ -286,11 +307,10 @@ function Home() {
                 </div>
 
                 <div style={tableStyle}>
-                    <h1 style={tableTitle}>
+                    <Typography role="gainers-header" style={tableTitle} fontWeight='bold' variant='h4' textAlign='center' mt={4} mb={2} fontSize='30px'>
                         Top Stock Gainers
-                    </h1>
-
-                    <TableContainer component={Paper} sx={tableStocksStyle}>
+                    </Typography>
+                    <TableContainer style={tableStocksStyle} component={Paper} >
                         <Table>
                             <TableHead style={tableHeadStyle}>
                                 <TableRow>
@@ -302,7 +322,7 @@ function Home() {
                             </TableHead>
                             <TableBody>
                                 {topGainers.map((gainer) => (
-                                    <TableRow sx={{height: 10}}>
+                                    <TableRow data-testid="gainers" sx={{height: 10}}>
                                         <TableCell component="th" scope="row">
                                             <Typography variant='subtitle2' 
                                                         onClick={() => navigate('/stocks', { state: gainer.symbol})}
@@ -310,9 +330,9 @@ function Home() {
                                                 {gainer.symbol} 
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="right">{gainer.change}</TableCell>
-                                        <TableCell align="right">{gainer.price}</TableCell>
-                                        <TableCell align="right">{gainer.volume}</TableCell>
+                                        <TableCell align="right">{gainer.change.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                        <TableCell align="right">{gainer.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                        <TableCell align="right">{gainer.volume.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -322,13 +342,13 @@ function Home() {
             </div>
 
             <div style={newsStyle}>
-                <h1 style={newsTitle}>
+                <Typography style={newsTitle} fontWeight='bold' variant='h4' textAlign='center' mt={3} mb={2} fontSize='30px'>
                     Stock Market News
-                </h1>
+                </Typography>
 
                 <List component={Paper} sx={newsArticles}>
                     {news.map((snews) => (
-                        <ListItem onClick={() => newsClick(snews)}>
+                        <ListItem data-testid="news" onClick={() => newsClick(snews)}>
                             <ListItemAvatar>
                             <Avatar 
                                 alt="Logo"

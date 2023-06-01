@@ -29,8 +29,8 @@ const leftStyle = {
 }
 
 const accountStyle = {
-    marginLeft: "1%",
-    width: "49%",
+    marginLeft: "5%",
+    width: "40%",
     justifyContent: "center",
     alignItems: "center"
 }
@@ -44,9 +44,9 @@ const cardStyle = {
 }
 
 const PerformanceStyle = {
-    marginLeft: "1%",
+    marginLeft: "8%",
     height: "100%",
-    width: "50%",
+    width: "45%",
     float: "right"
 }
 
@@ -55,9 +55,7 @@ const ChartStyle = {
     width: "70%",
     float: "right"
 }
-const PerformanceTitleStyle = {
-    textAlign: "center"
-}
+
 
 const emptyChart = {
     // x-axis labels
@@ -75,17 +73,18 @@ const emptyChart = {
   }
 
   const myStocksTable = {
-    marginLeft: "1%",
-    width: "48%",
+    marginLeft: "5%",
+    width: "40%",
     float: "left",
-    height: "50%"
+    height: "50vh"
   }
 
 
   const watchListTable = {
-    marginRight: "1%",
-    width: "48%",
-    float: "right"
+    marginRight: "5%",
+    width: "40%",
+    float: "right",
+    height: "50vh"
   }
 
   const tableStyle = {
@@ -95,8 +94,9 @@ const emptyChart = {
     textAlign: "center"
   }
 
-  const myStockTitle = {
-    textAlign: "center"
+  const titleStyles = {
+    textAlign: "center",
+    marginBottom: "15px"
   }
 
   /*const buttonCell = {
@@ -123,12 +123,13 @@ function Portfolio() {
 
     useEffect(() => {
         document.body.style.overflow = "auto";
+        window.scrollTo(0,0);
     })
 
     useEffect ( () => {
         if(profile){
             const prof = JSON.parse(localStorage.getItem("profile"));
-            fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/getPortfolioData?" + new URLSearchParams({
                 userKey: prof["email"]
             })).then(res => {return res.json()})
             .then(data => {setAccBalance(data.balance[Object.keys(data.balance)[0]].toFixed(2));
@@ -136,7 +137,7 @@ function Portfolio() {
                         getChartData(data);
                         getStocks(data.stocks)});
 
-            fetch("http://localhost:8000/getWatchList?" + new URLSearchParams({
+            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/getWatchList?" + new URLSearchParams({
                 userKey: prof["email"]
             })).then(res => {return res.json()})
             .then(data => {
@@ -219,7 +220,7 @@ function Portfolio() {
         for(const entry of data)
         {
             let stData = await getCurrentData(entry);
-            st.push(createData(entry, (stData[entry]['markPercentChangeInDouble']), stData[entry]['closePrice'], stData[entry]['totalVolume']));
+            st.push(createData(entry, (stData[entry]['markPercentChangeInDouble']), stData[entry]['closePrice'], stData[entry]['totalVolume'].toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})));
         }
         setWatchList(st);
     }
@@ -233,9 +234,9 @@ function Portfolio() {
             <div>
                 <div style={leftStyle}>
                     <div style={accountStyle}>
-                        <h1 style={PerformanceTitleStyle}>
+                        <Typography style={titleStyles} fontWeight='bold' variant='h4' textAlign='center' mt={3}>
                             Account Summary
-                        </h1>
+                        </Typography>
                         <Card>
                             <CardContent style={cardStyle}>
                                 <Typography variant='h5'>
@@ -253,9 +254,9 @@ function Portfolio() {
                     </div>
                     
                     <div style={PerformanceStyle}>
-                        <h1 style={PerformanceTitleStyle}>
+                        <Typography style={titleStyles} fontWeight='bold' variant='h4' textAlign='center' mt={3}>
                             Performance History
-                        </h1>
+                        </Typography>
 
                         <div >
                             <PerformanceChart chartData={chartData}/>
@@ -264,9 +265,9 @@ function Portfolio() {
                 </div>  
 
                 <div style={myStocksTable}>
-                    <h1 style={myStockTitle}>
-                        My Stocks
-                    </h1>
+                        <Typography style={titleStyles} fontWeight='bold' variant='h4' textAlign='center' mt={3}>
+                            My Stocks
+                        </Typography>
                         <TableContainer component={Paper} style={tableStyle}>
                             <Table>
                                 <TableHead>
@@ -279,13 +280,13 @@ function Portfolio() {
                                 </TableHead>
                                 <TableBody>
                                     {stocks.map((gainer) => (
-                                        <TableRow sx={{height: 10}}>
+                                        <TableRow data-testid='my-stocks' sx={{height: 10}}>
                                             <TableCell component="th" scope="row" onClick={() => navigate('/stocks', { state: gainer.symbol})} sx={{textDecoration: 'underline', cursor: 'pointer', maxWidth: '5px'}}>
                                                 {gainer.symbol}
                                             </TableCell>
-                                            <TableCell align="right">{gainer.change.toFixed(2)}</TableCell>
-                                            <TableCell align="right">{gainer.price.toFixed(2)}</TableCell>
-                                            <TableCell align="right">{gainer.quantity}</TableCell>
+                                            <TableCell align="right">{gainer.change.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                            <TableCell align="right">{gainer.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                            <TableCell align="right">{gainer.quantity.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -294,9 +295,9 @@ function Portfolio() {
                     </div>
                     <div style={watchListTable}>
 
-                        <h1 style={myStockTitle}>
+                        <Typography style={titleStyles} fontWeight='bold' variant='h4' textAlign='center' mt={3}>
                             My Watchlist
-                        </h1>
+                        </Typography>
 
                         <TableContainer component={Paper} style={tableStyle}>
                             <Table>
@@ -310,12 +311,12 @@ function Portfolio() {
                                 </TableHead>
                                 <TableBody>
                                     {watchList.map((gainer) => (
-                                        <TableRow sx={{height: 10}}>
+                                        <TableRow data-testid='my-watchlist' sx={{height: 10}}>
                                             <TableCell component="th" scope="row" onClick={() => navigate('/stocks', { state: gainer.symbol})} sx={{textDecoration: 'underline', cursor: 'pointer', maxWidth: '5px'}}>
                                                 {gainer.symbol}
                                             </TableCell>
-                                            <TableCell align="right">{gainer.change.toFixed(2)}</TableCell>
-                                            <TableCell align="right">{gainer.price.toFixed(2)}</TableCell>
+                                            <TableCell align="right">{gainer.change.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                            <TableCell align="right">{gainer.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
                                             <TableCell align="right">{gainer.quantity}</TableCell>
                                         </TableRow>
                                     ))}

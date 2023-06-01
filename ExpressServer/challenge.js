@@ -6,6 +6,7 @@ const numStocks = 10;
 var dailyChallenge = null;
 var dailyChallengeProfiles = null;
 var personalChallengeProfiles = null;
+var nextPersonalChallengeProfiles = null;
 
 
 function sleep(ms) 
@@ -34,8 +35,9 @@ class Challenge
 
     async initialize()
     {
-        this.stocks = await getRandomStocks(this.startDate);
-        this.stockData = await getStockData(this.startDate, this.stocks);
+        let stockArr = await getRandomStocks(this.startDate);
+        this.stocks = stockArr[0];
+        this.stockData = stockArr[1];
         if(this.stockData == 0)
         {
             console.log("retrying challenge initialization");
@@ -136,44 +138,61 @@ async function createDailyChallenge()
 async function createPersonalChallengeList()
 {
     var accountList = await database.getAccountList();
-    var profiles = new Map();
+    personalChallengeProfiles = new Map();
+    nextPersonalChallengeProfiles = new Map();
     for(let i = 0; i < accountList.length; i++)
     {
-        profiles.set(accountList[i], null);
+        personalChallengeProfiles.set(accountList[i], null);
+        var challenge = new Challenge();
+        setNextPersonalChallenge(accountList[i], challenge);
     }
-    personalChallengeProfiles = profiles;
 }
 
-async function createDailyChallengeProfile(userKey)
-{
-    dailyChallengeProfiles.set(userKey, new ChallengeProgress(dailyChallenge));
-}
 
 async function createPersonalChallenge(userKey)
 {
     var challenge = new Challenge();
-    await challenge.initialize();
-    personalChallengeProfiles.set(userKey, new ChallengeProgress(challenge));
-}
-
-async function getDailyChallengeProfile(userKey)
-{
-    while(dailyChallenge.initialized == 0)
+    var newProfile = nextPersonalChallengeProfiles.get(userKey);
+    while(newProfile == null)
     {
         await sleep(50);
+        newProfile = nextPersonalChallengeProfiles.get(userKey);
     }
+    personalChallengeProfiles.set(userKey, newProfile);
+    setNextPersonalChallenge(userKey, challenge);
+}
+
+async function setNextPersonalChallenge(userKey, challenge)
+{
+    console.log("setting next personal challenge for " + userKey);
+    nextPersonalChallengeProfiles.set(userKey, null);
+    await challenge.initialize();
+    nextPersonalChallengeProfiles.set(userKey, new ChallengeProgress(challenge));
+    console.log("next personal challenge set for " + userKey);
+}
+
+function getDailyChallengeProfile(userKey)
+{
     return(dailyChallengeProfiles.get(userKey));
 }
 
 function getPersonalChallengeProfile(userKey)
 {
-    const profile = personalChallengeProfiles.get(userKey);
-    return(profile);
+    return(personalChallengeProfiles.get(userKey));
 }
 
 function getDailyChallenge()
 {
     return(dailyChallenge);
+}
+
+async function addUser(userKey)
+{
+    dailyChallengeProfiles.set(userKey, new ChallengeProgress(dailyChallenge));
+    personalChallengeProfiles.set(userKey, null);
+    var challenge = new Challenge();
+    await challenge.initialize();
+    nextPersonalChallengeProfiles.set(userKey, new ChallengeProgress(challenge));
 }
 
 function deleteUser(userKey)
@@ -196,23 +215,27 @@ function getRandomDate()
 async function getRandomStocks(startDate)
 {
     var stockList = await query.getStockList();
-    var retList = [];
+    var stocks = [];
+    var stocksData = [];
+    var retList = [stocks, stocksData];
     var startDateMinusYear = new Date(startDate.getTime());
     var startDatePlusYear = new Date(startDate.getTime());
     startDateMinusYear.setFullYear(startDate.getFullYear()-1);
     startDatePlusYear.setFullYear(startDate.getFullYear()+1);
     const googleArrayLength = (await query.getPreviousDataRange("GOOG", new Date(startDateMinusYear), new Date(startDatePlusYear))).length;
     //console.log(startDateMinusYear);
-    while (retList.length < numStocks)
+    while (stocks.length < numStocks)
     {
         var randNum = Math.floor(Math.random()*stockList.length);
         if(stockList[randNum] != null)
         {
             //console.log(stockList[randNum]["symbol"]);
-            //console.log(retList.length);
-            if(await query.getStockListDate(stockList[randNum]["symbol"]) < startDateMinusYear.getTime() && ((await query.getPreviousDataRange(stockList[randNum]["symbol"], new Date(startDateMinusYear), new Date(startDatePlusYear))).length == googleArrayLength))
+            //console.log(stocks.length);
+            let data = (await query.getPreviousDataRange(stockList[randNum]["symbol"], startDateMinusYear, startDatePlusYear));
+            if(data.length == googleArrayLength)
             {
-                retList.push(stockList[randNum]["symbol"]);
+                stocks.push(stockList[randNum]["symbol"]);
+                stocksData.push(data);
             }
             stockList[randNum] = null;
         }
@@ -220,7 +243,7 @@ async function getRandomStocks(startDate)
     return(retList);
 }
 
-async function getStockData(startDate, stocks)
+/*async function getStockData(startDate, stocks)
 {
     var startDateMinusYear = new Date(startDate.getTime());
     var startDatePlusYear = new Date(startDate.getTime());
@@ -230,18 +253,20 @@ async function getStockData(startDate, stocks)
     for(let i = 0; i < numStocks; i++)
     {
         returnArr.push(await query.getPreviousDataRange(stocks[i], startDateMinusYear, startDatePlusYear));
-        if(returnArr[i].length == 0)
+        if(returnArr[i] == null || returnArr[i].length == 0)
         {
+            console.log(stocks[i]);
+            console.log(await query.getPreviousDataRange(stocks[i], startDateMinusYear, startDatePlusYear).length);
             return(0);
         }
     }
     return(returnArr);
-}
+}*/
 
 
 
 
 module.exports = 
 {
-     createDailyChallenge, getDailyChallengeProfile, getDailyChallenge, createPersonalChallengeList, createPersonalChallenge, getPersonalChallengeProfile, createDailyChallengeProfile, deleteUser
+     createDailyChallenge, getDailyChallengeProfile, getDailyChallenge, createPersonalChallengeList, createPersonalChallenge, getPersonalChallengeProfile, addUser, deleteUser
 }

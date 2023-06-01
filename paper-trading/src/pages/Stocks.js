@@ -41,10 +41,13 @@ import { ListItemIcon } from '@mui/material';
 
 import { useLocation } from 'react-router';
 import { useNavigate, Navigate } from 'react-router-dom';
+import { NumericFormat } from 'react-number-format'
 
 
 function Stocks() {
   const navigate = useNavigate();
+  
+  const numberWithCommas = (n) => n?.toString.replace(/\B(?=(\d{3})+(?!\d))/g, ',') || '0';
 
   const profile = localStorage.getItem("profile");
 
@@ -175,7 +178,7 @@ function Stocks() {
           <List component={Stack} direction='row' sx={{maxWidth: 800, ml:3}}>
             <ListItemText 
               primaryTypographyProps={{fontWeight: 'bold', fontSize: 30}}
-              primary={stockInfo.mark.toFixed(2) + ' USD'}/>
+              primary={stockInfo.mark.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' USD'}/>
             <ListItemText 
               primaryTypographyProps={{fontSize: 25, 
                                        color: (stockInfo.markChange > 0 ? 'green' : 'red'), mt:0.3}}
@@ -214,7 +217,7 @@ function Stocks() {
         <Stack direction="row" spacing={2}>
           <List sx={{width: "100%", maxWidth: 360, ml:1.5}}>
             <ListItem>
-              <ListItemText primary={"Volume (current): " + stockInfo.volume} />
+              <ListItemText primary={"Volume (current): " + stockInfo.volume.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} />
               <Tooltip title="The number of shares of a stock traded today" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -223,7 +226,7 @@ function Stocks() {
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary={"Today's High ($): " + stockInfo.high.toFixed(2)}/>
+              <ListItemText primary={"Today's High ($): " + stockInfo.high.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
               <Tooltip title="The highest price of the share today" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -232,7 +235,7 @@ function Stocks() {
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary={"Today's Low ($): " + stockInfo.low.toFixed(2)}/>
+              <ListItemText primary={"Today's Low ($): " + stockInfo.low.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
               <Tooltip title="The lowest price of the share today" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -243,7 +246,7 @@ function Stocks() {
 
           <List sx={{width: "100%", maxWidth: 360, justifyContent: 'flex-start'}}>
             <ListItem>
-              <ListItemText primary={"52 Week High ($): " + stockInfo.week52High.toFixed(2)}/>
+              <ListItemText primary={"52 Week High ($): " + stockInfo.week52High.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
               <Tooltip title="The highest price of the share within a 52 week period" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -252,7 +255,7 @@ function Stocks() {
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary={"Bid/Ask Price ($): " + stockInfo.bidPrice.toFixed(2) + ' / ' + stockInfo.askPrice.toFixed(2)}/>
+              <ListItemText primary={"Bid/Ask Price ($): " + stockInfo.bidPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' / ' + stockInfo.askPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
               <Tooltip title="The max/min price willing to be paid for a share" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -261,7 +264,7 @@ function Stocks() {
             </ListItem>
             <Divider />
             <ListItem>
-              <ListItemText primary={"52 Week Low ($): " + stockInfo.week52Low.toFixed(2)}/>
+              <ListItemText primary={"52 Week Low ($): " + stockInfo.week52Low.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
               <Tooltip title="The lowest price of the share within a 52 week period" placement='top'>
                 <IconButton disableRipple size='small'>
                   <InfoIcon />
@@ -276,7 +279,7 @@ function Stocks() {
         <Box sx={{ width: '100%', maxWidth: 1000}}>
           <List component={Stack} direction='row' sx={{maxWidth: 700, ml:3}}>
             <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
-                           primary={'Account Buying Power ($): ' + balance}/>
+                           primary={'Account Buying Power ($): ' + balance?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
             <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 20}}
                            primary={'Shares Owned: ' + ownedStocks}/>
           </List>
@@ -301,12 +304,17 @@ function Stocks() {
   useEffect ( () => {
     if (profile){
       const prof = JSON.parse(localStorage.getItem("profile"));
-      fetch("http://localhost:8000/getPortfolioData?" + new URLSearchParams({
+      fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/getPortfolioData?" + new URLSearchParams({
             userKey: prof["email"],
       })).then(res => {return res.json()})
-      .then(data => {setBalance(Math.ceil(data.buyingPower * 100)/100)});
+      .then(data => {setBalance(data.buyingPower)});
     }
   }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    window.scrollTo(0,0);
+  })
 
 
 
@@ -335,7 +343,7 @@ function Stocks() {
         body: JSON.stringify({userKey: prof["email"], stock: stockInfo.symbol.toUpperCase()}),
         headers: {'Content-Type': 'application/json'}
       }
-      fetch("http://localhost:8000/addWatchList", options);
+      fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/addWatchList", options);
       
     } else if (buttonText === "Remove from Watchlist" && profile) {
       console.log("it was remove!")
@@ -347,7 +355,7 @@ function Stocks() {
         body: JSON.stringify({userKey: prof["email"], stock: stockInfo.symbol.toUpperCase()}),
         headers: {'Content-Type': 'application/json'}
       }
-      fetch("http://localhost:8000/removeWatchList", options);
+      fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/removeWatchList", options);
     } else {
       console.log("tf?")
     }
@@ -373,7 +381,7 @@ function Stocks() {
         setActionError(false)
         setQuantityError(false)
       } else {
-        setBalance(parseFloat((balance - numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
+        setBalance(parseFloat((balance - numericQuantity * parseFloat(stockInfo.askPrice))))
         setOwnedStocks(ownedStocks + numericQuantity)
         if(profile){
           const prof = JSON.parse(localStorage.getItem("profile"));
@@ -382,7 +390,7 @@ function Stocks() {
             body: JSON.stringify({userKey: prof["email"], stock: stockInfo.symbol.toUpperCase(), amount: numericQuantity}),
             headers: {'Content-Type': 'application/json'}
           }
-          fetch("http://localhost:8000/buyStock", options);
+          fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/buyStock", options);
         }
         
         setBuyError(false)
@@ -399,7 +407,7 @@ function Stocks() {
         setActionError(false)
         setQuantityError(false)
       } else {
-        setBalance(parseFloat((balance + numericQuantity * parseFloat(stockInfo.mark)).toFixed(2)))
+        setBalance(parseFloat((balance + numericQuantity * parseFloat(stockInfo.bidPrice))))
         setOwnedStocks(ownedStocks - numericQuantity)
         if (profile){
           const prof = JSON.parse(localStorage.getItem("profile"));
@@ -408,7 +416,7 @@ function Stocks() {
             body: JSON.stringify({userKey: prof["email"], stock: stockInfo.symbol.toUpperCase(), amount: numericQuantity}),
             headers: {'Content-Type': 'application/json'}
           } 
-          fetch("http://localhost:8000/sellStock", options);
+          fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/sellStock", options);
         }
         
           setBuyError(false)
@@ -448,6 +456,7 @@ const handleClose = (event, reason) => {
         <FormControl>
           <InputLabel sx={{mt:1, ml:3}}>Action</InputLabel>
           <Select
+            role='selected-action'
             value={option}
             label='Action'
             onChange={changeOption}
@@ -458,7 +467,8 @@ const handleClose = (event, reason) => {
           </Select>
         </FormControl>
 
-        <TextField id="outlined-basic" 
+        <TextField id="outlined-basic"
+                   role="quantity-textfield"
                    label="Quantity"
                    variant="outlined" 
                    onChange={changeQuantity}
@@ -538,8 +548,11 @@ const handleClose = (event, reason) => {
   ];
 
   // Get information related to a given stock
-  function handleClick(stock) {
+  async function handleClick(stock) {
     const array = [stock]
+
+    setQuantity(0);
+    setOption("");
   
     getCurrentData(array).then(async response =>
       {
@@ -568,8 +581,9 @@ const handleClose = (event, reason) => {
                 week52Low: response[stockAllCaps]['52WkLow'],
               }
             )
-
+            console.log("Before")
             const res = await getNumDataPoints(stockAllCaps)
+            console.log("After")
             setHistData(res)
                 
             let times = []
@@ -607,16 +621,16 @@ const handleClose = (event, reason) => {
     )
     if(profile){
       const prof = JSON.parse(localStorage.getItem("profile"));
-      fetch("http://localhost:8000/getSpecificStock?" + new URLSearchParams({
+      fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/getSpecificStock?" + new URLSearchParams({
             userKey: prof["email"],
             stock: stock.toString().toUpperCase()
         })).then(res => {return res.json()})
         .then(data => setOwnedStocks(data.quantity));
-      fetch("http://localhost:8000/getWatchList?" + new URLSearchParams({
+      fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/getWatchList?" + new URLSearchParams({
           userKey: prof["email"],
         })).then(res => {return res.json()})
         .then(data => {
-          if(data.includes(stock.toString().toUpperCase())){
+          if(data && data.includes(stock.toString().toUpperCase())){
             setButtonText("Remove from Watchlist");
             setWatchListStyle(removeWatchlist);
           } else {
@@ -649,18 +663,19 @@ const handleClose = (event, reason) => {
   
   // Main used to search for stock
   const MainSearchButton = () => (
-    <IconButton 
+    <IconButton
+      aria-label='main-search-button' 
       sx={{color: "white", 
       backgroundColor: "#2196f3",
       //ml: 1.5,
       "&:hover": { color: "#2196f3" }}}
-      onClick={() => handleClick(searchStock.trim())}>
+      onClick={() => handleClick(searchStock.split('—')[0].trim())}>
       <SearchIcon />
     </IconButton>
     )
 
     const SearchButton = () => (
-      <IconButton onClick={() => handleClick(searchStock.trim())}>
+      <IconButton aria-label='search-button' onClick={() => handleClick(searchStock.split('—')[0].trim())}>
         <SearchIcon />
       </IconButton>
       )
@@ -670,20 +685,25 @@ const handleClose = (event, reason) => {
   // Set stock to be searched
   function changeStock(event) {
     console.log(event.target.value)
-    fetch("http://localhost:8000/getStocks?" + new URLSearchParams({
+    fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/getStocks?" + new URLSearchParams({
                 heading: event.target.value
             })).then(res => {return res.json()})
             .then(data => {
-              //console.log(data[0]);
+              console.log(data)
+              console.log(data[0][0]);
 
               var list = []
               for (const symbol of data[0]) {
-                list.push({"symbol": symbol})
+                //console.log(symbol)
+                if (symbol != null) {
+                  list.push({"symbol": symbol[0] + ' — ' + symbol[1]})
+                }
               }
               //console.log(list)
               setSearchList(list)});
     setStock(event.target.value)
   }
+
 
   // To change the time intervals displayed by stock graph
   const [interval, setInterval] = useState('1M')
@@ -786,6 +806,7 @@ const handleClose = (event, reason) => {
     setExternalStock(null)
   }
 
+
   return (
     <div>
       {profile ? (
@@ -819,15 +840,16 @@ const handleClose = (event, reason) => {
           disableClearable
           filterOptions={(x) => x}
           options={searchList.map((option) => option.symbol)}
-          onChange={(event, value) => setStock(value)}
+          onChange={(event, value) => {setStock(value); handleClick(value.split('—')[0].trim());}}
           renderInput={(params) => (
             <TextField
                       {...params}
+                      role='main-search-bar'
                       sx={{minWidth: 500, mt: 3}}
                       onChange={changeStock}
                       onKeyPress= {(e) => {
                         if (e.key === 'Enter') {
-                          handleClick(searchStock.trim())
+                          handleClick(searchStock.split('—')[0].trim())
                         }
                       }}
                       InputProps={{
@@ -860,16 +882,17 @@ const handleClose = (event, reason) => {
         disableClearable
         filterOptions={(x) => x}
         options={searchList.map((option) => option.symbol)}
-        onChange={(event, value) => setStock(value)}
+        onChange={(event, value) => {setStock(value); handleClick(value.split('—')[0].trim());}}
         renderInput={(params) =>
           <TextField 
                     {...params}
+                    role='search-bar'
                     label="Search for Symbol" 
                     variant="standard"
                     onChange={changeStock}
                     onKeyPress= {(e) => {
                       if (e.key === 'Enter') {
-                        handleClick(searchStock.trim())
+                        handleClick(searchStock.split('—')[0].trim())
                       }
                     }}
                     InputProps={{...params.InputProps, endAdornment: <SearchButton />}}

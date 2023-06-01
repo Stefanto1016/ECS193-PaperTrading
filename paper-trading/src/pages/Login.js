@@ -56,7 +56,7 @@ function Login() {
   useEffect(
     ()  => {
       if (profile) {
-        fetch("http://localhost:8000/hasAccount?" + new URLSearchParams({
+        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/hasAccount?" + new URLSearchParams({
             userKey: profile["email"]
         })).then((res) => { return res.json()}).then((data) => {
           if(!(data)){
@@ -65,7 +65,7 @@ function Login() {
               body: JSON.stringify({userKey: profile["email"]}),
               headers: {'Content-Type': 'application/json'}
             }
-            fetch("http://localhost:8000/createAccount", options).then((res) => {
+            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/createAccount", options).then((res) => {
               if(res.ok){
                 localStorage.setItem("profile", JSON.stringify(profile));
                 navigate("/App");

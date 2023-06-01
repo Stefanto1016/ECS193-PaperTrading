@@ -1,7 +1,8 @@
 const query = require('./query');
 let symbolRoot = null;
 let nameRoot = null;
-let lookupTable = new Map();
+let symbolLookupTable = new Map();
+let descLookupTable = new Map();
 
 async function getStocks(heading)
 {
@@ -46,7 +47,17 @@ async function getStocks(heading)
     }
     for(let i = 0; i < nameArray.length; i++)
     {
-        nameArray[i] = lookupTable.get(nameArray[i]);
+        if(symbolLookupTable.get(nameArray[i]) != null)
+        {
+            nameArray[i] = symbolLookupTable.get(nameArray[i]);
+        }
+    }
+    for(let i = 0; i < symbolArray.length; i++)
+    {
+        if(descLookupTable.get(symbolArray[i]) != null)
+        {
+            symbolArray[i] = descLookupTable.get(symbolArray[i]);
+        }
     }
     return(returnArr);
 }
@@ -65,7 +76,8 @@ async function createTree()
         if(stockList[i]["description"] != null && stockList[i]["description"] != "Symbol not found")
         {
             let desc = stockList[i]["description"].replace(/[^a-zA-Z]/g, "").toUpperCase();
-            lookupTable.set(desc, [stockList[i]["symbol"], stockList[i]["description"]]);
+            symbolLookupTable.set(desc, [stockList[i]["description"], stockList[i]["symbol"]]);
+            descLookupTable.set(stockList[i]["symbol"], [stockList[i]["symbol"], stockList[i]["description"]]);
             nameRoot.addChild(desc);
         }
     }

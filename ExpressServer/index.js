@@ -9,7 +9,7 @@ const limitOrder = require('./limitOrder');
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
-const port = 8000;
+const port = parseInt(process.env.PORT) || 8000;
 const MSinMin = 1000*60;
 var started = 0;
 var started2 = 0; //for testing purposes
@@ -49,7 +49,7 @@ app.listen(port, async () =>
     await tree.createTree();
     await challenge.createDailyChallenge();
     await challenge.createPersonalChallengeList();
-    globalQueue.run();
+    globalQueue.run(50, 50);
     while(globalQueue.getSize() != 0)
     {
         await sleep(20);
@@ -59,8 +59,8 @@ app.listen(port, async () =>
     {
         if(userQueues.get(userList[i]) != null)
         {
-            userQueues.get(userList[i]).run();
-            userChallengeQueues.get(userList[i]).run();
+            userQueues.get(userList[i]).run(50, 50);
+            userChallengeQueues.get(userList[i]).run(50, 50);
         }
     }
     started2 = 1; //for testing purposes
@@ -491,11 +491,45 @@ app.put('/challengeCreatePersonalChallenge', async(req, res) =>
         return;
     }
     await challenge.createPersonalChallenge(userKey);
-    var stockData = (await challenge.getPersonalChallengeProfile(userKey)).challenge.stockData;
+    var stockData = challenge.getPersonalChallengeProfile(userKey).challenge.stockData;
     var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
     var stocks = challenge.getPersonalChallengeProfile(userKey).challenge.stocks;
     alert.unalert();
     res.send({stockData : stockData, currentDay : currentDay, stocks : stocks});
+}
+)
+
+app.get('/challengeHasCompletedDaily', async(req, res) =>
+{
+    const userKey = req.query.userKey;
+    var alert = queue.createAlert();
+    if(started == 0)
+    {
+        globalQueue.enqueue(alert);
+    }
+    else
+    {
+        if(userQueues.get(userKey) == null)
+        {
+            res.send(false);
+            alert.unalert();
+            return;
+        }
+        userChallengeQueues.get(userKey).enqueue(alert);
+    }
+    while(alert.alerted == 0)
+    {
+        await sleep(100);
+    }
+    if(userQueues.get(userKey) == null)
+    {
+        res.send(false);
+        alert.unalert();
+        return;
+    }
+    let finished = challenge.getDailyChallengeProfile(userKey).finished;
+    alert.unalert();
+    res.send({isFinished : finished});
 }
 )
 
@@ -545,10 +579,11 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
         alert.unalert();
         return;
     }
-    const yesterday = req.query.yesterday;
-    let leaderboard = await database.getLeaderboard(yesterday);
+    const today = req.query.today;
+    let leaderboard = await database.getLeaderboard(today);
     let position = null;
-    for(let i = 0; i < leaderboard.size; i++)
+    var i;
+    for(i = 0; i < leaderboard.length; i++)
     {
         if(leaderboard[i]["userKey"] == userKey)
         {
@@ -556,9 +591,16 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
             i = leaderboard.size;
         }
     }
-    leaderboard.slice(max(0, position-4), min(i-1, position+4));
+    leaderboard.slice(Math.max(0, position-4), Math.min(i-1, position+4));
     alert.unalert();
-    res.send({position: position, leaderboard: leaderboard});
+    if(position == null)
+    {
+        res.send({position: false, leaderboard: false});
+    }
+    else
+    {
+        res.send({position: position+1, leaderboard: leaderboard});
+    }
 }
 )
 
@@ -577,8 +619,9 @@ app.get('/challengeGetStockData', async(req, res) =>
         {
             await sleep(100);
         }
-        stockData = (await challenge.getDailyChallenge()).stockData;
-        var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
+        stockData = challenge.getDailyChallenge().stockData;
+        var stocks = challenge.getDailyChallenge().stocks;
+        var currentDay = challenge.getDailyChallengeProfile(userKey).day;
     }
     else
     {
@@ -608,10 +651,11 @@ app.get('/challengeGetStockData', async(req, res) =>
             return;
         }
         stockData = challenge.getPersonalChallengeProfile(userKey).challenge.stockData;
+        var stocks = challenge.getPersonalChallengeProfile(userKey).challenge.stocks;
         var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
     }
     alert.unalert();
-    res.send({stockData : stockData, currentDay : currentDay});
+    res.send({stockData : stockData, currentDay : currentDay, stocks: stocks});
 }
 )
 
@@ -649,7 +693,7 @@ app.get('/challengeGetBuyingPower', async(req, res) =>
     var buyingPower = 0;
     if(daily == 1)
     {
-        buyingPower = (await challenge.getDailyChallengeProfile(userKey)).buyingPower;
+        buyingPower = challenge.getDailyChallengeProfile(userKey).buyingPower;
     }
     else
     {
@@ -694,7 +738,7 @@ app.get('/challengeGetBalance', async(req, res) =>
     var balance = 0;
     if(daily == 1)
     {
-        balance = (await challenge.getDailyChallengeProfile(userKey)).balance;
+        balance = challenge.getDailyChallengeProfile(userKey).balance;
     }
     else
     {
@@ -739,7 +783,7 @@ app.get('/challengeGetStocks', async(req, res) =>
     var stocks = [];
     if(daily == 1)
     {
-        stocks = (await challenge.getDailyChallengeProfile(userKey)).stocks;
+        stocks = challenge.getDailyChallengeProfile(userKey).stocks;
     }
     else
     {
@@ -788,7 +832,7 @@ app.post('/challengeBuyStock', async(req, res) =>
     var buyingPower = 0;
     if(daily == 1)
     {
-        buyingPower = (await challenge.getDailyChallengeProfile(userKey)).buy(stock, amount);
+        buyingPower = challenge.getDailyChallengeProfile(userKey).buy(stock, amount);
     }
     else
     {
@@ -835,7 +879,7 @@ app.post('/challengeSellStock', async(req, res) =>
     var buyingPower = 0;
     if(daily == 1)
     {
-        buyingPower = (await challenge.getDailyChallengeProfile(userKey)).sell(stock, amount);
+        buyingPower = challenge.getDailyChallengeProfile(userKey).sell(stock, amount);
     }
     else
     {
@@ -880,19 +924,20 @@ app.post('/challengeNextDay', async(req, res) =>
     var isFinished = 0;
     if(daily == 1)
     {
-        var wasFinished = (await challenge.getDailyChallengeProfile(userKey)).finished;
-        isFinished = (await challenge.getDailyChallengeProfile(userKey)).nextDay();
-        var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
+        var wasFinished = challenge.getDailyChallengeProfile(userKey).finished;
+        isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
+        var currentDay = challenge.getDailyChallengeProfile(userKey).day;
         if(wasFinished != isFinished)
         {
-            database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
+            database.addScore(userKey, challenge.getDailyChallengeProfile(userKey).balance);
         }
+        var balance = challenge.getDailyChallengeProfile(userKey).balance
     }
     else
     {
         isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
         var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
-        var balance = challenge.getPersonalChallengeProfile(userKey).balance;
+        var balance = challenge.getPersonalChallengeProfile(userKey).balance
     }
     alert.unalert();
     res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
@@ -935,14 +980,15 @@ app.post('/challengeNextWeek', async(req, res) =>
     {
         for(let i = 0; i < 5; i++)
         {
-            var wasFinished = (await challenge.getDailyChallengeProfile(userKey)).finished;
-            isFinished = (await challenge.getDailyChallengeProfile(userKey)).nextDay();
-            var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
+            var wasFinished = challenge.getDailyChallengeProfile(userKey).finished;
+            isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
+            var currentDay = challenge.getDailyChallengeProfile(userKey).day;
             if(wasFinished != isFinished)
             {
-                database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
+                database.addScore(userKey, challenge.getDailyChallengeProfile(userKey).balance);
             }
         }
+        var balance = challenge.getDailyChallengeProfile(userKey).balance
     }
     else
     {
@@ -950,8 +996,8 @@ app.post('/challengeNextWeek', async(req, res) =>
         {
             isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
             var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
-            var balance = challenge.getPersonalChallengeProfile(userKey).balance;
         }
+        var balance = challenge.getPersonalChallengeProfile(userKey).balance
     }
     alert.unalert();
     res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
@@ -994,14 +1040,15 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
     {
         for(let i = 0; i < 20; i++)
         {
-            var wasFinished = (await challenge.getDailyChallengeProfile(userKey)).finished;
-            isFinished = (await challenge.getDailyChallengeProfile(userKey)).nextDay();
-            var currentDay = (await challenge.getDailyChallengeProfile(userKey)).day;
+            var wasFinished = challenge.getDailyChallengeProfile(userKey).finished;
+            isFinished = challenge.getDailyChallengeProfile(userKey).nextDay();
+            var currentDay = challenge.getDailyChallengeProfile(userKey).day;
             if(wasFinished != isFinished)
             {
-                database.addScore(userKey, (await challenge.getDailyChallengeProfile(userKey)).balance);
+                database.addScore(userKey, (challenge.getDailyChallengeProfile(userKey).balance));
             }
         }
+        var balance = challenge.getDailyChallengeProfile(userKey).balance
     }
     else
     {
@@ -1009,9 +1056,9 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
         {
             isFinished = challenge.getPersonalChallengeProfile(userKey).nextDay();
             var currentDay = challenge.getPersonalChallengeProfile(userKey).day;
-            var balance = challenge.getPersonalChallengeProfile(userKey).balance;
 
         }
+        var balance = challenge.getPersonalChallengeProfile(userKey).balance
     }
     alert.unalert();
     res.send({isFinished : isFinished, currentDay : currentDay, balance : balance});
@@ -1045,7 +1092,7 @@ async function update()
 async function createAccount(userKey)
 {
     await database.addUser(userKey, 10000, [], {yesterday : 10000}, []);
-    await challenge.createDailyChallengeProfile(userKey);
+    await challenge.addUser(userKey);
     userQueues.set(userKey, queue.createQueue());
     userQueues.get(userKey).run();
     userChallengeQueues.set(userKey, queue.createQueue());

@@ -9,7 +9,7 @@ request returns 429 for too many requests.
 async function retryFetch(url)
 {
      var data = await fetch(url);
-     while(data.status == 429)
+     while(data == null || data.status == 429)
      {
           await new Promise(r => setTimeout(r, 200));
           var data = await fetch(url);

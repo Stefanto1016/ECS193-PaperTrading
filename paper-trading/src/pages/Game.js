@@ -43,6 +43,12 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+
 import { Typography } from '@mui/material';  
 
 const chartStyle = {
@@ -79,134 +85,6 @@ async function getCurrentData(companyList)//pass as array of strings listing com
    return(data);
 }
 
-// Gather historical data of stock market for various intervals
-async function getHistData(company)
-{
-   var client_id = 'Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK' 
-   var retArr = [];
-   const url = `https://api.tdameritrade.com/v1/marketdata/${company}/pricehistory?`;
-   var params = new URLSearchParams({apikey: client_id, periodType: "month", period: 1, frequencyType: "daily", frequency: 1});
-   var data = await retryFetch(url + params);
-   retArr.push(data["candles"]);
-   return(retArr);
-}
-
-function getRandomDate()
-{
-    const daysIn20Years = 7305;
-    var date = new Date();
-    const randNum = Math.floor(Math.random()*(daysIn20Years-730)+365);
-    date.setDate(date.getDate()-randNum);
-    return(date);
-}
-
-/*
-This function will return a list the symbols of all elligible stocks. As of now, that is simply any stock listed
-on the NYSE or the NASDAQ
-*/
-
-async function getStockList()
-{
-     var url =  "https://api.tdameritrade.com/v1/instruments?apikey=Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK&symbol=[A-Z]*&projection=symbol-regex";
-     var data = await retryFetch(url);
-     var returnList = [];
-     for(var index in data)
-     {
-          if(data[index]["exchange"] == "NYSE" || data[index]["exchange"] == "NASDAQ")
-          {
-               returnList.push(data[index]);
-          }
-     }
-     return(returnList);
-}
-
-/*
-This function takes the symbol of a stock in all caps and returns the day the stock was listed
-or 20 years ago, whichever is most recent, in epoch time.
-*/
-
-async function getStockListDate(company)
-{
-    var client_id = 'Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK'  
-     const url = `https://api.tdameritrade.com/v1/marketdata/${company}/pricehistory?`;
-     const params = new URLSearchParams({apikey: client_id, periodType: "year", period: 20, frequencyType: "daily", frequency: 1});
-     const data = await retryFetch(url + params);
-     if(data["candles"].length == 0)
-     {
-          return(Number.MAX_SAFE_INTEGER);
-     }
-     return(data["candles"][0]["datetime"]);
-}
-
-/*This function will return an array containing all daily data points for a company withing the given time period inclusive. Pass to
-the function the company symbol in caps as well as the start and end date as instances of the date class. will return a 2d array where
-the first dimension in the data point and the second dimension determines whether you get the price at that data point or the epoch time of that data point*/
-
-
-async function getPreviousDataRange(company, startDate, endDate)
-{
-     var client_id = 'Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK'  
-     const url = `https://api.tdameritrade.com/v1/marketdata/${company}/pricehistory?`;
-     const params = new URLSearchParams({apikey: client_id, periodType: "year", period: 20, frequencyType: "daily", frequency: 1});
-     var data = await retryFetch(url + params);
-     var returnArr = [];
-     for(let i = 0; i < data["candles"].length; i++)
-     {
-          if(data["candles"][i]["datetime"] >= startDate.getTime() && data["candles"][i]["datetime"] <= endDate.getTime())
-          {
-               returnArr.push([data["candles"][i]["close"], data["candles"][i]["datetime"]]);
-          }
-     }
-     return(returnArr);
-}
-
-async function getRandomStocks(startDate)
-{
-    var stockList = await getStockList();
-    var retList = [];
-    var startDateMinusYear = new Date(startDate.getTime());
-    var startDatePlusYear = new Date(startDate.getTime());
-    startDateMinusYear.setFullYear(startDate.getFullYear()-1);
-    startDatePlusYear.setFullYear(startDate.getFullYear()+1);
-    const googleArrayLength = (await getPreviousDataRange("GOOG", new Date(startDateMinusYear), new Date(startDatePlusYear))).length;
-    //console.log(startDateMinusYear);
-    var numStocks = 10;
-    while (retList.length < numStocks)
-    {
-        var randNum = Math.floor(Math.random()*stockList.length);
-        if(stockList[randNum] != null)
-        {
-            //console.log(stockList[randNum]["symbol"]);
-            //console.log(retList.length);
-            if(await getStockListDate(stockList[randNum]["symbol"]) < startDateMinusYear.getTime() && ((await getPreviousDataRange(stockList[randNum]["symbol"], new Date(startDateMinusYear), new Date(startDatePlusYear))).length == googleArrayLength))
-            {
-                retList.push(stockList[randNum]["symbol"]);
-            }
-            stockList[randNum] = null;
-        }
-    }
-    return(retList);
-}
-
-async function getStockData(startDate, stocks)
-{
-    var startDateMinusYear = new Date(startDate.getTime());
-    var startDatePlusYear = new Date(startDate.getTime());
-    startDateMinusYear.setFullYear(startDate.getFullYear()-1);
-    startDatePlusYear.setFullYear(startDate.getFullYear()+1);
-    var returnArr = [];
-    var numStocks = 10;
-    for(let i = 0; i < numStocks; i++)
-    {
-        returnArr.push(await getPreviousDataRange(stocks[i], startDateMinusYear, startDatePlusYear));
-        if(returnArr[i].length == 0)
-        {
-            return(0);
-        }
-    }
-    return(returnArr);
-}
-
 const emptyChart = {
     // x-axis labels
     labels: [],
@@ -231,7 +109,17 @@ function Game() {
     const [displayGame, setDisplayGame] = useState(false);
     const [displayEnd, setDisplayEnd] = useState(false);
 
+    // 0 for personal challenge, 1 for daily challenge
+    const [gameType, setGameType] = useState(null);
+
+    const [completedDaily, setCompletedDaily] = useState(null);
+
+    const [dialogOpen, setDialogOpen] = useState(false);
+
     const [leaderboard, setLeaderboad] = useState([]);
+    const [leaderboardPosition, setLeaderboadPosition] = useState(null);
+    const [leaderboardSuccess, setLeaderboadSuccess] = useState(false);
+    const [leaderboardFail, setLeaderboadFail] = useState(true);
 
     const [chartData, setChartData] = useState(emptyChart)
 
@@ -262,36 +150,49 @@ function Game() {
     const [quantityError, setQuantityError] = useState(false)
     const [validTransaction, setValidTransaction] = useState(false)
 
-    //const [disableWeekForward, setDisableWeekForward] = useState(false)
-    //const [disableMonthForward, setDisableMonthForward] = useState(false)
-
-    // While loading, set up game
-    // useEffect(() => {
-    //     if (displayLoading) {
-    //         console.log("in here")
-    //         goPlay()
-    //     }
-    // }, [displayLoading])
+    const [totalStocksBought, setTotalStocksBought] = useState(0)
+    const [moneySpent, setMoneySpent] = useState(0)
+    const [stocksListBought, setStocksListBought] = useState(Array(10).fill(0))
+    const [mostPurchasedStock, setMostPurchasedStock] = useState('N/A')
+    const [mostPurchasedStockAmount, setMostPurchasedStockAmount] = useState(0)
+    const [highestAmountBought, setHighestAmountBought] = useState(0)
+    const [highestAmountStock, setHighestAmountStock] = useState('N/A')
+    const [highestSingleSpending, setHighestSingleSpending] = useState(0)
+    const [highestSingleSpendingStock, setHighestSingleSpendingStock] = useState('N/A')
 
     useEffect(() => {
-        fetch("http://localhost:8000/challengeGetLeaderboard?" + new URLSearchParams({
+        document.body.style.overflow = "hidden";
+        window.scrollTo(0,0);
+    })
+
+    useEffect(() => {
+        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetLeaderboard?" + new URLSearchParams({
             })).then(res => {return res.json()})
-            .then(data => {setLeaderboad(data)});
+            .then(data => {console.log(data); setLeaderboad(data.slice(0, 8))});
     }, [])
 
-    //useEffect(())
+    useEffect(() => {
+        const prof = JSON.parse(localStorage.getItem("profile"))
+        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
+            userKey: prof["email"],
+            today: 1
+            })).then(res => {return res.json()})
+            .then(data => {console.log(data); setLeaderboadPosition(data.position)});
+    }, [])
 
-    // Disable buttons when certain amount of dates remain
-    // useEffect(() => {
-    //     if (histDataLen - cutoff <= 5 && !disableWeekForward) {
-    //         console.log('disable week')
-    //         setDisableWeekForward(true)
-    //     }
-    //     if (histDataLen - cutoff <= 20 && !disableMonthForward) {
-    //         console.log('disable month')
-    //         setDisableMonthForward(true)
-    //     }
-    // }, [cutoff])
+    useEffect(() => {
+        const prof = JSON.parse(localStorage.getItem("profile"))
+        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeHasCompletedDaily?" + new URLSearchParams({
+            userKey: prof["email"],
+            })).then(res => {return res.json()})
+            .then(data => {console.log(data); setCompletedDaily(data.isFinished)});
+    }, [])
+
+    useEffect(() => {
+        if (gameType != null) {
+            goPlay()
+        }
+    }, [gameType])
 
     async function getStockQuotes(stockData, firstStockName) {
         var stocksInfo = []
@@ -365,7 +266,7 @@ function Game() {
             setCurStockIndex(0)
             setStockSymbol(quoteData[0][stock].symbol)
             setStockDesc(quoteData[0][stock].description)
-            setStockMark(histData[0][cutoff-1][0].toFixed(2))
+            setStockMark(histData[0][cutoff-1][0])
             for (const data of histData[0]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -378,7 +279,7 @@ function Game() {
             setCurStockIndex(1)
             setStockSymbol(quoteData[1][stock].symbol)
             setStockDesc(quoteData[1][stock].description)
-            setStockMark(histData[1][cutoff-1][0].toFixed(2))
+            setStockMark(histData[1][cutoff-1][0])
             for (const data of histData[1]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -391,7 +292,7 @@ function Game() {
             setCurStockIndex(2)
             setStockSymbol(quoteData[2][stock].symbol)
             setStockDesc(quoteData[2][stock].description)
-            setStockMark(histData[2][cutoff-1][0].toFixed(2))
+            setStockMark(histData[2][cutoff-1][0])
             for (const data of histData[2]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -404,7 +305,7 @@ function Game() {
             setCurStockIndex(3)
             setStockSymbol(quoteData[3][stock].symbol)
             setStockDesc(quoteData[3][stock].description)
-            setStockMark(histData[3][cutoff-1][0].toFixed(2))
+            setStockMark(histData[3][cutoff-1][0])
             for (const data of histData[3]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -417,7 +318,7 @@ function Game() {
             setCurStockIndex(4)
             setStockSymbol(quoteData[4][stock].symbol)
             setStockDesc(quoteData[4][stock].description)
-            setStockMark(histData[4][cutoff-1][0].toFixed(2))
+            setStockMark(histData[4][cutoff-1][0])
             for (const data of histData[4]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -430,7 +331,7 @@ function Game() {
             setCurStockIndex(5)
             setStockSymbol(quoteData[5][stock].symbol)
             setStockDesc(quoteData[5][stock].description)
-            setStockMark(histData[5][cutoff-1][0].toFixed(2))
+            setStockMark(histData[5][cutoff-1][0])
             for (const data of histData[5]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -443,7 +344,7 @@ function Game() {
             setCurStockIndex(6)
             setStockSymbol(quoteData[6][stock].symbol)
             setStockDesc(quoteData[6][stock].description)
-            setStockMark(histData[6][cutoff-1][0].toFixed(2))
+            setStockMark(histData[6][cutoff-1][0])
             for (const data of histData[6]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -456,7 +357,7 @@ function Game() {
             setCurStockIndex(7)
             setStockSymbol(quoteData[7][stock].symbol)
             setStockDesc(quoteData[7][stock].description)
-            setStockMark(histData[7][cutoff-1][0].toFixed(2))
+            setStockMark(histData[7][cutoff-1][0])
             for (const data of histData[7]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -469,7 +370,7 @@ function Game() {
             setCurStockIndex(8)
             setStockSymbol(quoteData[8][stock].symbol)
             setStockDesc(quoteData[8][stock].description)
-            setStockMark(histData[8][cutoff-1][0].toFixed(2))
+            setStockMark(histData[8][cutoff-1][0])
             for (const data of histData[8]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -482,7 +383,7 @@ function Game() {
             setCurStockIndex(9)
             setStockSymbol(quoteData[9][stock].symbol)
             setStockDesc(quoteData[9][stock].description)
-            setStockMark(histData[9][cutoff-1][0].toFixed(2))
+            setStockMark(histData[9][cutoff-1][0])
             for (const data of histData[9]) {
                 var date = new Date(data[1])
                 times.push(date.toLocaleString('en', options))
@@ -513,28 +414,63 @@ function Game() {
           setChartData(chartData) 
     }
 
+    const handleDialogOpen = () => {
+        setDialogOpen(true);
+    };
+    
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+    };
+
+    function NoteDialog() {
+        return (
+        <Dialog
+            open={dialogOpen}
+            onClose={handleDialogClose}
+            PaperProps={{ sx: { width: "35%" } }}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+        >
+            <DialogTitle id="alert-dialog-title" style={{textDecoration:'underline'}} textAlign="center">
+                {"Note"}
+            </DialogTitle>
+            <DialogContent>
+            <DialogContentText id="alert-dialog-description" textAlign='center'>
+                You have already completed today's daily challenge!
+            </DialogContentText>
+            </DialogContent>
+            <DialogActions style={{ justifyContent: "center" }}>
+                <Button variant='contained' onClick={handleDialogClose}>OK</Button>
+            </DialogActions>
+        </Dialog>
+        )
+    }
+
     // Button handlers
     function goLeaderboard() {
         setDisplayStart(false)
         setDisplayLeaderboard(true)
     }
     function goStart() {
+        setDisplayEnd(false)
         setDisplayLeaderboard(false)
         setDisplayStart(true)
+        setGameType(null)
     }
 
     function goEnd() {
+        const isAllZero = stocksListBought.every(item => item === 0);
+        console.log(isAllZero)
+
+        if (!isAllZero) {
+            var maxIndex = stocksListBought.indexOf(Math.max(...stocksListBought));
+            setMostPurchasedStock(stocksList[maxIndex])
+            setMostPurchasedStockAmount(stocksListBought[maxIndex])
+        }
+
         setDisplayGame(false)
         setDisplayEnd(true)
 
-        // const prof = JSON.parse(localStorage.getItem("profile"))
-        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-        //         userKey: prof["email"],
-        //         daily: 0
-        //     })).then(res => {return res.json()})
-        //     .then(data => {setBalance(data.balance.toFixed(2))
-        //                    setDisplayGame(false)
-        //                    setDisplayEnd(true)}); 
     }
 
     function goLoad() {
@@ -544,8 +480,17 @@ function Game() {
     }
 
     async function goPlay() {
+        if (gameType == 1 && completedDaily == true) {
+            handleDialogOpen()
+            setGameType(null)
+            console.log('already completed daily')
+            return
+        }
+
         setDisplayLoading(true)
         setDisplayGame(false)
+        setLeaderboadSuccess(false)
+        setLeaderboadFail(true)
 
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
@@ -553,65 +498,107 @@ function Game() {
             body: JSON.stringify({userKey: prof["email"]}),
             headers: {'Content-Type': 'application/json'}
         }
-        fetch("http://localhost:8000/challengeCreatePersonalChallenge", options)
-            .then(res => {return res.json()})
-            .then(data => {
-                           console.log(data)
-                           console.log(data.stockData)
-                           setHistData(data.stockData)
-                           setCutoff(data.currentDay + 1)
-                           console.log(data.stockData.length)
-                           setHistDataLen(data.stockData[0].length)
-                           setStockMark(data.stockData[0][data.currentDay][0].toFixed(2))
-                           setCurStock(data.stocks[0])
-                           setStocksList(data.stocks)
-                           setCurStockIndex(0)
-                           getStockButtons(data.stocks)
-                           getChartData(data.stockData[0], data.currentDay + 1)
-                           getStockQuotes(data.stocks, data.stocks[0])
 
-                           fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-                                userKey: prof["email"],
-                                daily: 0
-                            })).then(res => {return res.json()})
-                            .then(data => {setBalance(data.balance.toFixed(2))});
+        // Create personal challenge
+        if (gameType == 0) {
+            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeCreatePersonalChallenge", options)
+                .then(res => {return res.json()})
+                .then(data => {
+                            console.log('Personal Challlenge Creating...')
+                            console.log(data)
+                            console.log(data.stockData)
+                            setHistData(data.stockData)
+                            setCutoff(data.currentDay + 1)
+                            console.log(data.stockData.length)
+                            setHistDataLen(data.stockData[0].length)
+                            setStockMark(data.stockData[0][data.currentDay][0])
+                            setCurStock(data.stocks[0])
+                            setStocksList(data.stocks)
+                            setCurStockIndex(0)
+                            getStockButtons(data.stocks)
+                            getChartData(data.stockData[0], data.currentDay + 1)
+                            getStockQuotes(data.stocks, data.stocks[0])
+
+                            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetBalance?" + new URLSearchParams({
+                                    userKey: prof["email"],
+                                    daily: gameType
+                                })).then(res => {return res.json()})
+                                .then(data => {setBalance(data.balance)});
 
 
-                            fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
-                                userKey: prof["email"],
-                                daily: 0
-                            })).then(res => {return res.json()})
-                            .then(data => {setBuyingPower(data.buyingPower.toFixed(2))});
+                                fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetBuyingPower?" + new URLSearchParams({
+                                    userKey: prof["email"],
+                                    daily: gameType
+                                })).then(res => {return res.json()})
+                                .then(data => {setBuyingPower(data.buyingPower)});
 
-                            fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
-                                userKey: prof["email"],
-                                daily: 0
-                            })).then(res => {return res.json()})
-                            .then(data => {setOwnedStocks(data)});
-                            });
+                                fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetStocks?" + new URLSearchParams({
+                                    userKey: prof["email"],
+                                    daily: gameType
+                                })).then(res => {return res.json()})
+                                .then(data => {setOwnedStocks(data)});
+                                });
+        } else {
+            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetStockData?" + new URLSearchParams({
+                    userKey: prof["email"],
+                    daily: gameType
+                })).then(res => {return res.json()})
+                .then(data => {
+                                    if (data.currentDay == data.stockData[0].length) {
+                                        console.log('already completed daily challenge')
+                                        return;
+                                    } else {
+                                        console.log('Daily Challlenge Creating...')
+                                        console.log(data)
+                                        console.log(data.stockData)
+                                        setHistData(data.stockData)
+                                        setCutoff(data.currentDay + 1)
+                                        console.log(data.stockData.length)
+                                        setHistDataLen(data.stockData[0].length)
+                                        console.log('Current Day: ' + data.currentDay)
+                                        console.log(data.stockData[0])
+                                        setStockMark(data.stockData[0][data.currentDay][0])
+                                        setCurStock(data.stocks[0])
+                                        setStocksList(data.stocks)
+                                        setCurStockIndex(0)
+                                        getStockButtons(data.stocks)
+                                        getChartData(data.stockData[0], data.currentDay + 1)
+                                        getStockQuotes(data.stocks, data.stocks[0])
+
+                                        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetBalance?" + new URLSearchParams({
+                                                userKey: prof["email"],
+                                                daily: gameType
+                                            })).then(res => {return res.json()})
+                                            .then(data => {setBalance(data.balance)});
+
+
+                                            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetBuyingPower?" + new URLSearchParams({
+                                                userKey: prof["email"],
+                                                daily: gameType
+                                            })).then(res => {return res.json()})
+                                            .then(data => {setBuyingPower(data.buyingPower)});
+
+                                            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetStocks?" + new URLSearchParams({
+                                                userKey: prof["email"],
+                                                daily: gameType
+                                            })).then(res => {return res.json()})
+                                            .then(data => {setOwnedStocks(data)});
+                                    }
+                            })
+        }
        
         setOption('')
         setQuantity(0)
 
-        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-        //         userKey: prof["email"],
-        //         daily: 0
-        //     })).then(res => {return res.json()})
-        //     .then(data => {setBalance(data.balance.toFixed(2))});
-
-
-        // fetch("http://localhost:8000/challengeGetBuyingPower?" + new URLSearchParams({
-        //         userKey: prof["email"],
-        //         daily: 0
-        //     })).then(res => {return res.json()})
-        //     .then(data => {setBuyingPower(data.buyingPower.toFixed(2))});
-
-
-        // fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
-        //         userKey: prof["email"],
-        //         daily: 0
-        //     })).then(res => {return res.json()})
-        //     .then(data => {setOwnedStocks(data)});
+        setTotalStocksBought(0)
+        setMoneySpent(0)
+        setStocksListBought(Array(10).fill(0))
+        setMostPurchasedStock('N/A')
+        setMostPurchasedStockAmount(0)
+        setHighestAmountBought(0)
+        setHighestAmountStock('N/A')
+        setHighestSingleSpending(0)
+        setHighestSingleSpendingStock('N/A')
         
         setDisplayStart(false)
         setDisplayEnd(false)
@@ -648,7 +635,7 @@ function Game() {
                         </Typography>
 
                         <Stack direction="row" spacing={6} justifyContent='center' ml={3} mr={3} mt={3} border={0}>
-                            <Button variant='contained' onClick={goPlay}>
+                            <Button variant='contained' onClick={() => {setGameType(1)}}>
                                 Play Now!
                             </Button>
 
@@ -658,7 +645,8 @@ function Game() {
                         </Stack>
 
                         <Typography variant='body2' mx='auto' textAlign='center' mt={3} border={0}>
-                            or <span onClick={goPlay} style={{textDecoration: 'underline', cursor: 'pointer', color: 'blue'}}> play against yourself! </span>
+                            or <span onClick={() => {setGameType(0)}} 
+                                style={{textDecoration: 'underline', cursor: 'pointer', color: 'blue'}}> play against yourself! </span>
                         </Typography>
                     </Paper>
             </Box>
@@ -669,7 +657,7 @@ function Game() {
         return (
             <Box sx={{flexDirection: 'column', textAlign: 'center', mt: 30}}>
                 <Typography variant='h5' textAlign='center'>
-                    Loading game...
+                    {'Loading ' + (gameType ? 'Daily Challenge...' : 'Personal Challenge...')}
                 </Typography>
 
                 <br/>
@@ -727,8 +715,8 @@ function Game() {
                                     <TableCell component="th" scope="row">
                                         {index + 1}
                                     </TableCell>
-                                    <TableCell>{data.name}</TableCell>
-                                    <TableCell align='right'>{data.balance}</TableCell>
+                                    <TableCell>{data.userKey}</TableCell>
+                                    <TableCell align='right'>{data.score.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
                                     </TableRow>
                                 ))}
                                 </TableBody>
@@ -769,10 +757,10 @@ function Game() {
             const prof = JSON.parse(localStorage.getItem("profile"))
             const options = {
                 method: 'POST',
-                body: JSON.stringify({userKey: prof["email"], stock: curStockIndex, amount: numericQuantity, daily: 0}),
+                body: JSON.stringify({userKey: prof["email"], stock: curStockIndex, amount: numericQuantity, daily: gameType}),
                 headers: {'Content-Type': 'application/json'}
             }
-            fetch("http://localhost:8000/challengeBuyStock", options)
+            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeBuyStock", options)
             .then(res => {return res.json()})
             .then(data => {
                 if (data.buyingPower === false) {
@@ -782,13 +770,31 @@ function Game() {
                     setActionError(false)
                     setQuantityError(false) 
                 } else {
-                    setBuyingPower(data.buyingPower.toFixed(2))
-                    fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
+                    setBuyingPower(data.buyingPower)
+                    fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetStocks?" + new URLSearchParams({
                         userKey: prof["email"],
-                        daily: 0
+                        daily: gameType
                     })).then(res => {return res.json()})
                     .then(data => {setOwnedStocks(data)});
                     
+
+                    setTotalStocksBought(totalStocksBought + numericQuantity)
+                    setMoneySpent(moneySpent + parseFloat(stockMark) * numericQuantity)
+
+                    var list = stocksListBought
+                    list[curStockIndex] += numericQuantity
+                    setStocksListBought(list)
+
+                    if (parseFloat(stockMark) * numericQuantity > highestSingleSpending) {
+                        setHighestSingleSpending(parseFloat(stockMark) * numericQuantity)
+                        setHighestSingleSpendingStock(stockSymbol)
+                    }
+
+                    if (numericQuantity > highestAmountBought) {
+                        setHighestAmountBought(numericQuantity)
+                        setHighestAmountStock(stockSymbol)
+                    }
+
                     setBuyError(false)
                     setSellError(false)
                     setValidTransaction(true)
@@ -796,33 +802,14 @@ function Game() {
                     setQuantityError(false) 
                 }
             });
-
-        //   if (numericQuantity * parseFloat(stockMark) > balance) {
-        //     setBuyError(true)
-        //     setSellError(false)
-        //     setValidTransaction(false)
-        //     setActionError(false)
-        //     setQuantityError(false)
-        //   } else {
-        //     setBalance(parseFloat((balance - numericQuantity * parseFloat(stockMark)).toFixed(2)))
-        //     var object = ownedStocks
-        //     object[curStock] = object[curStock] + numericQuantity
-        //     setOwnedStocks(object)
-            
-        //     setBuyError(false)
-        //     setSellError(false)
-        //     setValidTransaction(true)
-        //     setActionError(false)
-        //     setQuantityError(false)
-        //   }
         } else if (option == 'sell') {
             const prof = JSON.parse(localStorage.getItem("profile"))
             const options = {
                 method: 'POST',
-                body: JSON.stringify({userKey: prof["email"], stock: curStockIndex, amount: numericQuantity, daily: 0}),
+                body: JSON.stringify({userKey: prof["email"], stock: curStockIndex, amount: numericQuantity, daily: gameType}),
                 headers: {'Content-Type': 'application/json'}
             }
-            fetch("http://localhost:8000/challengeSellStock", options)
+            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeSellStock", options)
             .then(res => {return res.json()})
             .then(data => {
                 if (data.buyingPower === false) {
@@ -832,10 +819,10 @@ function Game() {
                     setActionError(false)
                     setQuantityError(false) 
                 } else {
-                    setBuyingPower(data.buyingPower.toFixed(2))
-                    fetch("http://localhost:8000/challengeGetStocks?" + new URLSearchParams({
+                    setBuyingPower(data.buyingPower)
+                    fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetStocks?" + new URLSearchParams({
                         userKey: prof["email"],
-                        daily: 0
+                        daily: gameType
                     })).then(res => {return res.json()})
                     .then(data => {setOwnedStocks(data)});
                     
@@ -846,25 +833,6 @@ function Game() {
                     setQuantityError(false) 
                 }
             });
-
-        //   if (ownedStocks[curStock] < numericQuantity) {
-        //     setBuyError(false)
-        //     setSellError(true)
-        //     setValidTransaction(false)
-        //     setActionError(false)
-        //     setQuantityError(false)
-        //   } else {
-        //     setBalance(parseFloat((balance + numericQuantity * parseFloat(stockMark)).toFixed(2)))
-        //     var object = ownedStocks
-        //     object[curStock] = object[curStock] - numericQuantity
-        //     setOwnedStocks(object)
-            
-        //     setBuyError(false)
-        //     setSellError(false)
-        //     setValidTransaction(true)
-        //     setActionError(false)
-        //     setQuantityError(false)
-        //   }
         } else {
             setBuyError(false)
             setSellError(false)
@@ -963,16 +931,16 @@ function Game() {
                 </List>
 
                 <Typography fontWeight='bold' sx={{ml:3, fontSize: 30}}>
-                    {'Market Price ($): ' + stockMark}
+                    {'Market Price ($): ' + stockMark.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                 </Typography>
 
                 <List component={Stack} direction='row' sx={{maxWidth: 700, ml:3}}>
                     <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 18}}
-                                    primary={'Balance ($): ' + balance}/>
+                                    primary={'Balance ($): ' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
                     <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 18}}
-                                    primary={'Buying Power ($): ' + buyingPower}/>
+                                    primary={'Buying Power ($): ' + buyingPower.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/>
                     <ListItemText  primaryTypographyProps={{fontWeight: 'bold', fontSize: 18}}
-                                    primary={'Shares Owned: ' + ownedStocks[curStockIndex]}/>
+                                    primary={'Shares Owned: ' + ownedStocks[curStockIndex].toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}/>
                 </List>
             </Box>
 
@@ -984,18 +952,37 @@ function Game() {
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
             method: 'POST',
-            body: JSON.stringify({userKey: prof["email"], daily: 0}),
+            body: JSON.stringify({userKey: prof["email"], daily: gameType}),
             headers: {'Content-Type': 'application/json'}
         }
-        fetch("http://localhost:8000/challengeNextDay", options)
+        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeNextDay", options)
             .then(res => {return res.json()})
             .then(data => {
                 if (data.isFinished) {
-                    goEnd()
+                    if (gameType == 1) {
+                        setCompletedDaily(true)
+                        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
+                        userKey: prof["email"],
+                        today: 1
+                        })).then(res => {return res.json()})
+                        .then(data => {
+                            console.log(leaderboardPosition)
+                            console.log(data.position)
+                            if (leaderboardPosition == false && data.position != false) {
+                                // You made it to the leaderboard
+                                console.log('YES')
+                                setLeaderboadSuccess(true)
+                                setLeaderboadFail(false)
+                            }
+                            goEnd()
+                        });
+                    } else {
+                        goEnd()
+                    }
                 } else {
                     setCutoff(data.currentDay + 1)
                     console.log(curStockPrices)
-                    setStockMark(curStockPrices[data.currentDay].toFixed(2))
+                    setStockMark(curStockPrices[data.currentDay])
                     const chartData = {
                         // x-axis labels
                         labels: curStockTimes.slice(0, data.currentDay+1),
@@ -1011,39 +998,10 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
-                    setBalance(data.balance.toFixed(2))
+                    console.log(data)
+                    setBalance(data.balance)
                 }
             });
-
-        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-        //         userKey: prof["email"],
-        //         daily: 0
-        //     })).then(res => {return res.json()})
-        //     .then(data => {setBalance(data.balance.toFixed(2))}); 
-
-
-        // if (cutoff + 1 == histDataLen) {
-        //     goEnd()
-        // } else {
-        //     setCutoff(cutoff + 1)
-        //     console.log(curStockPrices)
-        //     setStockMark(curStockPrices[cutoff].toFixed(2))
-        //     const chartData = {
-        //         // x-axis labels
-        //         labels: curStockTimes.slice(0, cutoff+1),
-        //         datasets: [
-        //         {
-        //           label: "Stock Price ($)",
-        //           // corresponding y values
-        //           data: curStockPrices.slice(0, cutoff+1),
-        //           fill: true,
-        //           borderColor: "blue",
-        //           tension: 0.1
-        //         }
-        //         ]
-        //     }
-        //     setChartData(chartData)
-        // }
     }
 
     // Forwards 5 dates
@@ -1051,18 +1009,35 @@ function Game() {
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
             method: 'POST',
-            body: JSON.stringify({userKey: prof["email"], daily: 0}),
+            body: JSON.stringify({userKey: prof["email"], daily: gameType}),
             headers: {'Content-Type': 'application/json'}
         }
-        fetch("http://localhost:8000/challengeNextWeek", options)
+        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeNextWeek", options)
             .then(res => {return res.json()})
             .then(data => {
                 if (data.isFinished) {
-                    goEnd()
+                    if (gameType == 1) {
+                        setCompletedDaily(true)
+                        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
+                        userKey: prof["email"],
+                        today: 1
+                        })).then(res => {return res.json()})
+                        .then(data => {
+                            if (leaderboardPosition == false && data.position != false) {
+                                // You made it to the leaderboard
+                                console.log('YES')
+                                setLeaderboadSuccess(true)
+                                setLeaderboadFail(false)         
+                            }
+                            goEnd()
+                        });
+                    } else {
+                        goEnd()
+                    }
                 } else {
                     setCutoff(data.currentDay + 1)
                     console.log(curStockPrices)
-                    setStockMark(curStockPrices[data.currentDay].toFixed(2))
+                    setStockMark(curStockPrices[data.currentDay])
                     const chartData = {
                         // x-axis labels
                         labels: curStockTimes.slice(0, data.currentDay+1),
@@ -1078,37 +1053,9 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
-                    setBalance(data.balance.toFixed(2))
+                    setBalance(data.balance)
                 }
             });
-
-        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-        //     userKey: prof["email"],
-        //     daily: 0
-        // })).then(res => {return res.json()})
-        // .then(data => {setBalance(data.balance.toFixed(2))}); 
-        // if (cutoff + 5 == histDataLen) {
-        //     goEnd()
-        // } else {
-        //     setCutoff(cutoff + 5)
-        //     console.log(curStockPrices)
-        //     setStockMark(curStockPrices[cutoff+4].toFixed(2))
-        //     const chartData = {
-        //         // x-axis labels
-        //         labels: curStockTimes.slice(0, cutoff+5),
-        //         datasets: [
-        //         {
-        //           label: "Stock Price ($)",
-        //           // corresponding y values
-        //           data: curStockPrices.slice(0, cutoff+5),
-        //           fill: true,
-        //           borderColor: "blue",
-        //           tension: 0.1
-        //         }
-        //         ]
-        //     }
-        //     setChartData(chartData)
-        // }
     }
 
     // Forward 20 dates
@@ -1116,18 +1063,34 @@ function Game() {
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
             method: 'POST',
-            body: JSON.stringify({userKey: prof["email"], daily: 0}),
+            body: JSON.stringify({userKey: prof["email"], daily: gameType}),
             headers: {'Content-Type': 'application/json'}
         }
-        fetch("http://localhost:8000/challengeNextMonth", options)
+        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeNextMonth", options)
             .then(res => {return res.json()})
             .then(data => {
                 if (data.isFinished) {
-                    goEnd()
+                    if (gameType == 1) {
+                        setCompletedDaily(true)
+                        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
+                        userKey: prof["email"],
+                        today: 1
+                        })).then(res => {return res.json()})
+                        .then(data => {
+                            if (leaderboardPosition == false && data.position != false) {
+                                // You made it to the leaderboard
+                                setLeaderboadSuccess(true)
+                                setLeaderboadFail(false)
+                            }
+                            goEnd()
+                        });
+                    } else {
+                        goEnd()
+                    }
                 } else {
                     setCutoff(data.currentDay + 1)
                     console.log(curStockPrices)
-                    setStockMark(curStockPrices[data.currentDay].toFixed(2))
+                    setStockMark(curStockPrices[data.currentDay])
                     const chartData = {
                         // x-axis labels
                         labels: curStockTimes.slice(0, data.currentDay+1),
@@ -1143,37 +1106,9 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
-                    setBalance(data.balance.toFixed(2))
+                    setBalance(data.balance)
                 }
             });
-
-        // fetch("http://localhost:8000/challengeGetBalance?" + new URLSearchParams({
-        //     userKey: prof["email"],
-        //     daily: 0
-        // })).then(res => {return res.json()})
-        // .then(data => {setBalance(data.balance.toFixed(2))}); 
-        // if (cutoff + 20 == histDataLen) {
-        //     goEnd()
-        // } else {
-        //     setCutoff(cutoff + 20)
-        //     console.log(curStockPrices)
-        //     setStockMark(curStockPrices[cutoff+19].toFixed(2))
-        //     const chartData = {
-        //         // x-axis labels
-        //         labels: curStockTimes.slice(0, cutoff+20),
-        //         datasets: [
-        //         {
-        //           label: "Stock Price ($)",
-        //           // corresponding y values
-        //           data: curStockPrices.slice(0, cutoff+20),
-        //           fill: true,
-        //           borderColor: "blue",
-        //           tension: 0.1
-        //         }
-        //         ]
-        //     }
-        //     setChartData(chartData)
-        // }
     }
     
 
@@ -1211,24 +1146,101 @@ function Game() {
     function EndInfo() {
         return (
             <Box display="flex" 
-                 width={500} height={275} 
+                 width={500} height={625} 
                  mx='auto'
-                 mt={20}
+                 mt={3}
                  border={0}>
-                <Paper elevation={3} sx={{width: 500, height: 275}}>
+                <Paper elevation={3} sx={{width: 500, height: 625}}>
                     <Typography fontWeight='bold' variant='h3' textAlign='center' mt={3}>
                         Game Over!
                     </Typography>
 
-                    <Typography variant='h4' display='block' textAlign='center' mt={6} mx={4}>
-                        {'Final Balance: $' + balance}
+                    {
+                        leaderboardFail &&
+
+                        <Typography variant='h4' display='block' textAlign='center' mt={6} mx={4} style={{whiteSpace: 'pre-line'}}>
+                            {'Final Balance: $' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </Typography>
+
+                    }                    
+
+                    {   leaderboardSuccess &&
+
+                        <Box>
+                            <Typography variant='h6' display='block' textAlign='center' mt={1} mx={4} style={{whiteSpace: 'pre-line'}}
+                                        sx={{color: "#4caf50"}}>
+                                {'Congratulations!\n You made it onto the leaderboard!'}
+                            </Typography>
+
+                        
+
+                            <Typography variant='h4' display='block' textAlign='center' mt={1} mb={-4} mx={4} style={{whiteSpace: 'pre-line'}}>
+                                {'Final Balance: $' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </Typography>
+                        </Box>
+                         
+                    }
+                    
+                    <Typography variant='h5' display='block' textAlign='center' mt={6} mx={4}
+                                sx={{textDecoration: 'underline', color: "#757575"}}
+                    >
+                        Additional Stats
                     </Typography>
 
-                    <Box sx={{display:'flex', justifyContent:'center', mt: 5}}>
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Total Shares Purchased: " + totalStocksBought.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+                    </Typography>
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Total Money Spent: $" + moneySpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </Typography>
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Total Money Earned: $" + (parseFloat(balance) - (10000 - moneySpent)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </Typography>  
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Most Purchased Stock: " + mostPurchasedStock + " (" + mostPurchasedStockAmount.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ")"}
+                    </Typography> 
+
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Highest Spending in One Transaction: $" + highestSingleSpending.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " (" + highestSingleSpendingStock + ")"}
+                    </Typography> 
+
+
+                    <Typography variant='body1' display='block' textAlign='center' mt={2} mx={4}
+                                sx={{color: "#757575"}}
+                    >
+                        {"Most Shares Bought in One Transaction: " + highestAmountBought.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}) + " (" + highestAmountStock + ")"}
+                    </Typography>  
+
+
+                    <Stack direction="row" spacing={6} justifyContent='center' ml={3} mr={3} mt={6} border={0}>
+                            <Button variant='contained' onClick={gameType ? handleDialogOpen : goPlay}>
+                                Play Again
+                            </Button>
+
+                            <Button variant='contained' onClick={goStart}>
+                                Game Menu
+                            </Button>
+                    </Stack>
+
+                    {/* <Box sx={{display:'flex', justifyContent:'center', mt: 5}}>
                         <Button variant='contained' onClick={goPlay}>
                             Play Again?
                         </Button>
-                    </Box>
+                    </Box> */}
                 </Paper>
             </Box>
         )
@@ -1241,6 +1253,7 @@ function Game() {
             <NavBar/> 
 
             {displayStart && <StartInfo/>}
+            {displayStart && <NoteDialog/>}
             {displayLeaderboard && <LeaderboardInfo/>}
             {displayLoading && <Loading/>}
             {displayGame && <GameInfo/>}
@@ -1257,6 +1270,7 @@ function Game() {
                 </div>
             }
             {displayEnd && <EndInfo/>}
+            {displayEnd && <NoteDialog/>}
 
 
             
