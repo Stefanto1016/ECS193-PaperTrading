@@ -53,5 +53,17 @@ describe('userInfo Tests', () => {
 
         expect(user.stocks["XOM"]).toBe(undefined);
     })
+
+    it('stockQuantity Test-1', async () => {
+        const amount = await db.stockQuantity(key, "GOOGL")
     
+        expect(amount).toBe(9);
+    })
+
+    it('stockQuantity Test-2', async () => {
+        const amount = await db.stockQuantity(key, "XOM")
+    
+        expect(amount).toBe(0);
+    })
+
 })
