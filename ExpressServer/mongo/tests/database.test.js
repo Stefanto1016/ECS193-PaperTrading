@@ -47,4 +47,11 @@ describe('userInfo Tests', () => {
         expect(user.stocks["GOOGL"]).toBe(9);
     })
 
+    it('deleteStock Test', async () => {
+        await db.deleteStock(key, "XOM");
+        const user = await db.getUser(key);
+
+        expect(user.stocks["XOM"]).toBe(undefined);
+    })
+    
 })
