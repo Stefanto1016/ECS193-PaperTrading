@@ -29,7 +29,7 @@ describe('userInfo Tests', () => {
 
     it('getUser Test-2', async () => {
         const user = await db.getUser("fake_key");
-        
+
         expect(user).toBe(null);
     })
 
@@ -38,6 +38,13 @@ describe('userInfo Tests', () => {
         const user = await db.getUser(key);
 
         expect(user.stocks["GOOGL"]).toBe(6);
+    })
+
+    it('updateStock Test', async () => {
+        await db.updateStock(key, "GOOGL", 9);
+        const user = await db.getUser(key);
+
+        expect(user.stocks["GOOGL"]).toBe(9);
     })
 
 })
