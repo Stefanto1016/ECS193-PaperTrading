@@ -793,7 +793,30 @@ const handleClose = (event, reason) => {
       }
       ]
     }
-    console.log(chartData)
+    console.log(prices[0])
+    console.log(prices.at(-1))
+    var newMarkChange = stockInfo.mark - prices[0];
+    var newMarkPercentChange = newMarkChange/prices[0] * 100;
+
+    setStockInfo(
+      {
+        symbol: stockInfo.symbol,
+        desc: stockInfo.desc,
+        mark: stockInfo.mark,
+        markChange: newMarkChange,
+        markPercentChange: newMarkPercentChange,
+        exchangeName: stockInfo.exchangeName,
+        volatility: stockInfo.volatility,
+        peRatio: stockInfo.peRatio,
+        volume: stockInfo.volume,
+        high: stockInfo.high,
+        low: stockInfo.low,
+        bidPrice: stockInfo.bidPrice,
+        askPrice: stockInfo.askPrice,
+        week52High: stockInfo.week52High,
+        week52Low: stockInfo.week52Low,
+      }
+    )
 
     setInterval(event.target.value)
     setChartData(chartData) 
