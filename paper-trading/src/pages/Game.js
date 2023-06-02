@@ -212,8 +212,10 @@ function Game() {
 
     function getStockButtons(stockNames) {
         var stockButtons = []
+        var index = 0;
         for (const stock of stockNames) {
-            stockButtons.push(<ToggleButton value={stock} key={stock}> {stock} </ToggleButton>)
+            stockButtons.push(<ToggleButton aria-label={"stock-button" + index} value={stock} key={stock}> {stock} </ToggleButton>)
+            index++
         }
         setStockToggles(stockButtons)
     }
@@ -471,12 +473,6 @@ function Game() {
         setDisplayGame(false)
         setDisplayEnd(true)
 
-    }
-
-    function goLoad() {
-        setDisplayStart(false)
-        setDisplayEnd(false)
-        setDisplayLoading(true)
     }
 
     async function goPlay() {
@@ -864,17 +860,20 @@ function Game() {
                 <FormControl>
                 <InputLabel sx={{mt:1, ml:3}}>Action</InputLabel>
                 <Select
+                    SelectDisplayProps={{ "data-testid": "select" }}
+                    role="selected-action"
                     value={option}
                     label='Action'
                     onChange={changeOption}
                     sx={{minWidth:250, mt: 1, ml: 3}}
                 >
-                    <MenuItem value={'buy'}> Buy </MenuItem>
-                    <MenuItem value={'sell'}> Sell </MenuItem>
+                    <MenuItem role='buy-option' value={'buy'}> Buy </MenuItem>
+                    <MenuItem role='sell-option' value={'sell'}> Sell </MenuItem>
                 </Select>
                 </FormControl>
 
-                <TextField id="outlined-basic" 
+                <TextField id="outlined-basic"
+                        role='quantity-textfield'
                         label="Quantity"
                         variant="outlined" 
                         onChange={changeQuantity}
@@ -1015,46 +1014,25 @@ function Game() {
         fetch("http://localhost:8000/challengeNextWeek", options)
             .then(res => {return res.json()})
             .then(data => {
-                if (data.isFinished) {
-                    if (gameType == 1) {
-                        setCompletedDaily(true)
-                        fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
-                        userKey: prof["email"],
-                        today: 1
-                        })).then(res => {return res.json()})
-                        .then(data => {
-                            if (leaderboardPosition == false && data.position != false) {
-                                // You made it to the leaderboard
-                                console.log('YES')
-                                setLeaderboadSuccess(true)
-                                setLeaderboadFail(false)         
-                            }
-                            goEnd()
-                        });
-                    } else {
-                        goEnd()
+                setCutoff(data.currentDay + 1)
+                console.log(curStockPrices)
+                setStockMark(curStockPrices[data.currentDay])
+                const chartData = {
+                    // x-axis labels
+                    labels: curStockTimes.slice(0, data.currentDay+1),
+                    datasets: [
+                    {
+                    label: "Stock Price ($)",
+                    // corresponding y values
+                    data: curStockPrices.slice(0, data.currentDay+1),
+                    fill: true,
+                    borderColor: "blue",
+                    tension: 0.1
                     }
-                } else {
-                    setCutoff(data.currentDay + 1)
-                    console.log(curStockPrices)
-                    setStockMark(curStockPrices[data.currentDay])
-                    const chartData = {
-                        // x-axis labels
-                        labels: curStockTimes.slice(0, data.currentDay+1),
-                        datasets: [
-                        {
-                        label: "Stock Price ($)",
-                        // corresponding y values
-                        data: curStockPrices.slice(0, data.currentDay+1),
-                        fill: true,
-                        borderColor: "blue",
-                        tension: 0.1
-                        }
-                        ]
-                    }
-                    setChartData(chartData)
-                    setBalance(data.balance)
+                    ]
                 }
+                setChartData(chartData)
+                setBalance(data.balance)
             });
     }
 
@@ -1069,45 +1047,25 @@ function Game() {
         fetch("http://localhost:8000/challengeNextMonth", options)
             .then(res => {return res.json()})
             .then(data => {
-                if (data.isFinished) {
-                    if (gameType == 1) {
-                        setCompletedDaily(true)
-                        fetch("http://localhost:8000/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
-                        userKey: prof["email"],
-                        today: 1
-                        })).then(res => {return res.json()})
-                        .then(data => {
-                            if (leaderboardPosition == false && data.position != false) {
-                                // You made it to the leaderboard
-                                setLeaderboadSuccess(true)
-                                setLeaderboadFail(false)
-                            }
-                            goEnd()
-                        });
-                    } else {
-                        goEnd()
+                setCutoff(data.currentDay + 1)
+                console.log(curStockPrices)
+                setStockMark(curStockPrices[data.currentDay])
+                const chartData = {
+                    // x-axis labels
+                    labels: curStockTimes.slice(0, data.currentDay+1),
+                    datasets: [
+                    {
+                    label: "Stock Price ($)",
+                    // corresponding y values
+                    data: curStockPrices.slice(0, data.currentDay+1),
+                    fill: true,
+                    borderColor: "blue",
+                    tension: 0.1
                     }
-                } else {
-                    setCutoff(data.currentDay + 1)
-                    console.log(curStockPrices)
-                    setStockMark(curStockPrices[data.currentDay])
-                    const chartData = {
-                        // x-axis labels
-                        labels: curStockTimes.slice(0, data.currentDay+1),
-                        datasets: [
-                        {
-                        label: "Stock Price ($)",
-                        // corresponding y values
-                        data: curStockPrices.slice(0, data.currentDay+1),
-                        fill: true,
-                        borderColor: "blue",
-                        tension: 0.1
-                        }
-                        ]
-                    }
-                    setChartData(chartData)
-                    setBalance(data.balance)
+                    ]
                 }
+                setChartData(chartData)
+                setBalance(data.balance)
             });
     }
     
