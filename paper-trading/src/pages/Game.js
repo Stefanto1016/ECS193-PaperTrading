@@ -168,7 +168,7 @@ function Game() {
     useEffect(() => {
         fetch("http://localhost:8000/challengeGetLeaderboard?" + new URLSearchParams({
             })).then(res => {return res.json()})
-            .then(data => {console.log(data); setLeaderboad(data.slice(0, 8))});
+            .then(data => {setLeaderboad(data.slice(0, 8))});
     }, [])
 
     useEffect(() => {
@@ -177,7 +177,7 @@ function Game() {
             userKey: prof["email"],
             today: 1
             })).then(res => {return res.json()})
-            .then(data => {console.log(data); setLeaderboadPosition(data.position)});
+            .then(data => {setLeaderboadPosition(data.position)});
     }, [])
 
     useEffect(() => {
@@ -185,7 +185,7 @@ function Game() {
         fetch("http://localhost:8000/challengeHasCompletedDaily?" + new URLSearchParams({
             userKey: prof["email"],
             })).then(res => {return res.json()})
-            .then(data => {console.log(data); setCompletedDaily(data.isFinished)});
+            .then(data => {setCompletedDaily(data.isFinished)});
     }, [])
 
     useEffect(() => {
@@ -200,8 +200,6 @@ function Game() {
             stocksInfo.push(await getCurrentData([stock]))
         }
         setQuoteData(stocksInfo)
-        console.log(stocksInfo[0][firstStockName].symbol)
-        console.log(stocksInfo[0][firstStockName].description)
         setStockSymbol(stocksInfo[0][firstStockName].symbol)
         setStockDesc(stocksInfo[0][firstStockName].description)
         setDisplayStart(false)
@@ -225,16 +223,13 @@ function Game() {
         let prices = []
 
         for (const data of firstStockData) {
-            //console.log(data.close)
             var date = new Date(data[1])
             const options = { year: 'numeric', month: 'short', day: 'numeric' };
             times.push(date.toLocaleString('en', options))
             prices.push(data[0])
         }
 
-        //console.log(times)
         setCurStockTimes(times)
-        //console.log(prices)
         setCurStockPrices(prices)
 
         const chartData = {
@@ -410,7 +405,6 @@ function Game() {
             }
             ]
           }
-          console.log(chartData)
       
           setCurStock(event.target.value)
           setChartData(chartData) 
@@ -462,7 +456,6 @@ function Game() {
 
     function goEnd() {
         const isAllZero = stocksListBought.every(item => item === 0);
-        console.log(isAllZero)
 
         if (!isAllZero) {
             var maxIndex = stocksListBought.indexOf(Math.max(...stocksListBought));
@@ -479,7 +472,6 @@ function Game() {
         if (gameType == 1 && completedDaily == true) {
             handleDialogOpen()
             setGameType(null)
-            console.log('already completed daily')
             return
         }
 
@@ -500,12 +492,8 @@ function Game() {
             fetch("http://localhost:8000/challengeCreatePersonalChallenge", options)
                 .then(res => {return res.json()})
                 .then(data => {
-                            console.log('Personal Challlenge Creating...')
-                            console.log(data)
-                            console.log(data.stockData)
                             setHistData(data.stockData)
                             setCutoff(data.currentDay + 1)
-                            console.log(data.stockData.length)
                             setHistDataLen(data.stockData[0].length)
                             setStockMark(data.stockData[0][data.currentDay][0])
                             setCurStock(data.stocks[0])
@@ -541,18 +529,11 @@ function Game() {
                 })).then(res => {return res.json()})
                 .then(data => {
                                     if (data.currentDay == data.stockData[0].length) {
-                                        console.log('already completed daily challenge')
                                         return;
                                     } else {
-                                        console.log('Daily Challlenge Creating...')
-                                        console.log(data)
-                                        console.log(data.stockData)
                                         setHistData(data.stockData)
                                         setCutoff(data.currentDay + 1)
-                                        console.log(data.stockData.length)
                                         setHistDataLen(data.stockData[0].length)
-                                        console.log('Current Day: ' + data.currentDay)
-                                        console.log(data.stockData[0])
                                         setStockMark(data.stockData[0][data.currentDay][0])
                                         setCurStock(data.stocks[0])
                                         setStocksList(data.stocks)
@@ -965,11 +946,8 @@ function Game() {
                         today: 1
                         })).then(res => {return res.json()})
                         .then(data => {
-                            console.log(leaderboardPosition)
-                            console.log(data.position)
                             if (leaderboardPosition == false && data.position != false) {
                                 // You made it to the leaderboard
-                                console.log('YES')
                                 setLeaderboadSuccess(true)
                                 setLeaderboadFail(false)
                             }
@@ -980,7 +958,6 @@ function Game() {
                     }
                 } else {
                     setCutoff(data.currentDay + 1)
-                    console.log(curStockPrices)
                     setStockMark(curStockPrices[data.currentDay])
                     const chartData = {
                         // x-axis labels
@@ -997,7 +974,6 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
-                    console.log(data)
                     setBalance(data.balance)
                 }
             });
@@ -1015,7 +991,6 @@ function Game() {
             .then(res => {return res.json()})
             .then(data => {
                 setCutoff(data.currentDay + 1)
-                console.log(curStockPrices)
                 setStockMark(curStockPrices[data.currentDay])
                 const chartData = {
                     // x-axis labels
@@ -1048,7 +1023,6 @@ function Game() {
             .then(res => {return res.json()})
             .then(data => {
                 setCutoff(data.currentDay + 1)
-                console.log(curStockPrices)
                 setStockMark(curStockPrices[data.currentDay])
                 const chartData = {
                     // x-axis labels
