@@ -100,4 +100,18 @@ describe('userInfo Tests', () => {
         expect(amount).toStrictEqual(-10000);
     })
 
+    it('addBalance Test', async () => {
+        await db.addBalance(key, {"6/3/2023" : 400000})
+        const user = await db.getUser(key)
+        const amount = user.balance["6/3/2023"];
+        expect(amount).toBe(400000);
+    })
+
+    it('updateDate Test', async () => {
+        await db.updateDate(key, "6/3/2023", 0)
+        const user = await db.getUser(key)
+        const amount = user.balance["6/3/2023"];
+        expect(amount).toBe(0);
+    })
+
 })
