@@ -84,7 +84,14 @@ describe('userInfo Tests', () => {
         const amount = await db.getBuyingPower(key)
     
         expect(amount).toStrictEqual(10000);
-    })  
+    })
+
+    it('updateBuyingPower Test', async () => {
+        await db.updateBuyingPower(key, 75000000)
+        const amount = await db.getBuyingPower(key)
+    
+        expect(amount).toStrictEqual(75000000);
+    })
 
 
 })
