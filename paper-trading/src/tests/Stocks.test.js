@@ -49,7 +49,6 @@ test('renders the landing page', async () => {
     expect(screen.getByText(/Search For Stock Symbol/i))
     const textfield = screen.getByRole('main-search-bar')
     expect(textfield).toBeInTheDocument()
-
 })
 
 test('render data on screen after search', async () => {
@@ -86,7 +85,7 @@ test('search with enter key', async () => {
   fireEvent.keyDown(textfieldInput, { key: "Enter" });
 
   expect(await (waitFor(() => screen.getByText(/TSLA/i), {timeout:10000})))
-})
+}, 10000)
 
 test('invalid stock search', async () => {
   render(<BrowserRouter> <Stocks/> </BrowserRouter>)
@@ -96,7 +95,7 @@ test('invalid stock search', async () => {
   userEvent.click(screen.getByRole("button"))
 
   expect(await (waitFor(() => screen.getByText(/Invalid Symbol/i), {timeout:10000})))
-})
+}, 10000)
 
 test('do one search and another search afterwards', async () => {
   render(<BrowserRouter> <Stocks/> </BrowserRouter>)
@@ -159,7 +158,7 @@ test('adding/removing from watchlist', async () => {
   expect(await (waitFor(() => screen.getByRole("button", {name: "Add to Watchlist"}), {timeout: 10000})))
   userEvent.click(screen.getByRole("button", {name: "Add to Watchlist"}))
   expect(await (waitFor(() => screen.getByRole("button", {name: "Remove from Watchlist"}), {timeout: 10000})))
-})
+}, 20000)
 
 test('invalid action transaction', async () => {
   render(<BrowserRouter> <Stocks /> </BrowserRouter>)

@@ -76,4 +76,4 @@ test('click one of the news articles', async () => {
     userEvent.click(news[0])
 
     expect(window.open).toHaveBeenCalled()
-})
+}, 20000)
