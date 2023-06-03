@@ -16,7 +16,7 @@ describe('userInfo Tests', () => {
         expect(user.email).toBe(key);
     })
 
-    it('getUser Test-1', async () => {
+    it('getUser Test - 1', async () => {
         const user = await db.getUser(key);
 
         expect(user.buyingPower).toBe(10000);
@@ -27,7 +27,7 @@ describe('userInfo Tests', () => {
         expect(user.balance["5/29/2023"]).toBe(35000);
     })
 
-    it('getUser Test-2', async () => {
+    it('getUser Test - 2', async () => {
         const user = await db.getUser("fake_key");
 
         expect(user).toBe(null);
@@ -54,13 +54,13 @@ describe('userInfo Tests', () => {
         expect(user.stocks["XOM"]).toBe(undefined);
     })
 
-    it('stockQuantity Test-1', async () => {
+    it('stockQuantity Test - 1', async () => {
         const amount = await db.stockQuantity(key, "GOOGL")
     
         expect(amount).toBe(9);
     })
 
-    it('stockQuantity Test-2', async () => {
+    it('stockQuantity Test - 2', async () => {
         const amount = await db.stockQuantity(key, "XOM")
     
         expect(amount).toBe(0);
@@ -86,12 +86,18 @@ describe('userInfo Tests', () => {
         expect(amount).toStrictEqual(10000);
     })
 
-    it('updateBuyingPower Test', async () => {
+    it('updateBuyingPower Test - 1', async () => {
         await db.updateBuyingPower(key, 75000000)
         const amount = await db.getBuyingPower(key)
     
         expect(amount).toStrictEqual(75000000);
     })
 
+    it('updateBuyingPower Test - 2', async () => {
+        await db.updateBuyingPower(key, -10000)
+        const amount = await db.getBuyingPower(key)
+    
+        expect(amount).toStrictEqual(-10000);
+    })
 
 })
