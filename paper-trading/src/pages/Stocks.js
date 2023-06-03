@@ -356,8 +356,6 @@ function Stocks() {
         headers: {'Content-Type': 'application/json'}
       }
       fetch("http://localhost:8000/removeWatchList", options);
-    } else {
-      console.log("tf?")
     }
   }
 
@@ -456,6 +454,7 @@ const handleClose = (event, reason) => {
         <FormControl>
           <InputLabel sx={{mt:1, ml:3}}>Action</InputLabel>
           <Select
+            SelectDisplayProps={{ "data-testid": "select" }}
             role='selected-action'
             value={option}
             label='Action'
@@ -581,9 +580,7 @@ const handleClose = (event, reason) => {
                 week52Low: response[stockAllCaps]['52WkLow'],
               }
             )
-            console.log("Before")
             const res = await getNumDataPoints(stockAllCaps)
-            console.log("After")
             setHistData(res)
                 
             let times = []
@@ -684,22 +681,17 @@ const handleClose = (event, reason) => {
 
   // Set stock to be searched
   function changeStock(event) {
-    console.log(event.target.value)
     fetch("http://localhost:8000/getStocks?" + new URLSearchParams({
                 heading: event.target.value
             })).then(res => {return res.json()})
             .then(data => {
-              console.log(data)
-              console.log(data[0][0]);
 
               var list = []
               for (const symbol of data[0]) {
-                //console.log(symbol)
                 if (symbol != null) {
                   list.push({"symbol": symbol[0] + ' — ' + symbol[1]})
                 }
               }
-              //console.log(list)
               setSearchList(list)});
     setStock(event.target.value)
   }
@@ -793,7 +785,28 @@ const handleClose = (event, reason) => {
       }
       ]
     }
-    console.log(chartData)
+    var newMarkChange = stockInfo.mark - prices[0];
+    var newMarkPercentChange = newMarkChange/prices[0] * 100;
+
+    setStockInfo(
+      {
+        symbol: stockInfo.symbol,
+        desc: stockInfo.desc,
+        mark: stockInfo.mark,
+        markChange: newMarkChange,
+        markPercentChange: newMarkPercentChange,
+        exchangeName: stockInfo.exchangeName,
+        volatility: stockInfo.volatility,
+        peRatio: stockInfo.peRatio,
+        volume: stockInfo.volume,
+        high: stockInfo.high,
+        low: stockInfo.low,
+        bidPrice: stockInfo.bidPrice,
+        askPrice: stockInfo.askPrice,
+        week52High: stockInfo.week52High,
+        week52Low: stockInfo.week52Low,
+      }
+    )
 
     setInterval(event.target.value)
     setChartData(chartData) 

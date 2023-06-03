@@ -147,7 +147,6 @@ function Portfolio() {
 
     function getChartData(data)
     {
-        //console.log(response[0])
 
         let times = []
         let prices = []
@@ -157,8 +156,6 @@ function Portfolio() {
         }
         times = times.reverse();
         prices = prices.reverse();
-        //console.log(times)
-        //console.log(prices)
         const chartData = {
         // x-axis labels
         labels: times,

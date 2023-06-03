@@ -64,15 +64,15 @@ test('check headers of table', async () => {
 test('check amount of elements in an empty stocks list', async () => {
     render(<BrowserRouter> <Portfolio/> </BrowserRouter>)
 
-    const myStocks = screen.queryByTestId("my-stocks")
+    const myStocks = await waitFor(() => screen.findAllByTestId("my-stocks"), {timeout:10000})
 
-    expect(myStocks).not.toBeInTheDocument()
+    expect(myStocks).toHaveLength(1)
 })
 
 test('check amount of elements in an empty watchlist', async () => {
     render(<BrowserRouter> <Portfolio/> </BrowserRouter>)
 
-    const myWatchlist = screen.queryByTestId("my-watchlist")
+    const myWatchlist = await waitFor(() => screen.findAllByTestId("my-watchlist"), {timeout:10000})
 
-    expect(myWatchlist).not.toBeInTheDocument()
+    expect(myWatchlist).toHaveLength(1)
 })

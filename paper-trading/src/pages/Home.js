@@ -203,7 +203,6 @@ function Home() {
           topGainers.push(createData(entry.symbol, (entry.change * 100).toFixed(2), entry.last, entry.totalVolume))
         }
     
-        //console.log(topGainers)
         setTopGainers(topGainers)
     }
 
@@ -216,7 +215,6 @@ function Home() {
           news.push(createNews(entry.title, entry.summary, entry.banner_image, entry.url))
         }
     
-        //console.log(news)
         setNews(news)
     }
 
@@ -236,7 +234,6 @@ function Home() {
 
     function getChartData(data)
     {
-        //console.log(response[0])
 
         let times = []
         let prices = []
@@ -246,8 +243,6 @@ function Home() {
         }
         times = times.reverse();
         prices = prices.reverse();
-        //console.log(times)
-        //console.log(prices)
         const chartData = {
         // x-axis labels
         labels: times,

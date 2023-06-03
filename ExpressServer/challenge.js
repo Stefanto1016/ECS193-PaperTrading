@@ -62,7 +62,7 @@ class ChallengeProgress
     buy(stock, amount)
     {
         let price = this.challenge.stockData[stock][this.day][0];
-        if(price*amount > this.buyingPower)
+        if(price*amount > this.buyingPower || stock <= 0)
         {
             console.log("This user doesn't have enough funds");
             return(false);
@@ -78,7 +78,7 @@ class ChallengeProgress
     sell(stock, amount)
     {
         let price = this.challenge.stockData[stock][this.day][0];
-        if(amount > this.stocks[stock])
+        if(amount > this.stocks[stock] || stock <= 0)
         {
             console.log("This user doesn't have enough of this stock");
             return(false);
