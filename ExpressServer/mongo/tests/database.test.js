@@ -114,4 +114,31 @@ describe('userInfo Tests', () => {
         expect(amount).toBe(0);
     })
 
+    it('addWatchList Test', async () => {
+        await db.addWatchList(key, "T")
+        await db.addWatchList(key, "AAPL")
+        await db.addWatchList(key, "WDAY")
+        const watchlist = await db.getWatchList(key)
+        
+        expect(watchlist[0]).toStrictEqual("T");
+        expect(watchlist[1]).toStrictEqual("AAPL");
+        expect(watchlist[2]).toStrictEqual("WDAY");
+    })
+
+    it('removeWatchList Test', async () => {
+        await db.removeWatchList(key, "T")
+        const watchlist1 = await db.getWatchList(key)
+        expect(watchlist1[0]).toStrictEqual("AAPL");
+
+        await db.removeWatchList(key, "AAPL")
+        const watchlist2 = await db.getWatchList(key)
+        expect(watchlist2[0]).toStrictEqual("WDAY");
+
+        await db.removeWatchList(key, "WDAY")
+        const watchlist3 = await db.getWatchList(key)
+        expect(watchlist3[0]).toStrictEqual(undefined)
+    })
+
+
+
 })
