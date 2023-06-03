@@ -66,4 +66,25 @@ describe('userInfo Tests', () => {
         expect(amount).toBe(0);
     })
 
+    it('getUserStockList Test - 1', async () => {
+        const amount = await db.getUserStockList(key)
+    
+        expect(amount).toStrictEqual({"GOOGL": 9, "TSLA": 2});
+    })
+
+    it('getUserStockList Test - 2', async () => {
+        await db.updateStock(key, "GOOGL", 400)
+        await db.updateStock(key, "TSLA", 1)
+        const amount = await db.getUserStockList(key)
+    
+        expect(amount).toStrictEqual({"GOOGL": 400, "TSLA": 1});
+    })
+
+    it('getBuyingPower Test', async () => {
+        const amount = await db.getBuyingPower(key)
+    
+        expect(amount).toStrictEqual(10000);
+    })  
+
+
 })
