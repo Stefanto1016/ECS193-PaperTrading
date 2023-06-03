@@ -9,6 +9,7 @@ jest.mock('react-chartjs-2', () => ({
 }));
 
 window.scrollTo = jest.fn()
+window.open = jest.fn()
 
 class LocalStorageMock {
     constructor() {
@@ -66,3 +67,13 @@ test('number of news should be 50', async () => {
 
     expect(news).toHaveLength(50)
 }, 20000)
+
+test('click one of the news articles', async () => {
+    render(<BrowserRouter> <Home/> </BrowserRouter>)
+
+    const news = await waitFor(() => screen.findAllByTestId("news"), {timeout:20000})
+
+    userEvent.click(news[0])
+
+    expect(window.open).toHaveBeenCalled()
+})

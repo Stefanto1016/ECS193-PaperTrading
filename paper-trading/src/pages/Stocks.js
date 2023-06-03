@@ -356,8 +356,6 @@ function Stocks() {
         headers: {'Content-Type': 'application/json'}
       }
       fetch("http://localhost:8000/removeWatchList", options);
-    } else {
-      console.log("tf?")
     }
   }
 
@@ -456,6 +454,7 @@ const handleClose = (event, reason) => {
         <FormControl>
           <InputLabel sx={{mt:1, ml:3}}>Action</InputLabel>
           <Select
+            SelectDisplayProps={{ "data-testid": "select" }}
             role='selected-action'
             value={option}
             label='Action'
@@ -581,9 +580,7 @@ const handleClose = (event, reason) => {
                 week52Low: response[stockAllCaps]['52WkLow'],
               }
             )
-            console.log("Before")
             const res = await getNumDataPoints(stockAllCaps)
-            console.log("After")
             setHistData(res)
                 
             let times = []
