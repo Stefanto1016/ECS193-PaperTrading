@@ -1,7 +1,9 @@
-describe('My First Test', () => {
-  it('finds the content "type"', () => {
-    cy.visit('https://example.cypress.io')
+describe('Login to Hone', function () {
+  beforeEach(function () {
+    cy.loginByGoogleApi()
+  })
 
-    cy.contains('type')
+  it('Login to Home', function () {
+    cy.contains('CompuTrade').should('be.visible')
   })
 })
