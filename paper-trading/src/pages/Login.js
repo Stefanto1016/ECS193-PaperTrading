@@ -28,6 +28,16 @@ function Login() {
     onError: (err) => console.log("Login failed, ", err)
   });
 
+  useEffect(
+    () => {
+      if (window.localStorage.getItem('googleCypress')) {
+        const credentials = JSON.parse(localStorage.getItem("googleCypress"));
+        console.log(credentials.user)
+        setProfile(credentials.user)
+      }
+    },
+    []
+  )
 
   useEffect(
     () => {
@@ -39,6 +49,7 @@ function Login() {
           }
         })
         .then((res) => {
+          console.log(res.data)
           setProfile(res.data);
         })
         .catch((err) => console.log(err));

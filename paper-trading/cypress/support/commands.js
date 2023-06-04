@@ -48,7 +48,7 @@ Cypress.Commands.add('loginByGoogleApi', () => {
           token: id_token,
           user: {
             googleId: body.sub,
-            email: body.email,
+            email: 'computester@gmail.com',
             givenName: body.given_name,
             familyName: body.family_name,
             imageUrl: body.picture,
