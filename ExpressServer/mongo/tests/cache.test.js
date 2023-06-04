@@ -2,7 +2,6 @@ const db = require('../database.js');
 const cache = require('../cache.js');
 
 beforeAll(async () => await db.connect());
-beforeAll(async () => await cache.deleteCacheStock("AAPL"));
 
 afterAll(async () => await db.disconnect());
 
