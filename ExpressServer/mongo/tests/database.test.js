@@ -146,7 +146,7 @@ describe('userInfo Tests', () => {
 
     it('key_1: addScore Test', async () => {
         //await db.addScore(key_1, 34343)
-        const board = await db.getLeaderboard("202353");
+        const board = await db.getLeaderboard("6/3/2023");
 
         expect(board[0]["score"]).toBe(34343);
     })
