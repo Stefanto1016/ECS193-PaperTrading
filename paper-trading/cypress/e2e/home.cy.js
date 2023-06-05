@@ -1,10 +1,10 @@
-describe('Home Page Rendering', function () {
+describe('Home/Portfolio Tests', function () {
   beforeEach(function () {
     cy.loginByGoogleApi()
   })
 
   it('Login to Home and Check Rendering', function () {
-    // NavBar Header Button Text
+    // NavBar Header, Buttons, and Text
     cy.get('.MuiIconButton-root').should('be.visible')
     cy.contains('CompuTrade').should('be.visible')
     cy.contains('Portfolio').should('be.visible')
@@ -19,15 +19,28 @@ describe('Home Page Rendering', function () {
     cy.contains('Stock Market News').should('be.visible')
     cy.contains('Top Stock Gainers').should('be.visible')
 
+
+    // Performance Chart
+    cy.get('canvas').should('be.visible')
+
+    // Card and Card Contents
+    cy.get('.MuiCardContent-root').contains('Account Balance').should('be.visible')
+    cy.get('.MuiCardContent-root').contains('Buying Power').should('be.visible')
+
+    // At least one news article rendered
+    cy.get('[style="float: right; width: 30%; height: calc(48% + 305px); max-height: 910px; text-align: center; overflow: auto;"] > .MuiPaper-root > :nth-child(1)')
+    .should('exist').should('be.visible')
   })
 })
 
-describe('Portfolio Viewing/Routing', function () {
+describe('Home to Portfolio Viewing', function () {
   beforeEach(function () {
     cy.loginByGoogleApi()
   })
 
   it('Go to Portfolio, check data, and return to home', function () {
+    cy.wait(5000)
+
     // NavBar Header Button Text
     cy.get('[href="/portfolio"]').click()
 
@@ -39,6 +52,11 @@ describe('Portfolio Viewing/Routing', function () {
     cy.contains('Performance History').should('be.visible')
     cy.contains('My Stocks').should('be.visible')
     cy.contains('My Watchlist').should('be.visible')
+
+    cy.get('.MuiCardContent-root').contains('Account Balance').should('be.visible')
+    cy.get('.MuiCardContent-root').contains('Buying Power').should('be.visible')
+
+    cy.get('canvas').should('be.visible')
 
     // Go Back to Home Page
     cy.get('.MuiIconButton-root').click()

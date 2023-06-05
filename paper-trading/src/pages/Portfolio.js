@@ -203,14 +203,16 @@ function Portfolio() {
      }
 
      async function getStocks(data){
-        let keys = Object.keys(data);
-        let st = [];
-        for(const entry of keys)
-        {
-            let stData = await getCurrentData(entry);
-            st.push(createData(entry, (stData[entry]['markPercentChangeInDouble']), stData[entry]['closePrice'], data[entry]));
+        if (data != undefined) {
+            let keys = Object.keys(data);
+            let st = [];
+            for(const entry of keys)
+            {
+                let stData = await getCurrentData(entry);
+                st.push(createData(entry, (stData[entry]['markPercentChangeInDouble']), stData[entry]['closePrice'], data[entry]));
+            }
+            setStocks(st);
         }
-        setStocks(st);
     }
     async function getWatchList(data){
         let st = [];

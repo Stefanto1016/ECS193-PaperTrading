@@ -210,10 +210,12 @@ function Home() {
         var url = 'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&limit=10&apikey=AHIL20FGMVQ12R9U'
         var data = await retryFetch(url);
         var news = []
-        for(const entry of data.feed)
-        {
-          news.push(createNews(entry.title, entry.summary, entry.banner_image, entry.url))
-        }
+        if (data.feed != undefined) {
+            for(const entry of data.feed)
+            {
+            news.push(createNews(entry.title, entry.summary, entry.banner_image, entry.url))
+            }
+        }  
     
         setNews(news)
     }
