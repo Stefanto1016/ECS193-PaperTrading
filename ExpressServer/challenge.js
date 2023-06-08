@@ -62,7 +62,7 @@ class ChallengeProgress
     buy(stock, amount)
     {
         let price = this.challenge.stockData[stock][this.day][0];
-        if(price*amount > this.buyingPower || stock <= 0)
+        if(price*amount > this.buyingPower || stock < 0 || stock > 9 || amount <= 0)
         {
             console.log("This user doesn't have enough funds");
             return(false);
@@ -78,7 +78,7 @@ class ChallengeProgress
     sell(stock, amount)
     {
         let price = this.challenge.stockData[stock][this.day][0];
-        if(amount > this.stocks[stock] || stock <= 0)
+        if(amount > this.stocks[stock] || stock < 0 || stock > 9 || amount <= 0 )
         {
             console.log("This user doesn't have enough of this stock");
             return(false);
@@ -164,11 +164,11 @@ async function createPersonalChallenge(userKey)
 
 async function setNextPersonalChallenge(userKey, challenge)
 {
-    console.log("setting next personal challenge for " + userKey);
+    //console.log("setting next personal challenge for " + userKey);
     nextPersonalChallengeProfiles.set(userKey, null);
     await challenge.initialize();
     nextPersonalChallengeProfiles.set(userKey, new ChallengeProgress(challenge));
-    console.log("next personal challenge set for " + userKey);
+    //console.log("next personal challenge set for " + userKey);
 }
 
 function getDailyChallengeProfile(userKey)
