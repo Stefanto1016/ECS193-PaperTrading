@@ -1280,7 +1280,7 @@ async function buyStock(userKey, stock, amount)
     let stockPrice = stockData[stock]["askPrice"];
     let stocksHeld = await database.stockQuantity(userKey, stock);
     let buyingPower = await database.getBuyingPower(userKey);
-    if(buyingPower < stockPrice*amount || stock <= 0)
+    if(buyingPower < stockPrice*amount || amount <= 0)
     {
         console.log("This user doesn't have enough funds");
         return(false);
@@ -1300,9 +1300,10 @@ async function sellStock(userKey, stock, amount)
     let stockData = await query.getCurrentData(stock);
     let stockPrice = stockData[stock]["bidPrice"];
     let stocksHeld = await database.stockQuantity(userKey, stock);
-    if(stocksHeld < amount || stock <= 0)
+    if(stocksHeld < amount || amount <= 0)
     {
         console.log("This user doesn't own enough of this stock");
+        return(false);
     }
     else if(stocksHeld == amount)
     {
