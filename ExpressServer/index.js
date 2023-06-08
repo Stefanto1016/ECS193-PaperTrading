@@ -11,12 +11,15 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = 8000;
 const MSinMin = 1000*60;
+const MSinDay = 8640000;
 var started = 0;
 var started2 = 0; //for testing purposes
 var globalQueue = queue.getGlobalQueue();
 var userQueues = queue.getUserQueue();
 var userChallengeQueues = queue.getUserChallengeQueue();
 var updating = 0;
+var currentTime = Date.now();
+var connectionList = new Map();
 
 /*var cors = require("cors");
 app.use(cors);*/
@@ -76,7 +79,9 @@ process.on('exit', function()
 
 setInterval(limitOrder.checkLimitOrders, MSinMin*5)
 
-app.get('/close', async (req, res) => 
+setInterval(update, MSinMin*5)
+
+/*app.get('/close', async (req, res) => 
 {
     while(updating == 1 || started2 == 0)
     {
@@ -85,12 +90,31 @@ app.get('/close', async (req, res) =>
     }
     console.log("closing");
     res.send(true);
+})*/
+
+app.put('/openConnection', async (req, res) => 
+{
+    let userKey = req.body.userKey;
+    let string = generateRandomString();
+    while(connectionList.get(string) != null)
+    {
+        string = generateRandomString();
+    }
+    connectionList.set(string, userKey);
+    res.send(string);
 })
 
-app.get('/update', async (req, res) => 
+app.put('/closeConnection', async (req, res) => 
+{
+    let string = req.body.connectionKey;
+    connectionList.delete(string);
+    res.send(true);
+})
+
+/*app.get('/update', async (req, res) => 
 {
     res.send(await update());
-})
+})*/
 
 /*returns 1 if the server is currently updating and 0 if not*/
 app.get('/isUpdating', async (req, res) => 
@@ -102,36 +126,54 @@ app.get('/isUpdating', async (req, res) =>
 app.put('/createAccount', async (req, res) => 
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     globalQueue.enqueue(alert);
     while(alert.alerted == 0)
     {
         await sleep(100);
     }
-    const ret = await createAccount(userKey);
+    await createAccount(userKey);
     alert.unalert();
-    res.send(ret);
+    res.send(true);
 })
 
 /*returns true if an account exists*/
 app.get('/hasAccount', async (req, res) => 
 {
     const userKey = req.query.userKey;
+    const string = req.query.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     globalQueue.enqueue(alert);
     while(alert.alerted == 0)
     {
         await sleep(100);
     }
-    const ret = await getUser(userKey);
+    await getUser(userKey);
     alert.unalert();
-    res.send(ret);
+    res.send(true);
 })
 
 /*deletes an account*/
 app.put('/removeAccount', async (req, res) => 
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     globalQueue.enqueue(alert);
     while(alert.alerted == 0)
@@ -144,15 +186,21 @@ app.put('/removeAccount', async (req, res) =>
         alert.unalert();
         return;
     }
-    const ret = await removeAccount(userKey);
+    await removeAccount(userKey);
     alert.unalert();
-    res.send(ret);
+    res.send(true);
 })
 
 /*buys a certain amount of stock for the given user*/
 app.post('/buyStock', async (req, res) => 
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -192,9 +240,15 @@ app.post('/buyStock', async (req, res) =>
 are met is a buy(0) or a sell(1). when less than is a boolean detailing whether the trigger should be when the current price drops below
 the trigger price(1) or rises above the trigger price(0). price is the trigger price, stock and amount are the stock to be transacted and
 the amount to be transacted*/
-app.post('/limitOrder', async (req, res) =>
+/*app.post('/limitOrder', async (req, res) =>
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     globalQueue.enqueue(alert);
     while(alert.alerted == 0)
@@ -215,12 +269,18 @@ app.post('/limitOrder', async (req, res) =>
     let ret = limitOrder.addLimitOrder(userKey, stock, amount, price, sell, whenLessThan)
     alert.unalert();
     res.send(ret);
-})
+})*/
 
 /*sells a certain amount of stock for the given user*/
 app.post('/sellStock', async (req, res) => 
 { 
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -258,6 +318,12 @@ app.post('/sellStock', async (req, res) =>
 app.post('/addWatchList', async (req, res) => 
 { 
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -293,6 +359,12 @@ app.post('/addWatchList', async (req, res) =>
 app.post('/removeWatchList', async (req, res) => 
 { 
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -328,6 +400,12 @@ app.post('/removeWatchList', async (req, res) =>
 app.get('/getWatchList', async (req, res) => 
 { 
     const userKey = req.query.userKey;
+    const string = req.query.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -363,6 +441,12 @@ app.get('/getWatchList', async (req, res) =>
 app.get('/getPortfolioData', async (req, res) => 
 {
     const userKey = req.query.userKey;
+    const string = req.query.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -397,6 +481,12 @@ app.get('/getPortfolioData', async (req, res) =>
 app.get('/getSpecificStock', async (req, res) => 
 {
     const userKey = req.query.userKey;
+    const string = req.query.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -465,6 +555,12 @@ app.get('/getStocks', async(req, res) =>
 app.put('/challengeCreatePersonalChallenge', async(req, res) =>
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -502,6 +598,12 @@ app.put('/challengeCreatePersonalChallenge', async(req, res) =>
 app.get('/challengeHasCompletedDaily', async(req, res) =>
 {
     const userKey = req.query.userKey;
+    const string = req.query.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -554,6 +656,12 @@ for yesterdays leaderboard and 0 for todays*/
 app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
 {
     const userKey = req.query.userKey;
+    const string = req.query.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -610,6 +718,12 @@ app.get('/challengeGetStockData', async(req, res) =>
 {
     const daily = req.query.daily;
     const userKey = req.query.userKey;
+    const string = req.query.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var stockData = 0;
     if(daily == 1)
     {
@@ -664,6 +778,12 @@ app.get('/challengeGetStockData', async(req, res) =>
 app.get('/challengeGetBuyingPower', async(req, res) =>
 {
     const userKey = req.query.userKey;
+    const string = req.query.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -709,6 +829,12 @@ app.get('/challengeGetBuyingPower', async(req, res) =>
 app.get('/challengeGetBalance', async(req, res) =>
 {
     const userKey = req.query.userKey;
+    const string = req.query.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -754,6 +880,12 @@ app.get('/challengeGetBalance', async(req, res) =>
 app.get('/challengeGetStocks', async(req, res) =>
 {
     const userKey = req.query.userKey;
+    const string = req.query.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -801,6 +933,12 @@ app.get('/challengeGetStocks', async(req, res) =>
 app.post('/challengeBuyStock', async(req, res) =>
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -848,6 +986,12 @@ app.post('/challengeBuyStock', async(req, res) =>
 app.post('/challengeSellStock', async(req, res) =>
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -895,6 +1039,12 @@ app.post('/challengeSellStock', async(req, res) =>
 app.post('/challengeNextDay', async(req, res) =>
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -949,6 +1099,12 @@ app.post('/challengeNextDay', async(req, res) =>
 app.post('/challengeNextWeek', async(req, res) =>
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -1009,6 +1165,12 @@ app.post('/challengeNextWeek', async(req, res) =>
 app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause im lazy, might change later
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     if(started == 0)
     {
@@ -1070,11 +1232,15 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
 
 async function update()
 {
-    if(updating != 1)
+    var newTime = Date.now();
+    console.log(Math.floor(currentTime/MSinDay));
+    console.log(Math.floor(newTime/MSinDay));
+    //if(Math.floor(currentTime/MSinDay) != Math.floor(newTime/MSinDay))
+    if(1)
     {
         updating = 1;
         var promises = [];
-        promises.push(currentDate = newDate);
+        promises.push(currentTime = newTime);
         promises.push(updateStockList());
         promises.push(updatePortfolioValues());
         promises.push(flushCache());
@@ -1114,7 +1280,7 @@ async function buyStock(userKey, stock, amount)
     let stockPrice = stockData[stock]["askPrice"];
     let stocksHeld = await database.stockQuantity(userKey, stock);
     let buyingPower = await database.getBuyingPower(userKey);
-    if(buyingPower < stockPrice*amount || stock <= 0)
+    if(buyingPower < stockPrice*amount || amount <= 0)
     {
         console.log("This user doesn't have enough funds");
         return(false);
@@ -1134,9 +1300,10 @@ async function sellStock(userKey, stock, amount)
     let stockData = await query.getCurrentData(stock);
     let stockPrice = stockData[stock]["bidPrice"];
     let stocksHeld = await database.stockQuantity(userKey, stock);
-    if(stocksHeld < amount || stock <= 0)
+    if(stocksHeld < amount || amount <= 0)
     {
         console.log("This user doesn't own enough of this stock");
+        return(false);
     }
     else if(stocksHeld == amount)
     {
@@ -1269,6 +1436,21 @@ async function flushCache()
         await cache.updateCacheStock(stockList[i], stockData);
     }
 }
+
+function generateRandomString() 
+{
+    let maxLength = 15;
+    let length = Math.floor(Math.random() * maxLength);
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    for (let i = 0; i < length; i++) 
+    {
+      const randomIndex = Math.floor(Math.random() * charactersLength);
+      result += characters.charAt(randomIndex);
+    }
+    return (result);
+  }
 
 
 
