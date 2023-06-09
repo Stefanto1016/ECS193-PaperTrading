@@ -67,20 +67,4 @@ async function getList(listName)
     }
 }
 
-async function deleteList(listName)
-{
-    try {
-        const list = await listSchema.findOne({listName : listName});
-
-        if (list == undefined) {
-            console.log("ERROR: Unable to delete list: list name is not in collection");
-            return;
-        } else {
-            await listSchema.deleteOne({listName : listName})
-        }
-    } catch(error) {
-        console.log(error);
-    }
-}
-
-module.exports = {addList, setList, deleteList, getList}
+module.exports = {addList, setList, getList}
