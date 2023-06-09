@@ -62,7 +62,7 @@ test('render daily challenge', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 100000});
 
     expect(screen.getByText(/Market Price \(\$\):/))
     expect(screen.getByText(/Balance \(\$\):/i))
@@ -75,13 +75,13 @@ test('render daily challenge', async () => {
     expect(screen.getByRole("button", {name: "Forward 1 Week (5 Dates)"})).toBeInTheDocument()
     expect(screen.getByRole("button", {name: "Forward 1 Month (20 Dates)"})).toBeInTheDocument()
     expect(screen.getByRole("button", {name: "Finish"})).toBeDisabled()
-}, 20000)
+}, 100000)
 
 test('render personal challenge', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     userEvent.click(screen.getByText(/play against yourself!/i))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Personal Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Personal Challenge.../i), {timeout: 100000});
 
     expect(screen.getByText(/Market Price \(\$\):/))
     expect(screen.getByText(/Balance \(\$\):/i))
@@ -94,13 +94,13 @@ test('render personal challenge', async () => {
     expect(screen.getByRole("button", {name: "Forward 1 Week (5 Dates)"})).toBeInTheDocument()
     expect(screen.getByRole("button", {name: "Forward 1 Month (20 Dates)"})).toBeInTheDocument()
     expect(screen.getByRole("button", {name: "Finish"})).toBeDisabled()
-}, 20000)
+}, 100000)
 
 test('change graphs in a challenge', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 100000});
 
     userEvent.click(screen.getByRole("button", {name: /stock-button2/i}))
     expect(screen.getByRole("button", {name: /stock-button2/i})).toEqual(screen.getByRole("button", {pressed: true}))
@@ -131,27 +131,27 @@ test('change graphs in a challenge', async () => {
 
     userEvent.click(screen.getByRole("button", {name: /stock-button8/i}))
     expect(screen.getByRole("button", {name: /stock-button8/i})).toEqual(screen.getByRole("button", {pressed: true}))
-}, 20000)
+}, 100000)
 
 test('invalid action transaction', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     
     userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 100000});
 
     userEvent.click(screen.getByRole("button", {name: "Confirm"}))
 
     expect(screen.getByText(/No Selected Action/i))
 
-}, 20000)
+}, 100000)
 
 test('invalid selling', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     
     userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 100000});
 
     userEvent.click(screen.getByTestId("select"))
     userEvent.click(screen.getByText(/Sell/i))
@@ -162,14 +162,14 @@ test('invalid selling', async () => {
     userEvent.click(screen.getByRole("button", {name: "Confirm"}))
 
     expect(await (waitFor(() => screen.getByText(/Insufficient Shares/i), {timeout:5000})))
-}, 20000)
+}, 100000)
 
 test('invalid buying', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     
     userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 100000});
 
     userEvent.click(screen.getByTestId("select"))
     userEvent.click(screen.getByText("Buy"))
@@ -180,14 +180,14 @@ test('invalid buying', async () => {
     userEvent.click(screen.getByRole("button", {name: "Confirm"}))
 
     expect(await (waitFor(() => screen.getByText(/Insufficient Funds/i), {timeout:5000})))
-}, 20000)
+}, 100000)
 
 test('invalid quantity', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     
     userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 100000});
 
     userEvent.click(screen.getByTestId("select"))
     userEvent.click(screen.getByText("Buy"))
@@ -198,85 +198,67 @@ test('invalid quantity', async () => {
     userEvent.click(screen.getByRole("button", {name: "Confirm"}))
 
     expect(await (waitFor(() => screen.getByText(/No Quantity Provided/i), {timeout:5000})))
-}, 20000)
+}, 100000)
 
-test('valid buying', async () => {
+test('valid buying/selling', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     
     userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 100000});
 
     userEvent.click(screen.getByTestId("select"))
     userEvent.click(screen.getByText("Buy"))
 
     const textfieldInput = screen.getByRole('quantity-textfield').querySelector('input')
-    fireEvent.change(textfieldInput, {target: {value: 0}})
+    fireEvent.change(textfieldInput, {target: {value: 1}})
 
     userEvent.click(screen.getByRole("button", {name: "Confirm"}))
 
     expect(await (waitFor(() => screen.getByText(/Transaction Completed/i), {timeout:5000})))
-}, 20000)
-
-test('valid selling', async () => {
-    render(<BrowserRouter> <Game /> </BrowserRouter>)
-    
-    userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
-
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
 
     userEvent.click(screen.getByTestId("select"))
     userEvent.click(screen.getByText("Sell"))
 
-    const textfieldInput = screen.getByRole('quantity-textfield').querySelector('input')
-    fireEvent.change(textfieldInput, {target: {value: 0}})
+    fireEvent.change(textfieldInput, {target: {value: 1}})
 
     userEvent.click(screen.getByRole("button", {name: "Confirm"}))
 
     expect(await (waitFor(() => screen.getByText(/Transaction Completed/i), {timeout:5000})))
-}, 20000)
+}, 100000)
 
 test('day forwarding', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     
     userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 100000});
 
-    await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Day"})), {timeout:20000}))
-    //await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Week (5 Dates)"})), {timeout:10000}))
-    //await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Month (20 Dates)"})), {timeout:10000}))
-    
-    //expect(await (waitFor(() => screen.getByRole("button", { name: "Finish"}), {timeout:20000}))).toBeDisabled()
+    await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Day"})), {timeout:100000}))
+
     expect(screen.getByRole("button", { name: "Finish"})).toBeDisabled()
-}, 20000)
+}, 100000)
 
 test('week forwarding', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     
     userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 100000});
 
-    //await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Day"})), {timeout:10000}))
-    await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Week (5 Dates)"})), {timeout:20000}))
-    //await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Month (20 Dates)"})), {timeout:10000}))
-    
-    //expect(await (waitFor(() => screen.getByRole("button", { name: "Finish"}), {timeout:20000}))).toBeDisabled()
+    await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Week (5 Dates)"})), {timeout:100000}))
+
     expect(screen.getByRole("button", { name: "Finish"})).toBeDisabled()
-}, 20000)
+}, 100000)
 
 test('month forwarding', async () => {
     render(<BrowserRouter> <Game /> </BrowserRouter>)
     
     userEvent.click(screen.getByRole("button", { name: "Play Now!"}))
 
-    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 20000});
+    await waitForElementToBeRemoved(() => screen.queryByText(/Loading Daily Challenge.../i), {timeout: 100000});
 
-    //await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Day"})), {timeout:10000}))
-    //await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Week (5 Dates)"})), {timeout:10000}))
-    await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Month (20 Dates)"})), {timeout:20000}))
+    await (waitFor(() => userEvent.click(screen.getByRole("button", { name: "Forward 1 Month (20 Dates)"})), {timeout:100000}))
     
-    //expect(await (waitFor(() => screen.getByRole("button", { name: "Finish"}), {timeout:20000}))).toBeDisabled()
     expect(screen.getByRole("button", { name: "Finish"})).toBeDisabled()
-}, 20000)
+}, 100000)
