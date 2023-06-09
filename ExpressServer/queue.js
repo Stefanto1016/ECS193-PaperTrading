@@ -50,17 +50,17 @@ class Queue
         return this.size == 0;
     }
 
-    async run()
+    async run(delay1, delay2)
     {
         while(1)
         {
-            await sleep(50);
+            await sleep(delay1);
             var alert = this.dequeue();
             if(alert != null)
             {
                 while(alert.alerted == 1)
                 {
-                    await sleep(50);
+                    await sleep(delay2);
                 }
             }
         }

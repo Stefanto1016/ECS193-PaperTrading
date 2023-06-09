@@ -18,7 +18,7 @@ var globalQueue = queue.getGlobalQueue();
 var userQueues = queue.getUserQueue();
 var userChallengeQueues = queue.getUserChallengeQueue();
 var updating = 0;
-var currentTime = Date.now();
+var currentTime = new Date();
 var connectionList = new Map();
 
 /*var cors = require("cors");
@@ -111,16 +111,16 @@ app.put('/closeConnection', async (req, res) =>
     res.send(true);
 })
 
-/*app.get('/update', async (req, res) => 
+app.get('/update', async (req, res) => 
 {
     res.send(await update());
-})*/
+})
 
 /*returns 1 if the server is currently updating and 0 if not*/
-app.get('/isUpdating', async (req, res) => 
+/*app.get('/isUpdating', async (req, res) => 
 {
     res.send({isUpdating: updating});
-})
+})*/
 
 /*creates an account with the userKey provided and stores to the database*/
 app.put('/createAccount', async (req, res) => 
@@ -645,7 +645,7 @@ app.get('/challengeGetLeaderboard', async(req, res) =>
         await sleep(100);
     }
     let leaderboard = await database.getLeaderboard();
-    leaderboard.slice(0, 7);
+    leaderboard = leaderboard.slice(0, 7);
     alert.unalert();
     res.send(leaderboard);
 }
@@ -696,10 +696,10 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
         if(leaderboard[i]["userKey"] == userKey)
         {
             position = i;
-            i = leaderboard.size;
+            i = leaderboard.length;
         }
     }
-    leaderboard.slice(Math.max(0, position-4), Math.min(i-1, position+4));
+    leaderboard = leaderboard.slice(Math.max(0, position-4), Math.min(i-1, position+4));
     alert.unalert();
     if(position == null)
     {
@@ -1232,12 +1232,14 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
 
 async function update()
 {
-    var newTime = Date.now();
-    console.log(Math.floor(currentTime/MSinDay));
-    console.log(Math.floor(newTime/MSinDay));
-    //if(Math.floor(currentTime/MSinDay) != Math.floor(newTime/MSinDay))
-    if(1)
+    while(started2 == 0)
     {
+        await sleep(100);
+    }
+    var newTime = new Date();
+    if(currentTime.getDate() != newTime.getDate())
+    {
+        console.log("updating");
         updating = 1;
         var promises = [];
         promises.push(currentTime = newTime);
@@ -1249,15 +1251,21 @@ async function update()
         promises.push(database.clearLeaderboard());
         await Promise.all(promises);
         updating = 0;
-        return(1);
+        return(true);
     }
-    return(0);
+    return(false);
 }
 
 
 async function createAccount(userKey)
 {
-    await database.addUser(userKey, 10000, [], {yesterday : 10000}, []);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayString = String((yesterday.getMonth() + 1) + "/" + yesterday.getDate() + "/" + yesterday.getFullYear());
+    let portfolioData = {};
+    portfolioData[yesterdayString] = 10000;
+    await database.addUser(userKey, 10000, [], portfolioData, []);
     await challenge.addUser(userKey);
     userQueues.set(userKey, queue.createQueue());
     userQueues.get(userKey).run();
@@ -1419,7 +1427,9 @@ async function updatePortfolioValues()
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        let portfolioData = {yesterday : userBalance};
+        const yesterdayString =  (yesterday.getMonth() + 1) + "/" + yesterday.getDate() + "/" + yesterday.getFullYear();
+        let portfolioData = {};
+        portfolioData[yesterdayString] = userBalance;
         await database.addBalance(accountList[i], portfolioData);
     }
 }
