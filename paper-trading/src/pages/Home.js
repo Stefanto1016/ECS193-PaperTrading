@@ -281,12 +281,12 @@ function Home() {
                                 <Typography variant='h5'>
                                     Account Balance
                                 </Typography>
-                                <NumericFormat value={accBalance} displayType={'text'} thousandSeparator={true} prefix={'$'} />
+                                <NumericFormat value={accBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} displayType={'text'} thousandSeparator={true} prefix={'$'} />
                                 <br />
                                 <Typography variant='h5'>
                                     Buying Power
                                 </Typography>
-                                <NumericFormat value={buyPower} displayType={'text'} thousandSeparator={true} prefix={'$'} />
+                                <NumericFormat value={buyPower.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} displayType={'text'} thousandSeparator={true} prefix={'$'} />
                                 <br />
                             </CardContent>
                         </Card>
