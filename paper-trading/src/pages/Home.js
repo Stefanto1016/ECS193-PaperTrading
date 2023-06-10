@@ -250,7 +250,7 @@ function Home() {
         labels: times,
         datasets: [
         {
-            label: "Stock Price ($)",
+            label: "Account Balance ($)",
             // corresponding y values
             data: prices,
             fill: true,

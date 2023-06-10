@@ -166,10 +166,12 @@ function Game() {
     })
 
     useEffect(() => {
-        fetch("http://localhost:8000/challengeGetLeaderboard?" + new URLSearchParams({
-            })).then(res => {return res.json()})
-            .then(data => {setLeaderboad(data.slice(0, 8))});
-    }, [])
+        if (displayStart) {
+            fetch("http://localhost:8000/challengeGetLeaderboard?" + new URLSearchParams({
+                })).then(res => {return res.json()})
+                .then(data => {console.log(data); setLeaderboad(data.slice(0, 8))});
+        }
+    }, [displayStart])
 
     useEffect(() => {
         const prof = JSON.parse(localStorage.getItem("profile"))
