@@ -103,7 +103,7 @@ function Stocks() {
   async function retryFetch(url) {
     var data = await fetch(url);
     while(data.status == 429) {
-         await new Promise(r => setTimeout(r, 500));
+         await new Promise(r => setTimeout(r, 1000));
          var data = await fetch(url);
     }
     data = await data.json();
@@ -174,7 +174,7 @@ function Stocks() {
           </List>
 
 
-        <Box sx={{ width: '100%', maxWidth: 400}}>
+        <Box sx={{ width: '100%', maxWidth: 500}}>
           <List component={Stack} direction='row' sx={{maxWidth: 800, ml:3}}>
             <ListItemText 
               primaryTypographyProps={{fontWeight: 'bold', fontSize: 30}}
