@@ -418,14 +418,14 @@ async function getLeaderboard(today)
     {
         date = new Date();
     }
-    var dateString = String(date.getFullYear())+String(date.getMonth())+String(date.getDate());
+    var dateString = String((date.getMonth() + 1) + "/" + date.getDate() + "/" + date.getFullYear());
     return(await leaderboard.find({date: dateString}).sort({score: -1}));
 }
 
 async function addScore(userKey, score)
 {
     let date = new Date();
-    let dateString = String(date.getFullYear())+String(date.getMonth())+String(date.getDate());
+    let dateString = String((date.getMonth() + 1) + "/" + date.getDate() + "/" + date.getFullYear());
     const newEntry = {
         userKey: userKey,
         score: score,
@@ -439,8 +439,8 @@ async function clearLeaderboard()
     let today = new Date();
     let yesterday = new Date();
     yesterday.setDate(today.getDate()-1);
-    let dateStringToday = String(today.getFullYear())+String(today.getMonth())+String(today.getDate());
-    let dateStringYesterday = String(yesterday.getFullYear())+String(yesterday.getMonth())+String(yesterday.getDate());
+    let dateStringToday = String((today.getMonth() + 1) + "/" + today.getDate() + "/" + today.getFullYear());
+    let dateStringYesterday = String((yesterday.getMonth() + 1) + "/" + yesterday.getDate() + "/" + yesterday.getFullYear());
     await leaderboard.deleteMany({ date: { $nin: [dateStringToday, dateStringYesterday] } });
 }
 
