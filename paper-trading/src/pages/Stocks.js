@@ -103,7 +103,7 @@ function Stocks() {
   async function retryFetch(url) {
     var data = await fetch(url);
     while(data.status == 429) {
-         await new Promise(r => setTimeout(r, 200));
+         await new Promise(r => setTimeout(r, 500));
          var data = await fetch(url);
     }
     data = await data.json();
