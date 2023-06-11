@@ -1,22 +1,25 @@
 const query = require('./query');
 const database = require('./mongo/database');
-const cache = require('./mongo/cache');
-const list = require('./mongo/list');
+//const cache = require('./mongo/cache');
+//const list = require('./mongo/list');
 const tree = require('./tree');
 const queue = require('./queue');
 const challenge = require('./challenge');
-const limitOrder = require('./limitOrder');
+//const limitOrder = require('./limitOrder');
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const port = parseInt(process.env.PORT) || 8000;
 const MSinMin = 1000*60;
+//const MSinDay = 8640000;
 var started = 0;
 var started2 = 0; //for testing purposes
 var globalQueue = queue.getGlobalQueue();
 var userQueues = queue.getUserQueue();
 var userChallengeQueues = queue.getUserChallengeQueue();
 var updating = 0;
+var currentTime = new Date();
+var connectionList = new Map();
 
 /*var cors = require("cors");
 app.use(cors);*/
@@ -74,9 +77,11 @@ process.on('exit', function()
 });
 
 
-setInterval(limitOrder.checkLimitOrders, MSinMin*5)
+//setInterval(limitOrder.checkLimitOrders, MSinMin*5)
 
-app.get('/close', async (req, res) => 
+setInterval(update, MSinMin*5)
+
+/*app.get('/close', async (req, res) => 
 {
     while(updating == 1 || started2 == 0)
     {
@@ -84,6 +89,25 @@ app.get('/close', async (req, res) =>
         await sleep(100);
     }
     console.log("closing");
+    res.send(true);
+})*/
+
+app.put('/openConnection', async (req, res) => 
+{
+    let userKey = req.body.userKey;
+    let string = generateRandomString();
+    while(connectionList.get(string) != null)
+    {
+        string = generateRandomString();
+    }
+    connectionList.set(string, userKey);
+    res.send(string);
+})
+
+app.put('/closeConnection', async (req, res) => 
+{
+    let string = req.body.connectionKey;
+    connectionList.delete(string);
     res.send(true);
 })
 
@@ -93,10 +117,10 @@ app.get('/update', async (req, res) =>
 })
 
 /*returns 1 if the server is currently updating and 0 if not*/
-app.get('/isUpdating', async (req, res) => 
+/*app.get('/isUpdating', async (req, res) => 
 {
     res.send({isUpdating: updating});
-})
+})*/
 
 /*creates an account with the userKey provided and stores to the database*/
 app.put('/createAccount', async (req, res) => 
@@ -108,9 +132,9 @@ app.put('/createAccount', async (req, res) =>
     {
         await sleep(100);
     }
-    const ret = await createAccount(userKey);
+    await createAccount(userKey);
     alert.unalert();
-    res.send(ret);
+    res.send(true);
 })
 
 /*returns true if an account exists*/
@@ -123,9 +147,9 @@ app.get('/hasAccount', async (req, res) =>
     {
         await sleep(100);
     }
-    const ret = await getUser(userKey);
+    await getUser(userKey);
     alert.unalert();
-    res.send(ret);
+    res.send(true);
 })
 
 /*deletes an account*/
@@ -144,9 +168,9 @@ app.put('/removeAccount', async (req, res) =>
         alert.unalert();
         return;
     }
-    const ret = await removeAccount(userKey);
+    await removeAccount(userKey);
     alert.unalert();
-    res.send(ret);
+    res.send(true);
 })
 
 /*buys a certain amount of stock for the given user*/
@@ -192,9 +216,15 @@ app.post('/buyStock', async (req, res) =>
 are met is a buy(0) or a sell(1). when less than is a boolean detailing whether the trigger should be when the current price drops below
 the trigger price(1) or rises above the trigger price(0). price is the trigger price, stock and amount are the stock to be transacted and
 the amount to be transacted*/
-app.post('/limitOrder', async (req, res) =>
+/*app.post('/limitOrder', async (req, res) =>
 {
     const userKey = req.body.userKey;
+    const string = req.body.connectionKey;
+    if(connectionList.get(string) != userKey)
+    {
+        res.send(false);
+        return;
+    }
     var alert = queue.createAlert();
     globalQueue.enqueue(alert);
     while(alert.alerted == 0)
@@ -215,7 +245,7 @@ app.post('/limitOrder', async (req, res) =>
     let ret = limitOrder.addLimitOrder(userKey, stock, amount, price, sell, whenLessThan)
     alert.unalert();
     res.send(ret);
-})
+})*/
 
 /*sells a certain amount of stock for the given user*/
 app.post('/sellStock', async (req, res) => 
@@ -542,8 +572,10 @@ app.get('/challengeGetLeaderboard', async(req, res) =>
     {
         await sleep(100);
     }
-    let leaderboard = await database.getLeaderboard();
-    leaderboard.slice(0, 7);
+    var today = req.query.today;
+    let leaderboard = await database.getLeaderboard(today);
+    console.log(leaderboard);
+    leaderboard = leaderboard.slice(0, 7);
     alert.unalert();
     res.send(leaderboard);
 }
@@ -588,10 +620,10 @@ app.get('/challengeGetUserLeaderboardPosition', async(req, res) =>
         if(leaderboard[i]["userKey"] == userKey)
         {
             position = i;
-            i = leaderboard.size;
+            i = leaderboard.length;
         }
     }
-    leaderboard.slice(Math.max(0, position-4), Math.min(i-1, position+4));
+    leaderboard = leaderboard.slice(Math.max(0, position-4), Math.min(i-1, position+4));
     alert.unalert();
     if(position == null)
     {
@@ -1070,11 +1102,17 @@ app.post('/challengeNextMonth', async(req, res) => //just jumped 20 days cause i
 
 async function update()
 {
-    if(updating != 1)
+    while(started2 == 0)
     {
+        await sleep(100);
+    }
+    var newTime = new Date();
+    if(currentTime.getDate() != newTime.getDate())
+    {
+        console.log("updating");
         updating = 1;
         var promises = [];
-        promises.push(currentDate = newDate);
+        promises.push(currentTime = newTime);
         promises.push(updateStockList());
         promises.push(updatePortfolioValues());
         promises.push(flushCache());
@@ -1083,15 +1121,21 @@ async function update()
         promises.push(database.clearLeaderboard());
         await Promise.all(promises);
         updating = 0;
-        return(1);
+        return(true);
     }
-    return(0);
+    return(false);
 }
 
 
 async function createAccount(userKey)
 {
-    await database.addUser(userKey, 10000, [], {yesterday : 10000}, []);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayString = String((yesterday.getMonth() + 1) + "/" + yesterday.getDate() + "/" + yesterday.getFullYear());
+    let portfolioData = {};
+    portfolioData[yesterdayString] = 10000;
+    await database.addUser(userKey, 10000, [], portfolioData, []);
     await challenge.addUser(userKey);
     userQueues.set(userKey, queue.createQueue());
     userQueues.get(userKey).run();
@@ -1114,7 +1158,7 @@ async function buyStock(userKey, stock, amount)
     let stockPrice = stockData[stock]["askPrice"];
     let stocksHeld = await database.stockQuantity(userKey, stock);
     let buyingPower = await database.getBuyingPower(userKey);
-    if(buyingPower < stockPrice*amount || stock <= 0)
+    if(buyingPower < stockPrice*amount || amount <= 0)
     {
         console.log("This user doesn't have enough funds");
         return(false);
@@ -1134,9 +1178,10 @@ async function sellStock(userKey, stock, amount)
     let stockData = await query.getCurrentData(stock);
     let stockPrice = stockData[stock]["bidPrice"];
     let stocksHeld = await database.stockQuantity(userKey, stock);
-    if(stocksHeld < amount || stock <= 0)
+    if(stocksHeld < amount || amount <= 0)
     {
         console.log("This user doesn't own enough of this stock");
+        return(false);
     }
     else if(stocksHeld == amount)
     {
@@ -1239,6 +1284,7 @@ async function updatePortfolioValues()
     let accountList = await database.getAccountList();
     for(let i = 0; i < accountList.length; i++)
     {
+        console.log(accountList[i]);
         let userStockList = await database.getUserStockList(accountList[i]);
         userStockList = Object.keys(userStockList);
         let userBalance = await database.getBuyingPower(accountList[i]);
@@ -1252,7 +1298,9 @@ async function updatePortfolioValues()
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        let portfolioData = {yesterday : userBalance};
+        const yesterdayString =  (yesterday.getMonth() + 1) + "/" + yesterday.getDate() + "/" + yesterday.getFullYear();
+        let portfolioData = {};
+        portfolioData[yesterdayString] = userBalance;
         await database.addBalance(accountList[i], portfolioData);
     }
 }
@@ -1269,6 +1317,21 @@ async function flushCache()
         await cache.updateCacheStock(stockList[i], stockData);
     }
 }
+
+function generateRandomString() 
+{
+    let maxLength = 15;
+    let length = Math.floor(Math.random() * maxLength);
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    for (let i = 0; i < length; i++) 
+    {
+      const randomIndex = Math.floor(Math.random() * charactersLength);
+      result += characters.charAt(randomIndex);
+    }
+    return (result);
+  }
 
 
 

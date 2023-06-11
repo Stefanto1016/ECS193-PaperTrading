@@ -1,5 +1,14 @@
-const client_id = "Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK";
+const queue = require('./queue');
 
+const client_id = "Y9RUBZ5ISBYWMTOQOMGYS5N6K1Y32HXK";
+var requestQueue = queue.createQueue();
+requestQueue.run(50, 50);
+
+function sleep(ms) 
+{
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+   
 
 /*
 This function takes a request and continues to retry it so long as the
@@ -8,13 +17,20 @@ request returns 429 for too many requests.
 
 async function retryFetch(url)
 {
+     var alert = queue.createAlert();
+     requestQueue.enqueue(alert);
+     while(alert.alerted == 0)
+     {
+          await sleep(100);
+     }
      var data = await fetch(url);
      while(data == null || data.status == 429)
      {
-          await new Promise(r => setTimeout(r, 200));
+          await sleep(200);
           var data = await fetch(url);
      }
      data = await data.json();
+     alert.unalert();
      return(data);
 }
 
