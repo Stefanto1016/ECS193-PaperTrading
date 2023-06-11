@@ -203,7 +203,6 @@ function Home() {
           topGainers.push(createData(entry.symbol, (entry.change * 100).toFixed(2), entry.last, entry.totalVolume))
         }
     
-        //console.log(topGainers)
         setTopGainers(topGainers)
     }
 
@@ -211,12 +210,13 @@ function Home() {
         var url = 'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&limit=10&apikey=AHIL20FGMVQ12R9U'
         var data = await retryFetch(url);
         var news = []
-        for(const entry of data.feed)
-        {
-          news.push(createNews(entry.title, entry.summary, entry.banner_image, entry.url))
-        }
+        if (data.feed != undefined) {
+            for(const entry of data.feed)
+            {
+            news.push(createNews(entry.title, entry.summary, entry.banner_image, entry.url))
+            }
+        }  
     
-        //console.log(news)
         setNews(news)
     }
 
@@ -236,7 +236,6 @@ function Home() {
 
     function getChartData(data)
     {
-        //console.log(response[0])
 
         let times = []
         let prices = []
@@ -246,14 +245,12 @@ function Home() {
         }
         times = times.reverse();
         prices = prices.reverse();
-        //console.log(times)
-        //console.log(prices)
         const chartData = {
         // x-axis labels
         labels: times,
         datasets: [
         {
-            label: "Stock Price ($)",
+            label: "Account Balance ($)",
             // corresponding y values
             data: prices,
             fill: true,
@@ -284,12 +281,12 @@ function Home() {
                                 <Typography variant='h5'>
                                     Account Balance
                                 </Typography>
-                                <NumericFormat value={accBalance} displayType={'text'} thousandSeparator={true} prefix={'$'} />
+                                <NumericFormat value={accBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} displayType={'text'} thousandSeparator={true} prefix={'$'} />
                                 <br />
                                 <Typography variant='h5'>
                                     Buying Power
                                 </Typography>
-                                <NumericFormat value={buyPower} displayType={'text'} thousandSeparator={true} prefix={'$'} />
+                                <NumericFormat value={buyPower.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} displayType={'text'} thousandSeparator={true} prefix={'$'} />
                                 <br />
                             </CardContent>
                         </Card>

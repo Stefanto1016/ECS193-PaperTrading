@@ -147,7 +147,6 @@ function Portfolio() {
 
     function getChartData(data)
     {
-        //console.log(response[0])
 
         let times = []
         let prices = []
@@ -157,14 +156,12 @@ function Portfolio() {
         }
         times = times.reverse();
         prices = prices.reverse();
-        //console.log(times)
-        //console.log(prices)
         const chartData = {
         // x-axis labels
         labels: times,
         datasets: [
         {
-            label: "Stock Price ($)",
+            label: "Account Balance ($)",
             // corresponding y values
             data: prices,
             fill: true,
@@ -206,14 +203,16 @@ function Portfolio() {
      }
 
      async function getStocks(data){
-        let keys = Object.keys(data);
-        let st = [];
-        for(const entry of keys)
-        {
-            let stData = await getCurrentData(entry);
-            st.push(createData(entry, (stData[entry]['markPercentChangeInDouble']), stData[entry]['closePrice'], data[entry]));
+        if (data != undefined) {
+            let keys = Object.keys(data);
+            let st = [];
+            for(const entry of keys)
+            {
+                let stData = await getCurrentData(entry);
+                st.push(createData(entry, (stData[entry]['markPercentChangeInDouble']), stData[entry]['closePrice'], data[entry]));
+            }
+            setStocks(st);
         }
-        setStocks(st);
     }
     async function getWatchList(data){
         let st = [];

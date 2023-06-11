@@ -166,10 +166,12 @@ function Game() {
     })
 
     useEffect(() => {
-        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetLeaderboard?" + new URLSearchParams({
-            })).then(res => {return res.json()})
-            .then(data => {console.log(data); setLeaderboad(data.slice(0, 8))});
-    }, [])
+        if (displayStart) {
+            fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetLeaderboard?" + new URLSearchParams({
+                })).then(res => {return res.json()})
+                .then(data => {console.log(data); setLeaderboad(data.slice(0, 8))});
+        }
+    }, [displayStart])
 
     useEffect(() => {
         const prof = JSON.parse(localStorage.getItem("profile"))
@@ -177,7 +179,7 @@ function Game() {
             userKey: prof["email"],
             today: 1
             })).then(res => {return res.json()})
-            .then(data => {console.log(data); setLeaderboadPosition(data.position)});
+            .then(data => {setLeaderboadPosition(data.position)});
     }, [])
 
     useEffect(() => {
@@ -185,7 +187,7 @@ function Game() {
         fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeHasCompletedDaily?" + new URLSearchParams({
             userKey: prof["email"],
             })).then(res => {return res.json()})
-            .then(data => {console.log(data); setCompletedDaily(data.isFinished)});
+            .then(data => {setCompletedDaily(data.isFinished)});
     }, [])
 
     useEffect(() => {
@@ -200,8 +202,6 @@ function Game() {
             stocksInfo.push(await getCurrentData([stock]))
         }
         setQuoteData(stocksInfo)
-        console.log(stocksInfo[0][firstStockName].symbol)
-        console.log(stocksInfo[0][firstStockName].description)
         setStockSymbol(stocksInfo[0][firstStockName].symbol)
         setStockDesc(stocksInfo[0][firstStockName].description)
         setDisplayStart(false)
@@ -212,8 +212,10 @@ function Game() {
 
     function getStockButtons(stockNames) {
         var stockButtons = []
+        var index = 0;
         for (const stock of stockNames) {
-            stockButtons.push(<ToggleButton value={stock} key={stock}> {stock} </ToggleButton>)
+            stockButtons.push(<ToggleButton aria-label={"stock-button" + index} value={stock} key={stock}> {stock} </ToggleButton>)
+            index++
         }
         setStockToggles(stockButtons)
     }
@@ -223,16 +225,13 @@ function Game() {
         let prices = []
 
         for (const data of firstStockData) {
-            //console.log(data.close)
             var date = new Date(data[1])
             const options = { year: 'numeric', month: 'short', day: 'numeric' };
             times.push(date.toLocaleString('en', options))
             prices.push(data[0])
         }
 
-        //console.log(times)
         setCurStockTimes(times)
-        //console.log(prices)
         setCurStockPrices(prices)
 
         const chartData = {
@@ -408,7 +407,6 @@ function Game() {
             }
             ]
           }
-          console.log(chartData)
       
           setCurStock(event.target.value)
           setChartData(chartData) 
@@ -460,7 +458,6 @@ function Game() {
 
     function goEnd() {
         const isAllZero = stocksListBought.every(item => item === 0);
-        console.log(isAllZero)
 
         if (!isAllZero) {
             var maxIndex = stocksListBought.indexOf(Math.max(...stocksListBought));
@@ -473,17 +470,10 @@ function Game() {
 
     }
 
-    function goLoad() {
-        setDisplayStart(false)
-        setDisplayEnd(false)
-        setDisplayLoading(true)
-    }
-
     async function goPlay() {
         if (gameType == 1 && completedDaily == true) {
             handleDialogOpen()
             setGameType(null)
-            console.log('already completed daily')
             return
         }
 
@@ -504,12 +494,8 @@ function Game() {
             fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeCreatePersonalChallenge", options)
                 .then(res => {return res.json()})
                 .then(data => {
-                            console.log('Personal Challlenge Creating...')
-                            console.log(data)
-                            console.log(data.stockData)
                             setHistData(data.stockData)
                             setCutoff(data.currentDay + 1)
-                            console.log(data.stockData.length)
                             setHistDataLen(data.stockData[0].length)
                             setStockMark(data.stockData[0][data.currentDay][0])
                             setCurStock(data.stocks[0])
@@ -545,18 +531,11 @@ function Game() {
                 })).then(res => {return res.json()})
                 .then(data => {
                                     if (data.currentDay == data.stockData[0].length) {
-                                        console.log('already completed daily challenge')
                                         return;
                                     } else {
-                                        console.log('Daily Challlenge Creating...')
-                                        console.log(data)
-                                        console.log(data.stockData)
                                         setHistData(data.stockData)
                                         setCutoff(data.currentDay + 1)
-                                        console.log(data.stockData.length)
                                         setHistDataLen(data.stockData[0].length)
-                                        console.log('Current Day: ' + data.currentDay)
-                                        console.log(data.stockData[0])
                                         setStockMark(data.stockData[0][data.currentDay][0])
                                         setCurStock(data.stocks[0])
                                         setStocksList(data.stocks)
@@ -864,17 +843,20 @@ function Game() {
                 <FormControl>
                 <InputLabel sx={{mt:1, ml:3}}>Action</InputLabel>
                 <Select
+                    SelectDisplayProps={{ "data-testid": "select" }}
+                    role="selected-action"
                     value={option}
                     label='Action'
                     onChange={changeOption}
                     sx={{minWidth:250, mt: 1, ml: 3}}
                 >
-                    <MenuItem value={'buy'}> Buy </MenuItem>
-                    <MenuItem value={'sell'}> Sell </MenuItem>
+                    <MenuItem role='buy-option' value={'buy'}> Buy </MenuItem>
+                    <MenuItem role='sell-option' value={'sell'}> Sell </MenuItem>
                 </Select>
                 </FormControl>
 
-                <TextField id="outlined-basic" 
+                <TextField id="outlined-basic"
+                        role='quantity-textfield'
                         label="Quantity"
                         variant="outlined" 
                         onChange={changeQuantity}
@@ -966,11 +948,8 @@ function Game() {
                         today: 1
                         })).then(res => {return res.json()})
                         .then(data => {
-                            console.log(leaderboardPosition)
-                            console.log(data.position)
                             if (leaderboardPosition == false && data.position != false) {
                                 // You made it to the leaderboard
-                                console.log('YES')
                                 setLeaderboadSuccess(true)
                                 setLeaderboadFail(false)
                             }
@@ -981,7 +960,6 @@ function Game() {
                     }
                 } else {
                     setCutoff(data.currentDay + 1)
-                    console.log(curStockPrices)
                     setStockMark(curStockPrices[data.currentDay])
                     const chartData = {
                         // x-axis labels
@@ -998,7 +976,6 @@ function Game() {
                         ]
                     }
                     setChartData(chartData)
-                    console.log(data)
                     setBalance(data.balance)
                 }
             });
@@ -1015,46 +992,24 @@ function Game() {
         fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeNextWeek", options)
             .then(res => {return res.json()})
             .then(data => {
-                if (data.isFinished) {
-                    if (gameType == 1) {
-                        setCompletedDaily(true)
-                        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
-                        userKey: prof["email"],
-                        today: 1
-                        })).then(res => {return res.json()})
-                        .then(data => {
-                            if (leaderboardPosition == false && data.position != false) {
-                                // You made it to the leaderboard
-                                console.log('YES')
-                                setLeaderboadSuccess(true)
-                                setLeaderboadFail(false)         
-                            }
-                            goEnd()
-                        });
-                    } else {
-                        goEnd()
+                setCutoff(data.currentDay + 1)
+                setStockMark(curStockPrices[data.currentDay])
+                const chartData = {
+                    // x-axis labels
+                    labels: curStockTimes.slice(0, data.currentDay+1),
+                    datasets: [
+                    {
+                    label: "Stock Price ($)",
+                    // corresponding y values
+                    data: curStockPrices.slice(0, data.currentDay+1),
+                    fill: true,
+                    borderColor: "blue",
+                    tension: 0.1
                     }
-                } else {
-                    setCutoff(data.currentDay + 1)
-                    console.log(curStockPrices)
-                    setStockMark(curStockPrices[data.currentDay])
-                    const chartData = {
-                        // x-axis labels
-                        labels: curStockTimes.slice(0, data.currentDay+1),
-                        datasets: [
-                        {
-                        label: "Stock Price ($)",
-                        // corresponding y values
-                        data: curStockPrices.slice(0, data.currentDay+1),
-                        fill: true,
-                        borderColor: "blue",
-                        tension: 0.1
-                        }
-                        ]
-                    }
-                    setChartData(chartData)
-                    setBalance(data.balance)
+                    ]
                 }
+                setChartData(chartData)
+                setBalance(data.balance)
             });
     }
 
@@ -1069,45 +1024,24 @@ function Game() {
         fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeNextMonth", options)
             .then(res => {return res.json()})
             .then(data => {
-                if (data.isFinished) {
-                    if (gameType == 1) {
-                        setCompletedDaily(true)
-                        fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetUserLeaderboardPosition?" + new URLSearchParams({
-                        userKey: prof["email"],
-                        today: 1
-                        })).then(res => {return res.json()})
-                        .then(data => {
-                            if (leaderboardPosition == false && data.position != false) {
-                                // You made it to the leaderboard
-                                setLeaderboadSuccess(true)
-                                setLeaderboadFail(false)
-                            }
-                            goEnd()
-                        });
-                    } else {
-                        goEnd()
+                setCutoff(data.currentDay + 1)
+                setStockMark(curStockPrices[data.currentDay])
+                const chartData = {
+                    // x-axis labels
+                    labels: curStockTimes.slice(0, data.currentDay+1),
+                    datasets: [
+                    {
+                    label: "Stock Price ($)",
+                    // corresponding y values
+                    data: curStockPrices.slice(0, data.currentDay+1),
+                    fill: true,
+                    borderColor: "blue",
+                    tension: 0.1
                     }
-                } else {
-                    setCutoff(data.currentDay + 1)
-                    console.log(curStockPrices)
-                    setStockMark(curStockPrices[data.currentDay])
-                    const chartData = {
-                        // x-axis labels
-                        labels: curStockTimes.slice(0, data.currentDay+1),
-                        datasets: [
-                        {
-                        label: "Stock Price ($)",
-                        // corresponding y values
-                        data: curStockPrices.slice(0, data.currentDay+1),
-                        fill: true,
-                        borderColor: "blue",
-                        tension: 0.1
-                        }
-                        ]
-                    }
-                    setChartData(chartData)
-                    setBalance(data.balance)
+                    ]
                 }
+                setChartData(chartData)
+                setBalance(data.balance)
             });
     }
     
