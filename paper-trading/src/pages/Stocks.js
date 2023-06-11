@@ -334,7 +334,6 @@ function Stocks() {
 
   function handleWatchlist() {
     if(buttonText === "Add to Watchlist" && profile){
-      console.log("it was add!")
       const prof = JSON.parse(localStorage.getItem("profile"));
       setButtonText("Remove from Watchlist");
       setWatchListStyle(removeWatchlist);
@@ -346,7 +345,6 @@ function Stocks() {
       fetch("http://localhost:8000/addWatchList", options);
       
     } else if (buttonText === "Remove from Watchlist" && profile) {
-      console.log("it was remove!")
       const prof = JSON.parse(localStorage.getItem("profile"));
       setButtonText("Add to Watchlist");
       setWatchListStyle(addWatchlist);
@@ -560,14 +558,28 @@ const handleClose = (event, reason) => {
         } else {
             setIsValidStock(true)
             const stockAllCaps = stock.toUpperCase()
-          
+                      
+            const res = await getNumDataPoints(stockAllCaps)
+            setHistData(res)
+                
+            let times = []
+            let prices = []
+            for (const candle of res[2]) {
+              var date = new Date(candle.datetime)
+              const options = { month: 'short', day: 'numeric' };
+              times.push(date.toLocaleString('en', options))
+              prices.push(candle.close)
+            }
+            var newMarkChange = response[stockAllCaps]['mark'] - prices[0];
+            var newMarkPercentChange = newMarkChange/prices[0] * 100;
+
             setStockInfo(
               {
                 symbol: response[stockAllCaps]['symbol'],
                 desc: response[stockAllCaps]['description'],
                 mark: response[stockAllCaps]['mark'],
-                markChange: response[stockAllCaps]['markChangeInDouble'],
-                markPercentChange: response[stockAllCaps]['markPercentChangeInDouble'],
+                markChange: newMarkChange,
+                markPercentChange: newMarkPercentChange,
                 exchangeName: response[stockAllCaps]['exchangeName'],
                 volatility: response[stockAllCaps]['volatility'],
                 peRatio: response[stockAllCaps]['peRatio'],
@@ -580,17 +592,7 @@ const handleClose = (event, reason) => {
                 week52Low: response[stockAllCaps]['52WkLow'],
               }
             )
-            const res = await getNumDataPoints(stockAllCaps)
-            setHistData(res)
-                
-            let times = []
-            let prices = []
-            for (const candle of res[2]) {
-              var date = new Date(candle.datetime)
-              const options = { month: 'short', day: 'numeric' };
-              times.push(date.toLocaleString('en', options))
-              prices.push(candle.close)
-            }
+
             const chartData = {
             // x-axis labels
               labels: times,
@@ -605,7 +607,6 @@ const handleClose = (event, reason) => {
               }
               ]
             }
-
             setChartData(chartData)
 
             setInterval('1M')
