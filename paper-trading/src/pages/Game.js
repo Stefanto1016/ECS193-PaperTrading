@@ -983,6 +983,10 @@ function Game() {
 
     // Forwards 5 dates
     function forwardWeek() {
+        if (histDataLen - cutoff < 5) {
+            return;
+        }
+
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
             method: 'POST',
@@ -1015,6 +1019,10 @@ function Game() {
 
     // Forward 20 dates
     function forwardMonth() {
+        if (histDataLen - cutoff < 20) {
+            return;
+        }
+
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
             method: 'POST',
