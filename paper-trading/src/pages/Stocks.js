@@ -718,10 +718,9 @@ const handleClose = (event, reason) => {
                 heading: event.target.value
             })).then(res => {return res.json()})
             .then(data => {
-
               var list = []
               for (const symbol of data[0]) {
-                if (symbol != null) {
+                if (symbol != null && Array.isArray(symbol)) {
                   list.push({"symbol": symbol[0] + ' — ' + symbol[1]})
                 }
               }
