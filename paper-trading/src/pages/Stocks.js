@@ -689,7 +689,7 @@ const handleClose = (event, reason) => {
 
               var list = []
               for (const symbol of data[0]) {
-                if (symbol != null) {
+                if (symbol != null && Array.isArray(symbol)) {
                   list.push({"symbol": symbol[0] + ' — ' + symbol[1]})
                 }
               }
