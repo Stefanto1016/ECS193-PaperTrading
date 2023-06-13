@@ -52,13 +52,25 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { Typography } from '@mui/material';  
 
 const chartStyle = {
-    //width: 650,
-    //height: 500,
+    width: 650,
+    height: 500,
     position: 'absolute',
     top: 175,
     left: 750,
 
 }
+
+const smallChartStyle = {
+    //width: 650,
+    //height: 500,
+    //position: 'absolute',
+    top: 175,
+    left: 775,
+    float: "left",
+    maxWidth: 750,
+    marginLeft: '50px'
+
+  }
 
 async function retryFetch(url) {
     var data = await fetch(url);
@@ -160,11 +172,28 @@ function Game() {
     const [highestSingleSpending, setHighestSingleSpending] = useState(0)
     const [highestSingleSpendingStock, setHighestSingleSpendingStock] = useState('N/A')
 
-    useEffect(() => {
+    /*useEffect(() => {
         document.body.style.overflow = "hidden";
         window.scrollTo(0,0);
-    })
+    })*/
 
+    const [isScrollable, setIsScrollable] = useState(false);
+
+  useEffect(() => {
+    function handleResize() {
+      const windowWidth = window.innerWidth;
+      setIsScrollable(windowWidth > 1250);
+    }
+
+    handleResize(); // Initial check on component mount
+
+    window.addEventListener('resize', handleResize);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
     useEffect(() => {
         if (displayStart) {
             fetch("https://api-dot-papertrading-378100.uw.r.appspot.com/challengeGetLeaderboard?" + new URLSearchParams({
@@ -983,6 +1012,10 @@ function Game() {
 
     // Forwards 5 dates
     function forwardWeek() {
+        if (histDataLen - cutoff < 5) {
+            return;
+        }
+
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
             method: 'POST',
@@ -1015,6 +1048,10 @@ function Game() {
 
     // Forward 20 dates
     function forwardMonth() {
+        if (histDataLen - cutoff < 20) {
+            return;
+        }
+
         const prof = JSON.parse(localStorage.getItem("profile"))
         const options = {
             method: 'POST',
@@ -1067,7 +1104,7 @@ function Game() {
                     </Button>
                 </Box>
 
-                <Box sx={{mt: 3, display: 'flex', justifyContent: 'center'}}>
+                <Box sx={{mt: 3, display: 'flex', justifyContent: 'center', marginBottom: "30px"}}>
                     <Button size='large' variant='contained' disabled={histDataLen - cutoff != 0} onClick={forwardDay}>
                         Finish
                     </Button>
@@ -1183,9 +1220,8 @@ function Game() {
     return (
         <div>
             {profile ? (
-        <div>
+        <div className={isScrollable ? 'scrollable' : ''}>
             <NavBar/> 
-
             {displayStart && <StartInfo/>}
             {displayStart && <NoteDialog/>}
             {displayLeaderboard && <LeaderboardInfo/>}
@@ -1194,7 +1230,7 @@ function Game() {
             {displayGame && PurchasingOptions()}
             {displayGame && <GameForwarding/>}
             {(displayGame) &&
-                <div style={chartStyle}>
+                <div style={(isScrollable ? chartStyle : smallChartStyle)}>
                     <Box textAlign='center'>
                         <ToggleButtonGroup onChange={changeStock} value={curStock}>
                             {stockToggles}
@@ -1206,9 +1242,8 @@ function Game() {
             {displayEnd && <EndInfo/>}
             {displayEnd && <NoteDialog/>}
 
-
+            </div>
             
-        </div>
             ) : (
                 <Navigate to="/login"/>
             )}

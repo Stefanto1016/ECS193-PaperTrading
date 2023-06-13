@@ -45,18 +45,28 @@ import { NumericFormat } from 'react-number-format'
 
 
 function Stocks() {
-  const navigate = useNavigate();
   
-  const numberWithCommas = (n) => n?.toString.replace(/\B(?=(\d{3})+(?!\d))/g, ',') || '0';
 
   const profile = localStorage.getItem("profile");
 
   const chartStyle = {
-    //width: 650,
-    //height: 500,
+    width: 650,
+    height: 500,
     position: 'absolute',
     top: 175,
     left: 775,
+
+  }
+
+  const smallChartStyle = {
+    //width: 650,
+    //height: 500,
+    //position: 'absolute',
+    top: 175,
+    left: 775,
+    float: "left",
+    maxWidth: 750,
+    marginLeft: '50px'
 
   }
 
@@ -311,10 +321,32 @@ function Stocks() {
     }
   }, []);
 
+  /*useEffect(() => {
+    if(window.innerWidth > 1000){
+      document.body.style.overflow = "hidden";
+      window.scrollTo(0,0);
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  })*/
+
+  const [isScrollable, setIsScrollable] = useState(false);
+
   useEffect(() => {
-    document.body.style.overflow = "hidden";
-    window.scrollTo(0,0);
-  })
+    function handleResize() {
+      const windowWidth = window.innerWidth;
+      setIsScrollable(windowWidth > 1250);
+    }
+
+    handleResize(); // Initial check on component mount
+
+    window.addEventListener('resize', handleResize);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
 
 
@@ -448,7 +480,7 @@ const handleClose = (event, reason) => {
   // GUI for purchasing or selling stock
   function PurchasingOptions() {
     return (
-      <Box sx={{ width: '100%', maxWidth: 10000}}>
+      <Box sx={{ width: '100%', maxWidth: 10000, float: 'left'}}>
         <FormControl>
           <InputLabel sx={{mt:1, ml:3}}>Action</InputLabel>
           <Select
@@ -689,7 +721,7 @@ const handleClose = (event, reason) => {
 
               var list = []
               for (const symbol of data[0]) {
-                if (symbol != null) {
+                if (symbol != null && Array.isArray(symbol)) {
                   list.push({"symbol": symbol[0] + ' — ' + symbol[1]})
                 }
               }
@@ -824,7 +856,7 @@ const handleClose = (event, reason) => {
   return (
     <div>
       {profile ? (
-    <div className='Stocks'>
+    <div className={isScrollable ? 'scrollable' : ''}>
       <NavBar/>
 
       {externalStock ? (
@@ -924,7 +956,7 @@ const handleClose = (event, reason) => {
     {dataVisibility && <SecondaryData/>}
 
     {(dataVisibility) &&
-      <div style={chartStyle}>
+      <div style={(isScrollable ? chartStyle : smallChartStyle)}>
         <Box textAlign='center'>
           <ToggleButtonGroup onChange={changeInterval} value={interval}>
             {intervals}
